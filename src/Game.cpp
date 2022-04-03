@@ -212,12 +212,6 @@ void Game::Draw(sf::RenderWindow* _window)
 
     _window->setView(m_infoView);
     m_infoPanel.Render(*_window);
-
-    // sf::RectangleShape m_shape;
-    // m_shape.setSize(sf::Vector2f{CELL_SIZE, CELL_SIZE});
-    // m_shape.setPosition(sf::Vector2f{0.f, 0.f});
-    // m_shape.setFillColor(sf::Color::Yellow);
-    // _window->draw(m_shape);
 }
 
 

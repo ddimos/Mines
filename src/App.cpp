@@ -1,5 +1,5 @@
 #include "App.h"
-// #include "Utils/Log.h"
+#include "Log.h"
 #include "Game.h"
 
 #include <SFML/Graphics.hpp>
@@ -8,12 +8,12 @@ const double DT = 1.f / 60.f;
 
 bool Application::StartUp(sf::RenderWindow* window)
 {
-    // LOG("StartUp");
+    LOG("StartUp");
     m_window = window;
 
     if (!m_window)
     {
-        // LOG_ERROR("window is nullptr");
+        LOG_ERROR("window is nullptr");
         return false;
     }
     Game::StartUp(window);
@@ -56,7 +56,7 @@ void Application::MainLoop()
 
 bool Application::ShutDown()
 {
-    // LOG("ShutDown");
+    LOG("ShutDown");
     m_window = nullptr;
 
     Game::ShutDown();

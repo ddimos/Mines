@@ -141,11 +141,8 @@ void GameWorld::generateBombs(size_t _bombsNumber)
 	}
 }
 
-#if 1
 void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
 {
-    // std::set<WorldPosition> cellsToUncover; before inserting would need to check if it's already in the array
-
     std::function<void(WorldPosition)> checkNeib = [&](WorldPosition _posToCheck)
     {
         if (_radius != InfiniteRadius && (_pos - _posToCheck).getLength() >= _radius)
@@ -201,66 +198,3 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
 
     checkNeib(_pos);
 }
-#else
-std::set<WorldPosition> 
-    GameWorld::getPositionsOfNotBombNeighboringCells(WorldPosition _position)
-{
-    std::set<WorldPosition> positions;
-    for (auto& neigPos : getCell(_position).getNeighbors())
-    {
-        if (getCell(neigPos).m_type == Cell::ValueType::BOMB)
-            continue;
-        if (getCell(neigPos).m_state == Cell::State::UNCOVERED)
-            continue;
-        // if (getCell(neigPos).m_state == Cell::State::FLAGGED)
-        //     continue;
-        // if (indexesToOpen.find(neigPos) != indexesToOpen.end())
-        //     continue;
-
-        // indexesToOpen.insert(neigPos);
-        //if (getCell(neigPos).m_type == Cell::ValueType::EMPTY)
-            positions.insert(neigPos);
-    }
-    return positions;
-}
-void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
-{
-    std::set<WorldPosition> cellsToUncover;
-
-    auto neighbors = getPositionsOfNotBombNeighboringCells(_pos);
-    cellsToUncover.insert(neighbors.begin(), neighbors.end());
-    _radius--;
-    while (_radius)
-    {
-        if (neighbors.empty())
-            break;
-        
-        std::set<WorldPosition> cellsToCheck;
-        for (auto& neighborPos : neighbors)
-        {
-            if (getCell(neighborPos).m_type == Cell::ValueType::NUMBER)
-                continue;
-            
-            auto neighborsOfNeighbor = getPositionsOfNotBombNeighboringCells(neighborPos);
-            for (auto& nOfNPos : neighborsOfNeighbor)
-            {
-                if (cellsToUncover.find(nOfNPos) == cellsToUncover.end())
-                    cellsToCheck.insert(nOfNPos);
-            }
-        }
-        neighbors.clear();
-        neighbors.insert(cellsToCheck.begin(), cellsToCheck.end());
-        cellsToUncover.insert(neighbors.begin(), neighbors.end());
-        
-        _radius--;
-    }
-    
-    for (auto& neigPos : cellsToUncover)
-    {
-        // LOG("X: " + tstr(neigPos.x) + " Y: " + tstr(neigPos.y) + " " + tstr(neigPos.getLength()));
-        // getCell(neigPos).OnUncoverCell(0);
-        getCell(neigPos).OnUncoverCell((neigPos - _pos).getLength());
-        m_cellsLeftToUncover--;
-    }
-}
-#endif

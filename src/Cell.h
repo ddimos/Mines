@@ -37,8 +37,6 @@ public:
     void OnUncoverCell();
     void OnToggleFlag();
 
-//	const std::set<WorldPosition>& getNeighbors() const { return m_neighbors; }
-
 //private
 
 	const float RADIUS_DECREASE_KOEF = 3.f;
@@ -51,7 +49,4 @@ public:
     State m_state = State::COVERED;
 	ValueType m_type = ValueType::EMPTY;
 	int m_number = 0;
-
-//	std::set<WorldPosition> m_neighbors;
-
 };

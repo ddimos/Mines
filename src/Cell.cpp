@@ -21,21 +21,6 @@ Cell::Cell(WorldPosition _position)
     //m_text.setString("H");
     m_text.setFillColor(sf::Color::Black);
     //m_text.setStyle(sf::Text::Bold | sf::Text::Underlined);
-
-    // for (int x = _position.x - 1; x <= _position.x + 1; ++x)
-    // {
-    //     if (x < 0 || x >= CELL_COUNT)
-    //         continue;
-    //     for (int y = _position.y - 1; y <= _position.y + 1; ++y)
-    //     {
-    //         if (x == _position.x && y == _position.y)
-    //             continue;
-    //         if (y < 0 || y >= CELL_COUNT)
-    //             continue;
-            
-    //         m_neighbors.insert({x, y});
-    //     }
-    // }
 }
 
 
@@ -65,7 +50,7 @@ void Cell::OnUncoverCell()
         m_shape.setFillColor(sf::Color::Red);
     }
 
-   if (m_type == ValueType::NUMBER) // better do it on init
+    if (m_type == ValueType::NUMBER) // better do it on init
         m_text.setString(std::to_string(m_number));
 }
 
@@ -81,43 +66,14 @@ void Cell::OnToggleFlag()
 void Cell::Update(float _dt)
 {
     (void)_dt;
-    if (m_state == State::UNCOVERED)
-    {
-        if (m_type != ValueType::BOMB)
-        {
-            // if (m_delayBeforeUncovering <= 0.f)
-            {
-                if (m_type == ValueType::NUMBER)
-                    m_shape.setFillColor(sf::Color::Blue);
-                else 
-                    m_shape.setFillColor(sf::Color::Cyan);
-            }
-        }
-        else
-        {
-            //if (m_delayBeforeUncovering <= 0.f)
-                m_shape.setFillColor(sf::Color::Red);
-        }
-    }	
-    else
-        m_shape.setFillColor(sf::Color::Green);
-
-  //  if (m_state == State::UNCOVERED && m_delayBeforeUncovering >= 0.f)	
-  //      m_delayBeforeUncovering -= _dt;
 }
 
 void Cell::Render(sf::RenderWindow& _window)
 {
     _window.draw(m_shape);
-   // if (m_delayBeforeUncovering <= 0.f)
-    {
-        if (m_state == State::UNCOVERED && m_type != ValueType::EMPTY)
-        {
-            _window.draw(m_text);
-        }
-        if (m_state == State::FLAGGED)
-        {
-            _window.draw(m_flagShape);
-        }
-    }
+
+    if (m_state == State::UNCOVERED && m_type != ValueType::EMPTY)
+        _window.draw(m_text);
+    if (m_state == State::FLAGGED)
+        _window.draw(m_flagShape);
 }
