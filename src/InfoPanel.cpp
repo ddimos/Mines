@@ -6,8 +6,8 @@ InfoPanel::InfoPanel(/* args */)
     m_text.setPosition(sf::Vector2f{20.f, 20.f});
     m_text.setFillColor(sf::Color::Magenta);
 
-    m_finishText.setPosition(sf::Vector2f{20.f, 200.f});
-    m_finishText.setFillColor(sf::Color::Magenta);
+    m_bombsNumText.setPosition(sf::Vector2f{20.f, 200.f});
+    m_bombsNumText.setFillColor(sf::Color::Magenta);
 }
 
 InfoPanel::~InfoPanel()
@@ -17,14 +17,18 @@ InfoPanel::~InfoPanel()
 void InfoPanel::updateBombsLeftText(int _newNumber)
 {
     m_bombsLeft = _newNumber;
-    m_text.setString(std::to_string(_newNumber));
+    m_bombsNumText.setString("Bombs Left\n" + std::to_string(_newNumber));
 }
 
-void InfoPanel::OnInit(const sf::Font& _font, int _bombsNum)
+void InfoPanel::OnInit(const sf::Font& _font)
 {
     m_text.setFont(_font);
-    m_finishText.setFont(_font);
-    updateBombsLeftText(_bombsNum);
+    m_bombsNumText.setFont(_font);
+}
+
+void InfoPanel::OnGameInit()
+{
+    m_text.setString("Welcome\n\nTo Start Game\n- B\nTo Start Network\n- N");
 }
 
 void InfoPanel::OnFlagSet()
@@ -37,14 +41,16 @@ void InfoPanel::OnFlagUnset()
     updateBombsLeftText(m_bombsLeft + 1);
 }
 
-void InfoPanel::OnGameStart()
+void InfoPanel::OnGameStart(int _bombsNum)
 {
-    m_finishText.setString("PLAY!!");
+    updateBombsLeftText(_bombsNum);
+    m_text.setString("PLAY!!\n\nMovement - Arrows\nUncover - Space\nFlag/Unflag - X");
 }
 
 void InfoPanel::OnGameFinish()
 {
-    m_finishText.setString("To restart press R!!");
+    m_text.setString("To restart press R!!");
+    m_bombsNumText.setString("");
 }
 
 void InfoPanel::Update(float _dt)
@@ -55,6 +61,6 @@ void InfoPanel::Update(float _dt)
 void InfoPanel::Render(sf::RenderWindow& _window)
 {
     _window.draw(m_text);
-    _window.draw(m_finishText);
+    _window.draw(m_bombsNumText);
 }
     

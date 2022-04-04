@@ -87,7 +87,7 @@ void Character::Update(float _dt)
         Game::Get().OnPlayerUncoverCell(m_position);
     }
 
-    if (Game::isKeyPressed(sf::Keyboard::Z))
+    if (Game::isKeyPressed(sf::Keyboard::X))
     {
         Game::Get().OnPlayerToggleFlagCell(m_position);
     }

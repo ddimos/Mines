@@ -16,6 +16,11 @@ Game::Game(sf::RenderWindow* _window)
     m_infoView.setViewport(sf::FloatRect(0.8f, 0.f, 0.8f, 1.f));
 
     loadResources();
+
+    m_infoPanel.OnInit(m_font);
+    // Create a preview
+    m_gameWorld.CreateWorld({35, 35}, 1);
+
     m_wantsToChangeState = true;
 }
 
@@ -72,7 +77,6 @@ void Game::loadResources()
 void Game::initGame()
 {
     m_gameWorld.CreateWorld({CELL_COUNT, CELL_COUNT}, BOMBS_COUNT);
-    m_infoPanel.OnInit(m_font, BOMBS_COUNT);
 }
 
 void Game::resetGame()
@@ -86,11 +90,12 @@ void Game::onStateEnter(GameState _newState)
     switch (_newState)
     {
     case GameState::INIT:
-        initGame();
-        m_wantsToChangeState = true;
+        // m_wantsToChangeState = true;
+        m_infoPanel.OnGameInit();
         break;
     case GameState::GAME:
-        m_infoPanel.OnGameStart();
+        initGame();
+        m_infoPanel.OnGameStart(BOMBS_COUNT);
         break;
     case GameState::FINISH:
         m_infoPanel.OnGameFinish();
@@ -181,7 +186,21 @@ void Game::Update(float _dt)
             if (!isKeyDown(static_cast<sf::Keyboard::Key>(i)))
                 ms_keysState[i] = false;
 
-    if (m_currentState == GameState::GAME)
+    if (m_currentState == GameState::INIT)
+    {
+        if (isKeyPressed(sf::Keyboard::B))
+        {
+            m_wantsToChangeState = true;
+        }
+
+        if (isKeyPressed(sf::Keyboard::N))
+        {
+            m_wantsToChangeState = true;
+            m_isNetwork = true;
+        }
+        
+    }
+    else if (m_currentState == GameState::GAME)
     {
         m_gameWorld.Update(_dt);
         m_gameView.setCenter(m_gameWorld.GetCamera().GetPos());		

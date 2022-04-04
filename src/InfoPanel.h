@@ -7,11 +7,12 @@ public:
     InfoPanel();
     ~InfoPanel();
 
-    void OnInit(const sf::Font& _font, int _bombsNum);
+    void OnInit(const sf::Font& _font);
     void OnFlagSet();
     void OnFlagUnset();
 
-    void OnGameStart();
+    void OnGameInit();
+    void OnGameStart(int _bombsNum);
     void OnGameFinish();
 
     void Update(float _dt);
@@ -22,7 +23,8 @@ private:
     void updateBombsLeftText(int _newNumber);
     
     sf::Text m_text;
-    sf::Text m_finishText;
+    sf::Text m_bombsNumText;
+
     int m_bombsLeft = 0;
 };
 

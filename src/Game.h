@@ -69,7 +69,8 @@ private:
     // State machine
     GameState m_currentState = GameState::None;
     bool m_wantsToChangeState = false;
-
+    
+    bool m_isNetwork = false;
 
 public:
     // Keybord
