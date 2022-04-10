@@ -28,7 +28,7 @@ void InfoPanel::OnInit(const sf::Font& _font)
 
 void InfoPanel::OnGameInit()
 {
-    m_text.setString("Welcome\n\nTo Start Game\n- B\nTo Start Network\n- N");
+    m_text.setString("Welcome\n\nCreate\n- B\nConnect\n- N");
 }
 
 void InfoPanel::OnFlagSet()

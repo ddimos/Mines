@@ -6,6 +6,8 @@
 #include "InfoPanel.h"
 #include "GameWorld.h"
 
+#include <SFML/Network.hpp>
+
 namespace sf
 {
     class RenderWindow;
@@ -54,6 +56,10 @@ private:
     void onStateExit(GameState _oldState);
     void updateState();
 
+    // Network
+    void CreateHost();
+    
+    sf::UdpSocket m_localSocket;    
 
     static Game* ms_game;
     sf::RenderWindow* m_window = nullptr;

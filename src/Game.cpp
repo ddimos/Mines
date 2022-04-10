@@ -9,7 +9,8 @@ Game::Game(sf::RenderWindow* _window)
 :
     m_window(_window)
 {
-    srand (time(NULL));
+    srand (1548624);
+    // srand (time(NULL));
     std::fill(ms_keysState.begin(), ms_keysState.end(), false);
 
     m_gameView.setViewport(sf::FloatRect(0.f, 0.f, 0.8f, 1.f));
@@ -22,6 +23,8 @@ Game::Game(sf::RenderWindow* _window)
     m_gameWorld.CreateWorld({35, 35}, 1);
 
     m_wantsToChangeState = true;
+    
+    CreateHost();
 }
 
 Game::~Game()
@@ -233,4 +236,19 @@ void Game::Draw(sf::RenderWindow* _window)
     m_infoPanel.Render(*_window);
 }
 
+void Game::CreateHost()
+{
+    if (m_localSocket.bind(sf::Socket::AnyPort) != sf::Socket::Done)
+    {
+        LOG_ERROR("Couldn't bind a port");
+        return;
+    }
+
+        m_localSocket.setBlocking(false);
+
+    LOG("\n\tHost created on a port:\t" + tstr(m_localSocket.getLocalPort()) 
+     + "\n\tLocal address:\t\t" +  sf::IpAddress::getLocalAddress().toString()
+     + "\n\tGlobal:\t\t\t" + sf::IpAddress::getPublicAddress().toString());
+
+}
 
