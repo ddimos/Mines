@@ -118,6 +118,7 @@ void Game::onStateExit(GameState _oldState)
     {
     case GameState::INIT:
     case GameState::GAME:
+    case GameState::GAME_INIT:
         break;
     case GameState::FINISH:
         resetGame();
@@ -141,6 +142,9 @@ void Game::updateState()
         newState = GameState::INIT;
         break;
     case GameState::INIT:
+        newState = GameState::GAME_INIT;
+        break;
+    case GameState::GAME_INIT:
         newState = GameState::GAME;
         break;
     case GameState::GAME:
@@ -180,6 +184,27 @@ void Game::OnGameEnded(bool _isVictory)
     m_isGameEnded = true;
 }
 
+void Game::OnStartButtonPressed()
+{
+    m_wantsToChangeState = true;
+}
+
+void Game::OnTextEntered(sf::Uint32 _char)
+{
+    if (m_currentState == GameState::INIT)
+    {
+        if (_char < 46 || _char > 58) // Only numbers and dots
+            return;
+        
+        if (_char == 8) // Backspace
+            m_enteredText.pop_back();
+        else
+            m_enteredText += _char;
+
+        m_infoPanel.OnTextEntered(m_enteredText);
+    }
+}
+
 void Game::Update(float _dt)
 {
     updateState();
@@ -193,15 +218,12 @@ void Game::Update(float _dt)
     {
         if (isKeyPressed(sf::Keyboard::B))
         {
-            m_wantsToChangeState = true;
+            OnStartButtonPressed();
         }
+    }
+    else if (m_currentState == GameState::GAME_INIT)
+    {
 
-        if (isKeyPressed(sf::Keyboard::N))
-        {
-            m_wantsToChangeState = true;
-            m_isNetwork = true;
-        }
-        
     }
     else if (m_currentState == GameState::GAME)
     {

@@ -7,6 +7,8 @@ public:
     InfoPanel();
     ~InfoPanel();
 
+    void OnTextEntered(const std::string& _text);
+
     void OnInit(const sf::Font& _font);
     void OnFlagSet();
     void OnFlagUnset();
@@ -23,6 +25,7 @@ private:
     void updateBombsLeftText(int _newNumber);
     
     sf::Text m_text;
+    sf::Text m_enteredText;
     sf::Text m_bombsNumText;
 
     int m_bombsLeft = 0;

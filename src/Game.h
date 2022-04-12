@@ -17,6 +17,7 @@ enum class GameState
 {
     None,
     INIT,
+    GAME_INIT,
     GAME,
     FINISH
 };
@@ -37,6 +38,10 @@ public:
     void OnPlayerUncoverCell(WorldPosition _pos);
     void OnPlayerToggleFlagCell(WorldPosition _pos);
     void OnGameEnded(bool _isVictory);
+
+    void OnStartButtonPressed();
+
+    void OnTextEntered(sf::Uint32 _char);
 
     const GameWorld& GetGameWorld() const { return m_gameWorld; }
      
@@ -69,6 +74,7 @@ private:
     sf::View m_gameView;
     sf::View m_infoView;
 
+    std::string m_enteredText;
 
     bool m_isGameEnded = false;
 
@@ -76,7 +82,7 @@ private:
     GameState m_currentState = GameState::None;
     bool m_wantsToChangeState = false;
     
-    bool m_isNetwork = false;
+  //  bool m_isNetwork = false;
 
 public:
     // Keybord

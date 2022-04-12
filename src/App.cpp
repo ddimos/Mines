@@ -28,7 +28,6 @@ void Application::MainLoop()
     
     while (m_window->isOpen())
     {
-        // static std::string text;
         sf::Event event;
         while (m_window->pollEvent(event))
         {
@@ -36,12 +35,10 @@ void Application::MainLoop()
             {
                 m_window->close();
             }
-            // if (event.type == sf::Event::TextEntered)
-            // {
-            //     text += event.text.unicode;
-            //     LOG(text.c_str());
-
-            // }
+            if (event.type == sf::Event::TextEntered)
+            {
+                Game::Get().OnTextEntered(event.text.unicode);
+            }
         }
 
         sf::Time elapsed = clock.restart();
