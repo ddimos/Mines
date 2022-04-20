@@ -9,8 +9,8 @@ Game::Game(sf::RenderWindow* _window)
 :
     m_window(_window)
 {
-    srand (1548624);
-    // srand (time(NULL));
+    m_seed = time(NULL);
+
     std::fill(ms_keysState.begin(), ms_keysState.end(), false);
 
     m_gameView.setViewport(sf::FloatRect(0.f, 0.f, 0.8f, 1.f));
@@ -79,6 +79,7 @@ void Game::loadResources()
 
 void Game::initGame()
 {
+    srand(m_seed);
     m_gameWorld.CreateWorld({CELL_COUNT, CELL_COUNT}, BOMBS_COUNT);
 }
 
@@ -186,7 +187,25 @@ void Game::OnGameEnded(bool _isVictory)
 
 void Game::OnStartButtonPressed()
 {
-    m_wantsToChangeState = true;
+    //m_wantsToChangeState = true;
+    size_t index = m_enteredText.find(":");
+    if (index == std::string::npos)
+    {
+        LOG_ERROR("Entered a bad address: " + m_enteredText);
+        return;
+    }
+
+    m_isMasterSession = false;
+
+    m_address = sf::IpAddress(m_enteredText.substr(0, index));
+    m_port = std::stoi(m_enteredText.substr(index+1));
+
+    sf::Packet packet;
+    NetworkPacketType type = NetworkPacketType::CONNECT;
+    packet << static_cast<sf::Uint16>(type);
+
+    LOG("Type " + tstr(static_cast<sf::Uint16>(type)));
+    Send(packet, m_address, m_port);
 }
 
 void Game::OnTextEntered(sf::Uint32 _char)
@@ -207,6 +226,67 @@ void Game::OnTextEntered(sf::Uint32 _char)
 
 void Game::Update(float _dt)
 {
+    while (true)
+    {
+        sf::Packet packet;
+        sf::IpAddress sender;
+        unsigned short port;
+        const sf::Socket::Status status = m_localSocket.receive(packet, sender, port);
+
+        if (status == sf::Socket::Status::NotReady)
+        {
+            break;
+        }
+        else if(status == sf::Socket::Status::Done)
+        {
+            LOG("Received from " + sender.toString() + " on port " + tstr(port) );
+            sf::Uint16 type1;
+            packet >> type1;
+            NetworkPacketType type = static_cast<NetworkPacketType>(type1);
+            if (type == NetworkPacketType::CONNECT)
+            {
+                m_address = sender;
+                m_port = port;
+
+                sf::Packet packet;
+                NetworkPacketType type = NetworkPacketType::CREATE_GAME;
+                packet << static_cast<sf::Uint16>(type);
+                packet << m_seed;
+                Send(packet, m_address, m_port);
+                m_wantsToChangeState = true;
+            }
+            else if (type == NetworkPacketType::CREATE_GAME)
+            {
+                packet >> m_seed;
+                LOG("Type " + tstr(type1) + " seed: " + tstr(m_seed));
+                m_wantsToChangeState = true;
+
+            }
+            else if (type == NetworkPacketType::CREATE_CHARACTER)
+            {
+                m_gameWorld.OnSpawnCharacterPacketReceived(packet);
+            }
+            else if (type == NetworkPacketType::REPLICATE_CHARACTER_POS)
+            {
+                m_gameWorld.OnReplicateCharacterPacketReceived(packet);
+            }
+            else if (type == NetworkPacketType::REPLICATE_CHARACTER_UNCOVER)
+            {
+                m_gameWorld.OnReplicateUncoverCellPacketReceived(packet);
+            }
+            else if (type == NetworkPacketType::REPLICATE_CHARACTER_TOGGLE)
+            {
+                m_gameWorld.OnReplicateToggleFlagCellPacketReceived(packet);
+            }
+        }
+        else
+        {
+            LOG_ERROR("The status of the socket: " + tstr(status));
+            break;
+        }       
+
+    }
+
     updateState();
 
     for (size_t i = 0; i < ms_keysState.size(); ++i)
@@ -223,7 +303,7 @@ void Game::Update(float _dt)
     }
     else if (m_currentState == GameState::GAME_INIT)
     {
-
+        m_wantsToChangeState = true;
     }
     else if (m_currentState == GameState::GAME)
     {
@@ -237,7 +317,7 @@ void Game::Update(float _dt)
         }
 
         if (isKeyPressed(sf::Keyboard::S))
-            m_gameWorld.SpawnCharacter();
+            m_gameWorld.SpawnMasterCharacter();
     }
     else if (m_currentState == GameState::FINISH)
     {
@@ -274,3 +354,12 @@ void Game::CreateHost()
 
 }
 
+void Game::Send(sf::Packet _packet, sf::IpAddress _address, unsigned short _port)
+{
+    m_localSocket.send(_packet, _address, _port);
+}
+
+void Game::Send(sf::Packet _packet)
+{
+    m_localSocket.send(_packet, m_address, m_port);
+}

@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "InfoPanel.h"
 #include "GameWorld.h"
+#include "NetworkPacketType.h"
 
 #include <SFML/Network.hpp>
 
@@ -48,6 +49,9 @@ public:
     // Resources
     const sf::Font& GetFont() const { return m_font; }
 
+    void Send(sf::Packet _packet, sf::IpAddress _address, unsigned short _port);
+    void Send(sf::Packet _packet); // Brodcast
+
 private:
     sf::Font m_font;
 
@@ -74,7 +78,7 @@ private:
     sf::View m_gameView;
     sf::View m_infoView;
 
-    std::string m_enteredText;
+    std::string m_enteredText = "192.168.1.11";
 
     bool m_isGameEnded = false;
 
@@ -83,6 +87,10 @@ private:
     bool m_wantsToChangeState = false;
     
   //  bool m_isNetwork = false;
+    bool m_isMasterSession = true; // A master creates a game, all who connects aren't
+    sf::IpAddress m_address = {};
+    unsigned short m_port = 0;
+    unsigned m_seed = 0;
 
 public:
     // Keybord

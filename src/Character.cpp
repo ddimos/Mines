@@ -1,9 +1,14 @@
 #include "Character.h"
 #include "Game.h"
 #include "Log.h"
+#include "NetworkPacketType.h"
+
 #include <algorithm>
 
-Character::Character(/* args */)
+Character::Character(bool _isMaster, unsigned _id)
+    :
+    m_isMaster(_isMaster),
+    m_id(_id)
 {
     m_shape.setSize(sf::Vector2f{CELL_SIZE / DECREASE_KOEF, CELL_SIZE / DECREASE_KOEF});
     m_padding = {(CELL_SIZE - CELL_SIZE / DECREASE_KOEF) / 2, (CELL_SIZE - CELL_SIZE / DECREASE_KOEF) / 2};
@@ -16,6 +21,9 @@ Character::~Character()
 
 void Character::Update(float _dt)
 {
+    if (!m_isMaster)
+        return;
+    
     sf::Vector2i deltaPos = {0, 0};
     if (Game::isKeyDown(sf::Keyboard::Left))
     {
@@ -82,19 +90,96 @@ void Character::Update(float _dt)
     m_position.x = std::clamp(m_position.x + deltaPos.x, 0, (int)worldSize.x - 1);
     m_position.y = std::clamp(m_position.y + deltaPos.y, 0, (int)worldSize.y - 1);
 
+    replicatePos();
+    // LOG("X: " + tstr(m_position.x) + " Y: " + tstr(m_position.y));
+
     if (Game::isKeyPressed(sf::Keyboard::Space))
     {
-        Game::Get().OnPlayerUncoverCell(m_position);
+        onCharacterUncoverCell(m_position);
+        replicateUncoverCell();
     }
-
+    
     if (Game::isKeyPressed(sf::Keyboard::X))
     {
-        Game::Get().OnPlayerToggleFlagCell(m_position);
+        onCharacterToggleFlagCell(m_position);   
+        replicateToggleFlagCell();
     }
+
+    m_prevPosition = m_position;
 }
 
 void Character::Render(sf::RenderWindow& _window)
 {
     m_shape.setPosition(m_position.getWindowPosition() + m_padding);
     _window.draw(m_shape);
+}
+
+void Character::onCharacterUncoverCell(WorldPosition _pos)
+{
+    Game::Get().OnPlayerUncoverCell(_pos);
+}
+
+void Character::onCharacterToggleFlagCell(WorldPosition _pos)
+{
+    Game::Get().OnPlayerToggleFlagCell(_pos);
+}
+
+void Character::replicatePos()
+{
+    if (m_prevPosition == m_position)
+        return;
+
+    sf::Packet packet;
+    packet << static_cast<sf::Uint16>(NetworkPacketType::REPLICATE_CHARACTER_POS);
+    packet << m_id;
+    packet << (sf::Int32)m_position.x;
+    packet << (sf::Int32)m_position.y;
+
+    Game::Get().Send(packet);
+}
+
+void Character::replicateUncoverCell()
+{
+    sf::Packet packet;
+    packet << static_cast<sf::Uint16>(NetworkPacketType::REPLICATE_CHARACTER_UNCOVER);
+    packet << m_id;
+    packet << (sf::Int32)m_position.x;
+    packet << (sf::Int32)m_position.y;
+
+    Game::Get().Send(packet);
+}
+
+void Character::replicateToggleFlagCell()
+{
+    sf::Packet packet;
+    packet << static_cast<sf::Uint16>(NetworkPacketType::REPLICATE_CHARACTER_TOGGLE);
+    packet << m_id;
+    packet << (sf::Int32)m_position.x;
+    packet << (sf::Int32)m_position.y;
+
+    Game::Get().Send(packet);
+}
+
+void Character::OnReplicateCharacterPacketReceived(sf::Packet& _packet)
+{
+    if (m_isMaster)
+        return;
+
+    // id is already taken
+    _packet >> m_position.x;
+    _packet >> m_position.y;
+}
+
+void Character::OnReplicateUncoverCellPacketReceived(sf::Packet& _packet)
+{
+    _packet >> m_position.x;
+    _packet >> m_position.y;
+    onCharacterUncoverCell(m_position);
+}
+
+void Character::OnReplicateToggleFlagCellPacketReceived(sf::Packet& _packet)
+{
+    _packet >> m_position.x;
+    _packet >> m_position.y;
+    onCharacterToggleFlagCell(m_position);
 }

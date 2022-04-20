@@ -1,6 +1,8 @@
 #include "GameWorld.h"
 #include "Game.h"
 #include "Utils.h"
+#include "Log.h"
+#include "NetworkPacketType.h"
 
 #include <functional>
 #include <set>
@@ -20,16 +22,36 @@ void GameWorld::CreateWorld(WorldPosition _worldSize, size_t _bombsNumber)
     createCells(_worldSize);
     generateBombs(_bombsNumber);
     m_camera.OnInit(_worldSize);
+    m_characters.reserve(5);
 }
 
-void GameWorld::SpawnCharacter()
+void GameWorld::SpawnMasterCharacter()
 {
-    if (!m_characters.empty())
+    if (m_mainCharachter)
         return;
+    
+    unsigned id = generateId();
+    spawnCharacter(true, id);
+    sf::Packet packet;
+    packet << static_cast<sf::Uint16>(NetworkPacketType::CREATE_CHARACTER);
+    packet << id;
+    // Position
+    Game::Get().Send(packet);
+}
 
-    m_characters.emplace_back(Character());
-    m_mainCharachter = &m_characters.back();
-    m_camera.SetTargetedCharacter(m_mainCharachter);
+void GameWorld::spawnCharacter(bool _spawnMaster, unsigned _id)
+{
+    m_characters.emplace_back(Character(_spawnMaster, _id));
+    std::string roleStr = (_spawnMaster) ? "M":"R";
+    LOG("Spawn " + roleStr + " Id: " + tstr(_id));
+    if (_spawnMaster)
+    {
+        if (m_mainCharachter != nullptr)
+            LOG_ERROR("Main charachter is already created");
+        
+        m_mainCharachter = &m_characters.back();
+        m_camera.SetTargetedCharacter(m_mainCharachter);    
+    }
 }
 
 void GameWorld::Update(float _dt)
@@ -197,4 +219,58 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
     };
 
     checkNeib(_pos);
+}
+
+unsigned GameWorld::generateId()
+{
+    return m_characters.size() + 1; // TODO: a real bad way to generate ids
+}
+
+void GameWorld::OnSpawnCharacterPacketReceived(sf::Packet& _packet)
+{
+    unsigned id;
+    _packet >> id;
+    spawnCharacter(false, id);
+}
+
+void GameWorld::OnReplicateCharacterPacketReceived(sf::Packet& _packet)
+{
+    unsigned id;
+    _packet >> id;
+    for (Character& charac : m_characters)
+    {
+        if (charac.GetId() == id)
+        {
+            charac.OnReplicateCharacterPacketReceived(_packet);
+            break;
+        }
+    }
+}
+
+void GameWorld::OnReplicateUncoverCellPacketReceived(sf::Packet& _packet)
+{
+    unsigned id;
+    _packet >> id;
+    for (Character& charac : m_characters)
+    {
+        if (charac.GetId() == id)
+        {
+            charac.OnReplicateUncoverCellPacketReceived(_packet);
+            break;
+        }
+    }
+}
+
+void GameWorld::OnReplicateToggleFlagCellPacketReceived(sf::Packet& _packet)
+{
+    unsigned id;
+    _packet >> id;
+    for (Character& charac : m_characters)
+    {
+        if (charac.GetId() == id)
+        {
+            charac.OnReplicateToggleFlagCellPacketReceived(_packet);
+            break;
+        }
+    }
 }
