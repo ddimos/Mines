@@ -85,8 +85,7 @@ private:
     // State machine
     GameState m_currentState = GameState::None;
     bool m_wantsToChangeState = false;
-    
-  //  bool m_isNetwork = false;
+
     bool m_isMasterSession = true; // A master creates a game, all who connects aren't
     sf::IpAddress m_address = {};
     unsigned short m_port = 0;

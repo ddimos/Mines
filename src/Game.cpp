@@ -152,7 +152,7 @@ void Game::updateState()
         newState = GameState::FINISH;
         break;
     case GameState::FINISH:
-        newState = GameState::INIT; // if wants to restart
+        newState = GameState::GAME_INIT; // if wants to restart
         break;
     default:
         break;
