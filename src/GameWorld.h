@@ -11,12 +11,14 @@ public:
     GameWorld();
     ~GameWorld();
 
-    void CreateWorld(WorldPosition _worldSize, size_t _bombsNumber);
-    void SpawnMasterCharacter();
-
     void Update(float _dt);
     void Render(sf::RenderWindow& _window);
 
+    void CreateWorld(WorldPosition _worldSize, size_t _bombsNumber);
+    void SpawnCharacter(bool _spawnMaster, unsigned _id);
+
+    unsigned GenerateId();
+    
     const Camera& GetCamera() const { return m_camera; }
     WorldPosition GetWorldSize() const { return m_worldSize; }
 
@@ -40,9 +42,7 @@ private:
         getPositionsOfNotBombNeighboringCells(WorldPosition _position);
     void uncoverCellsInRadius(WorldPosition _pos, int _radius);
 
-    void spawnCharacter(bool _spawnMaster, unsigned _id);
 
-    unsigned generateId();
 
     WorldPosition m_worldSize = {};
     std::vector<Cell> m_cells;

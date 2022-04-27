@@ -1,6 +1,7 @@
 #pragma once
 
-
+#include <queue>
+#include <utility>
 #include <SFML/Network.hpp>
 
 struct NetworkAddress
@@ -9,6 +10,23 @@ struct NetworkAddress
     unsigned short  port = 0;
 };
 
+struct NetEvent
+{
+    enum class Type
+    {
+        ON_CONNECT,
+        ON_RECEIVE,
+        ON_DISCONNECT
+    };
+    NetEvent() = default;
+    NetEvent(Type _type, sf::Packet&& _packet, const NetworkAddress& _sender)
+    : type(_type), packet(std::move(_packet)), sender(_sender)
+    {}
+    
+    Type type;
+    sf::Packet packet;
+    NetworkAddress sender;
+};
 // TODO: Handle connection
 
 class Network
@@ -23,9 +41,11 @@ public:
 
     void Update(float _dt);
 
+    bool PollEvents(NetEvent& _event);
 
     void Send(sf::Packet _packet, NetworkAddress _address);
-    // void Send(sf::Packet _packet); // Brodcast
+    void Send(sf::Packet _packet); // Brodcast
+
 
 private:
 
@@ -35,6 +55,8 @@ private:
     sf::UdpSocket m_localSocket;
 
     NetworkAddress m_localAddress = {};
+    NetworkAddress m_others = {};
     
+    std::queue<NetEvent> m_events;
 };
 

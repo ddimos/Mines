@@ -68,8 +68,9 @@ void Network::Update(float _dt)
         else if(status == sf::Socket::Status::Done)
         {
             LOG("Received from " + sender.toString() + " on port " + tstr(port) );
-            // push into a queue
-            // then pull from the game
+            m_others.address = sender;
+            m_others.port = port;
+            m_events.push(NetEvent(NetEvent::Type::ON_RECEIVE, std::move(packet), NetworkAddress{sender, port}));
         }
         else
         {
@@ -80,6 +81,17 @@ void Network::Update(float _dt)
     }
 }
 
+bool Network::PollEvents(NetEvent& _event)
+{
+    if (m_events.empty())
+        return false; 
+    
+    _event = m_events.back();
+    m_events.pop();
+
+    return true;
+}
+
 void Network::Send(sf::Packet _packet, NetworkAddress _address)
 {
     m_localSocket.send(_packet, _address.address, _address.port);
@@ -87,5 +99,5 @@ void Network::Send(sf::Packet _packet, NetworkAddress _address)
 
 void Network::Send(sf::Packet _packet)
 {
-   // m_localSocket.send(_packet, m_address, m_port);
+    m_localSocket.send(_packet, m_others.address, m_others.port);
 }

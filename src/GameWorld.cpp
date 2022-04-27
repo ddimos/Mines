@@ -25,21 +25,7 @@ void GameWorld::CreateWorld(WorldPosition _worldSize, size_t _bombsNumber)
     m_characters.reserve(5);
 }
 
-void GameWorld::SpawnMasterCharacter()
-{
-    if (m_mainCharachter)
-        return;
-    
-    unsigned id = generateId();
-    spawnCharacter(true, id);
-    sf::Packet packet;
-    packet << static_cast<sf::Uint16>(NetworkPacketType::CREATE_CHARACTER);
-    packet << id;
-    // Position
- //   Game::Get().Send(packet);
-}
-
-void GameWorld::spawnCharacter(bool _spawnMaster, unsigned _id)
+void GameWorld::SpawnCharacter(bool _spawnMaster, unsigned _id)
 {
     m_characters.emplace_back(Character(_spawnMaster, _id));
     std::string roleStr = (_spawnMaster) ? "M":"R";
@@ -221,16 +207,16 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
     checkNeib(_pos);
 }
 
-unsigned GameWorld::generateId()
+unsigned GameWorld::GenerateId()
 {
     return m_characters.size() + 1; // TODO: a real bad way to generate ids
 }
 
 void GameWorld::OnSpawnCharacterPacketReceived(sf::Packet& _packet)
 {
-    unsigned id;
-    _packet >> id;
-    spawnCharacter(false, id);
+    // unsigned id;
+    // _packet >> id;
+    // spawnCharacter(false, id);
 }
 
 void GameWorld::OnReplicateCharacterPacketReceived(sf::Packet& _packet)

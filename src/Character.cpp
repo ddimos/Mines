@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "Log.h"
 #include "NetworkPacketType.h"
+#include "Network.h"
 
 #include <algorithm>
 
@@ -135,7 +136,7 @@ void Character::replicatePos()
     packet << (sf::Int32)m_position.x;
     packet << (sf::Int32)m_position.y;
 
-   // Game::Get().Send(packet);
+    Network::Get().Send(packet);
 }
 
 void Character::replicateUncoverCell()
@@ -146,7 +147,7 @@ void Character::replicateUncoverCell()
     packet << (sf::Int32)m_position.x;
     packet << (sf::Int32)m_position.y;
 
-  //  Game::Get().Send(packet);
+    Network::Get().Send(packet);
 }
 
 void Character::replicateToggleFlagCell()
@@ -157,7 +158,7 @@ void Character::replicateToggleFlagCell()
     packet << (sf::Int32)m_position.x;
     packet << (sf::Int32)m_position.y;
 
-  //  Game::Get().Send(packet);
+    Network::Get().Send(packet);
 }
 
 void Character::OnReplicateCharacterPacketReceived(sf::Packet& _packet)

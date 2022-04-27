@@ -6,6 +6,7 @@
 #include "InfoPanel.h"
 #include "GameWorld.h"
 #include "NetworkPacketType.h"
+#include "Network.h"
 
 namespace sf
 {
@@ -16,7 +17,7 @@ enum class GameState
 {
     None,
     INIT,
-    GAME_INIT,
+    LOBBY,
     GAME,
     FINISH
 };
@@ -52,8 +53,9 @@ private:
 
 private:
 
-    void initGame();
     void loadResources();
+    void initGame();
+    void spawnCharacters();
     void resetGame();
 
     void onStateEnter(GameState _newState);
@@ -76,6 +78,8 @@ private:
     
     unsigned m_seed = 0;
 
+    bool m_isMasterSession = true; // Become a replica when sends a join request
+    NetworkAddress m_otherPeers;
     // State machine
     GameState m_currentState = GameState::None;
     bool m_wantsToChangeState = false;

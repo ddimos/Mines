@@ -7,18 +7,19 @@ public:
     InfoPanel();
     ~InfoPanel();
 
-    void OnTextEntered(const std::string& _text);
+    void Update(float _dt);
+    void Render(sf::RenderWindow& _window);
 
     void OnInit(const sf::Font& _font);
-    void OnFlagSet();
-    void OnFlagUnset();
 
-    void OnGameInit();
+    void OnEnterInit();
+    void OnEnterLobby(bool _isMaster);
     void OnGameStart(int _bombsNum);
     void OnGameFinish();
 
-    void Update(float _dt);
-    void Render(sf::RenderWindow& _window);
+    void OnTextEntered(const std::string& _text);
+    void OnFlagSet();
+    void OnFlagUnset();
 
 private:
 

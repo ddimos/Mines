@@ -23,11 +23,6 @@ void InfoPanel::updateBombsLeftText(int _newNumber)
     m_bombsNumText.setString("Bombs Left\n" + std::to_string(_newNumber));
 }
 
-void InfoPanel::OnTextEntered(const std::string& _text)
-{
-    m_enteredText.setString(_text);
-}
-
 void InfoPanel::OnInit(const sf::Font& _font)
 {
     m_text.setFont(_font);
@@ -35,9 +30,9 @@ void InfoPanel::OnInit(const sf::Font& _font)
     m_enteredText.setFont(_font);
 }
 
-void InfoPanel::OnGameInit()
+void InfoPanel::OnTextEntered(const std::string& _text)
 {
-    m_text.setString("Welcome\n\nStart - B\n");
+    m_enteredText.setString(_text);
 }
 
 void InfoPanel::OnFlagSet()
@@ -48,6 +43,21 @@ void InfoPanel::OnFlagSet()
 void InfoPanel::OnFlagUnset()
 {
     updateBombsLeftText(m_bombsLeft + 1);
+}
+
+void InfoPanel::OnEnterInit()
+{
+    m_text.setString("Welcome\n\nStart - B\n\nOr start entering \nthe address \nto connect");
+}
+
+void InfoPanel::OnEnterLobby(bool _isMaster)
+{
+    sf::String text = _isMaster
+                ? "Wait others\n\nStart - B\n"
+                : "Wait others\n\nThe host\nwill start\n";
+ 
+    m_text.setString(text);
+    m_enteredText.setString("");
 }
 
 void InfoPanel::OnGameStart(int _bombsNum)

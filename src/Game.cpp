@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Utils.h"
 #include "Log.h"
+#include "Network.h"
 
 Game* Game::ms_game = nullptr;
 std::array<bool, sf::Keyboard::KeyCount> Game::ms_keysState;
@@ -9,7 +10,6 @@ Game::Game(sf::RenderWindow* _window)
 :
     m_window(_window)
 {
-    m_seed = time(NULL);
 
     std::fill(ms_keysState.begin(), ms_keysState.end(), false);
 
@@ -77,8 +77,36 @@ void Game::loadResources()
 
 void Game::initGame()
 {
+    if (m_isMasterSession)
+        m_seed = time(NULL);
+    WorldPosition worldSize = {CELL_COUNT, CELL_COUNT};
+    LOG("Create a game world. Seed: " + tstr(m_seed) + " X: " + tstr(worldSize.x) + " Y: " + tstr(worldSize.y) + " Bombs: " + tstr(BOMBS_COUNT));
     srand(m_seed);
-    m_gameWorld.CreateWorld({CELL_COUNT, CELL_COUNT}, BOMBS_COUNT);
+    m_gameWorld.CreateWorld(worldSize, BOMBS_COUNT);
+}
+
+void Game::spawnCharacters()
+{
+    if (!m_isMasterSession)
+        return;
+
+    unsigned id = m_gameWorld.GenerateId();
+    m_gameWorld.SpawnCharacter(true, id);
+    // sendSpawnRequest()
+    // for(number of connected peers)
+    unsigned id2 = m_gameWorld.GenerateId();
+    m_gameWorld.SpawnCharacter(false, id2);
+
+    sf::Packet packet;
+    packet << static_cast<sf::Uint16>(NetworkPacketType::CREATE_CHARACTER);
+    packet << false;
+    packet << id;
+    packet << true; // a master for this spesific peer
+    packet << id2;
+    // Position
+    // Send to all peers
+    Network::Get().Send(packet, m_otherPeers);
+
 }
 
 void Game::resetGame()
@@ -93,12 +121,16 @@ void Game::onStateEnter(GameState _newState)
     {
     case GameState::INIT:
         // m_wantsToChangeState = true;
-        m_infoPanel.OnGameInit();
+        m_infoPanel.OnEnterInit();
         break;
-    case GameState::GAME_INIT:
+    case GameState::LOBBY:
+        initGame();
+        m_infoPanel.OnEnterLobby(m_isMasterSession );
         break;
     case GameState::GAME:
-        initGame();
+        if (m_isMasterSession)
+            spawnCharacters();
+        
         m_infoPanel.OnGameStart(BOMBS_COUNT);
         break;
     case GameState::FINISH:
@@ -119,7 +151,7 @@ void Game::onStateExit(GameState _oldState)
     {
     case GameState::INIT:
     case GameState::GAME:
-    case GameState::GAME_INIT:
+    case GameState::LOBBY:
         break;
     case GameState::FINISH:
         resetGame();
@@ -143,16 +175,16 @@ void Game::updateState()
         newState = GameState::INIT;
         break;
     case GameState::INIT:
-        newState = GameState::GAME_INIT;
+        newState = GameState::LOBBY;
         break;
-    case GameState::GAME_INIT:
+    case GameState::LOBBY:
         newState = GameState::GAME;
         break;
     case GameState::GAME:
         newState = GameState::FINISH;
         break;
     case GameState::FINISH:
-        newState = GameState::GAME_INIT; // if wants to restart
+        newState = GameState::LOBBY; // ?INIT // if wants to restart
         break;
     default:
         break;
@@ -187,25 +219,25 @@ void Game::OnGameEnded(bool _isVictory)
 
 void Game::OnStartButtonPressed()
 {
-    //m_wantsToChangeState = true;
     size_t index = m_enteredText.find(":");
     if (index == std::string::npos)
     {
-        LOG_ERROR("Entered a bad address: " + m_enteredText);
+        LOG("No entered text. Assume to be a master");
         return;
     }
 
-    // m_isMasterSession = false;
+    m_isMasterSession = false;
 
-    // m_address = sf::IpAddress(m_enteredText.substr(0, index));
-    // m_port = std::stoi(m_enteredText.substr(index+1));
+    NetworkAddress address;
+    address.address = sf::IpAddress(m_enteredText.substr(0, index));
+    address.port = std::stoi(m_enteredText.substr(index+1));
+    m_otherPeers = address;
 
-    // sf::Packet packet;
-    // NetworkPacketType type = NetworkPacketType::CONNECT;
-    // packet << static_cast<sf::Uint16>(type);
+    sf::Packet packet;
+    NetworkPacketType type = NetworkPacketType::JOIN_REQUEST;
+    packet << static_cast<sf::Uint16>(type);
 
-    // LOG("Type " + tstr(static_cast<sf::Uint16>(type)));
-    // Send(packet, m_address, m_port);
+    Network::Get().Send(packet, address);
 }
 
 void Game::OnTextEntered(sf::Uint32 _char)
@@ -226,66 +258,73 @@ void Game::OnTextEntered(sf::Uint32 _char)
 
 void Game::Update(float _dt)
 {
-    // while (true)
-    // {
-    //     sf::Packet packet;
-    //     sf::IpAddress sender;
-    //     unsigned short port;
-    //     const sf::Socket::Status status = m_localSocket.receive(packet, sender, port);
+    while (true)
+    {
+        NetEvent event;
+        if (!Network::Get().PollEvents(event))
+            break;
 
-    //     if (status == sf::Socket::Status::NotReady)
-    //     {
-    //         break;
-    //     }
-    //     else if(status == sf::Socket::Status::Done)
-    //     {
-    //         LOG("Received from " + sender.toString() + " on port " + tstr(port) );
-    //         sf::Uint16 type1;
-    //         packet >> type1;
-    //         NetworkPacketType type = static_cast<NetworkPacketType>(type1);
-    //         if (type == NetworkPacketType::CONNECT)
-    //         {
-    //             m_address = sender;
-    //             m_port = port;
+        switch (event.type)
+        {
+        case NetEvent::Type::ON_CONNECT:    // TODO: implement
+        case NetEvent::Type::ON_DISCONNECT:
+            break;
+        case NetEvent::Type::ON_RECEIVE:
+        {
+            sf::Uint16 type1;
+            event.packet >> type1;
+            NetworkPacketType type = static_cast<NetworkPacketType>(type1);   
+            if (type == NetworkPacketType::JOIN_REQUEST)
+            {
+                LOG("JOIN_REQUEST");
+                m_otherPeers = event.sender;
+                // Send the accept only if we are in the lobby state
+                sf::Packet packet;
+                NetworkPacketType type = NetworkPacketType::JOIN_ACCEPT;
+                packet << static_cast<sf::Uint16>(type);
+                packet << m_seed;
 
-    //             sf::Packet packet;
-    //             NetworkPacketType type = NetworkPacketType::CREATE_GAME;
-    //             packet << static_cast<sf::Uint16>(type);
-    //             packet << m_seed;
-    //             Send(packet, m_address, m_port);
-    //             m_wantsToChangeState = true;
-    //         }
-    //         else if (type == NetworkPacketType::CREATE_GAME)
-    //         {
-    //             packet >> m_seed;
-    //             LOG("Type " + tstr(type1) + " seed: " + tstr(m_seed));
-    //             m_wantsToChangeState = true;
+                Network::Get().Send(packet, event.sender);
+            }
+            else if (type == NetworkPacketType::JOIN_ACCEPT)
+            {
+                LOG("JOIN_ACCEPT");
 
-    //         }
-    //         else if (type == NetworkPacketType::CREATE_CHARACTER)
-    //         {
-    //             m_gameWorld.OnSpawnCharacterPacketReceived(packet);
-    //         }
-    //         else if (type == NetworkPacketType::REPLICATE_CHARACTER_POS)
-    //         {
-    //             m_gameWorld.OnReplicateCharacterPacketReceived(packet);
-    //         }
-    //         else if (type == NetworkPacketType::REPLICATE_CHARACTER_UNCOVER)
-    //         {
-    //             m_gameWorld.OnReplicateUncoverCellPacketReceived(packet);
-    //         }
-    //         else if (type == NetworkPacketType::REPLICATE_CHARACTER_TOGGLE)
-    //         {
-    //             m_gameWorld.OnReplicateToggleFlagCellPacketReceived(packet);
-    //         }
-    //     }
-    //     else
-    //     {
-    //         LOG_ERROR("The status of the socket: " + tstr(status));
-    //         break;
-    //     }       
+                event.packet >> m_seed;
+                m_wantsToChangeState = true;
+            }
+            else if (type == NetworkPacketType::CREATE_CHARACTER)
+            {
+                LOG("CREATE_CHARACTER");
+                while (!event.packet.endOfPacket())
+                {
+                    bool isMaster;
+                    event.packet >> isMaster;
+                    unsigned id;
+                    event.packet >> id;
+                    m_gameWorld.SpawnCharacter(isMaster, id);
+                }
+                
+                m_wantsToChangeState = true;
+            }
+            else if (type == NetworkPacketType::REPLICATE_CHARACTER_POS)
+            {
+                m_gameWorld.OnReplicateCharacterPacketReceived(event.packet);
+            }
+            else if (type == NetworkPacketType::REPLICATE_CHARACTER_UNCOVER)
+            {
+                m_gameWorld.OnReplicateUncoverCellPacketReceived(event.packet);
+            }
+            else if (type == NetworkPacketType::REPLICATE_CHARACTER_TOGGLE)
+            {
+                m_gameWorld.OnReplicateToggleFlagCellPacketReceived(event.packet);
+            }
 
-    // }
+            break;
+        }
+        }   
+        
+    }
 
     updateState();
 
@@ -299,11 +338,17 @@ void Game::Update(float _dt)
         if (isKeyPressed(sf::Keyboard::B))
         {
             OnStartButtonPressed();
+            if (m_isMasterSession)
+                m_wantsToChangeState = true;            
         }
     }
-    else if (m_currentState == GameState::GAME_INIT)
+    else if (m_currentState == GameState::LOBBY)
     {
-        m_wantsToChangeState = true;
+        if (isKeyPressed(sf::Keyboard::B))
+        {
+            if (m_isMasterSession)
+                m_wantsToChangeState = true;            
+        }
     }
     else if (m_currentState == GameState::GAME)
     {
@@ -316,8 +361,8 @@ void Game::Update(float _dt)
             m_wantsToChangeState = true;
         }
 
-        if (isKeyPressed(sf::Keyboard::S))
-            m_gameWorld.SpawnMasterCharacter();
+        // if (isKeyPressed(sf::Keyboard::S))
+        //     m_gameWorld.SpawnMasterCharacter();
     }
     else if (m_currentState == GameState::FINISH)
     {
