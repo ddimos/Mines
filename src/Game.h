@@ -7,8 +7,6 @@
 #include "GameWorld.h"
 #include "NetworkPacketType.h"
 
-#include <SFML/Network.hpp>
-
 namespace sf
 {
     class RenderWindow;
@@ -49,9 +47,6 @@ public:
     // Resources
     const sf::Font& GetFont() const { return m_font; }
 
-    void Send(sf::Packet _packet, sf::IpAddress _address, unsigned short _port);
-    void Send(sf::Packet _packet); // Brodcast
-
 private:
     sf::Font m_font;
 
@@ -65,10 +60,7 @@ private:
     void onStateExit(GameState _oldState);
     void updateState();
 
-    // Network
-    void CreateHost();
-    
-    sf::UdpSocket m_localSocket;    
+ 
 
     static Game* ms_game;
     sf::RenderWindow* m_window = nullptr;
@@ -81,15 +73,12 @@ private:
     std::string m_enteredText = "192.168.1.11";
 
     bool m_isGameEnded = false;
+    
+    unsigned m_seed = 0;
 
     // State machine
     GameState m_currentState = GameState::None;
     bool m_wantsToChangeState = false;
-
-    bool m_isMasterSession = true; // A master creates a game, all who connects aren't
-    sf::IpAddress m_address = {};
-    unsigned short m_port = 0;
-    unsigned m_seed = 0;
 
 public:
     // Keybord

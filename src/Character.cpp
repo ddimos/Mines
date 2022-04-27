@@ -135,7 +135,7 @@ void Character::replicatePos()
     packet << (sf::Int32)m_position.x;
     packet << (sf::Int32)m_position.y;
 
-    Game::Get().Send(packet);
+   // Game::Get().Send(packet);
 }
 
 void Character::replicateUncoverCell()
@@ -146,7 +146,7 @@ void Character::replicateUncoverCell()
     packet << (sf::Int32)m_position.x;
     packet << (sf::Int32)m_position.y;
 
-    Game::Get().Send(packet);
+  //  Game::Get().Send(packet);
 }
 
 void Character::replicateToggleFlagCell()
@@ -157,7 +157,7 @@ void Character::replicateToggleFlagCell()
     packet << (sf::Int32)m_position.x;
     packet << (sf::Int32)m_position.y;
 
-    Game::Get().Send(packet);
+  //  Game::Get().Send(packet);
 }
 
 void Character::OnReplicateCharacterPacketReceived(sf::Packet& _packet)

@@ -36,7 +36,7 @@ void GameWorld::SpawnMasterCharacter()
     packet << static_cast<sf::Uint16>(NetworkPacketType::CREATE_CHARACTER);
     packet << id;
     // Position
-    Game::Get().Send(packet);
+ //   Game::Get().Send(packet);
 }
 
 void GameWorld::spawnCharacter(bool _spawnMaster, unsigned _id)

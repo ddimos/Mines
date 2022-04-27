@@ -1,6 +1,7 @@
 #include "App.h"
 #include "Log.h"
 #include "Game.h"
+#include "Network.h"
 
 #include <SFML/Graphics.hpp>
 
@@ -16,6 +17,7 @@ bool Application::StartUp(sf::RenderWindow* window)
         LOG_ERROR("window is nullptr");
         return false;
     }
+    Network::StartUp();
     Game::StartUp(window);
 
     return true;
@@ -46,6 +48,7 @@ void Application::MainLoop()
 
         while (accumulator >= DT)
         {
+            Network::Get().Update(DT);
             Game::Get().Update(DT);
             accumulator -= DT;
         }
@@ -64,5 +67,7 @@ bool Application::ShutDown()
     m_window = nullptr;
 
     Game::ShutDown();
+    Network::ShutDown();
+
     return true;
 }

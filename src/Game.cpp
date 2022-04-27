@@ -23,8 +23,6 @@ Game::Game(sf::RenderWindow* _window)
     m_gameWorld.CreateWorld({35, 35}, 1);
 
     m_wantsToChangeState = true;
-    
-    CreateHost();
 }
 
 Game::~Game()
@@ -96,6 +94,8 @@ void Game::onStateEnter(GameState _newState)
     case GameState::INIT:
         // m_wantsToChangeState = true;
         m_infoPanel.OnGameInit();
+        break;
+    case GameState::GAME_INIT:
         break;
     case GameState::GAME:
         initGame();
@@ -195,17 +195,17 @@ void Game::OnStartButtonPressed()
         return;
     }
 
-    m_isMasterSession = false;
+    // m_isMasterSession = false;
 
-    m_address = sf::IpAddress(m_enteredText.substr(0, index));
-    m_port = std::stoi(m_enteredText.substr(index+1));
+    // m_address = sf::IpAddress(m_enteredText.substr(0, index));
+    // m_port = std::stoi(m_enteredText.substr(index+1));
 
-    sf::Packet packet;
-    NetworkPacketType type = NetworkPacketType::CONNECT;
-    packet << static_cast<sf::Uint16>(type);
+    // sf::Packet packet;
+    // NetworkPacketType type = NetworkPacketType::CONNECT;
+    // packet << static_cast<sf::Uint16>(type);
 
-    LOG("Type " + tstr(static_cast<sf::Uint16>(type)));
-    Send(packet, m_address, m_port);
+    // LOG("Type " + tstr(static_cast<sf::Uint16>(type)));
+    // Send(packet, m_address, m_port);
 }
 
 void Game::OnTextEntered(sf::Uint32 _char)
@@ -226,66 +226,66 @@ void Game::OnTextEntered(sf::Uint32 _char)
 
 void Game::Update(float _dt)
 {
-    while (true)
-    {
-        sf::Packet packet;
-        sf::IpAddress sender;
-        unsigned short port;
-        const sf::Socket::Status status = m_localSocket.receive(packet, sender, port);
+    // while (true)
+    // {
+    //     sf::Packet packet;
+    //     sf::IpAddress sender;
+    //     unsigned short port;
+    //     const sf::Socket::Status status = m_localSocket.receive(packet, sender, port);
 
-        if (status == sf::Socket::Status::NotReady)
-        {
-            break;
-        }
-        else if(status == sf::Socket::Status::Done)
-        {
-            LOG("Received from " + sender.toString() + " on port " + tstr(port) );
-            sf::Uint16 type1;
-            packet >> type1;
-            NetworkPacketType type = static_cast<NetworkPacketType>(type1);
-            if (type == NetworkPacketType::CONNECT)
-            {
-                m_address = sender;
-                m_port = port;
+    //     if (status == sf::Socket::Status::NotReady)
+    //     {
+    //         break;
+    //     }
+    //     else if(status == sf::Socket::Status::Done)
+    //     {
+    //         LOG("Received from " + sender.toString() + " on port " + tstr(port) );
+    //         sf::Uint16 type1;
+    //         packet >> type1;
+    //         NetworkPacketType type = static_cast<NetworkPacketType>(type1);
+    //         if (type == NetworkPacketType::CONNECT)
+    //         {
+    //             m_address = sender;
+    //             m_port = port;
 
-                sf::Packet packet;
-                NetworkPacketType type = NetworkPacketType::CREATE_GAME;
-                packet << static_cast<sf::Uint16>(type);
-                packet << m_seed;
-                Send(packet, m_address, m_port);
-                m_wantsToChangeState = true;
-            }
-            else if (type == NetworkPacketType::CREATE_GAME)
-            {
-                packet >> m_seed;
-                LOG("Type " + tstr(type1) + " seed: " + tstr(m_seed));
-                m_wantsToChangeState = true;
+    //             sf::Packet packet;
+    //             NetworkPacketType type = NetworkPacketType::CREATE_GAME;
+    //             packet << static_cast<sf::Uint16>(type);
+    //             packet << m_seed;
+    //             Send(packet, m_address, m_port);
+    //             m_wantsToChangeState = true;
+    //         }
+    //         else if (type == NetworkPacketType::CREATE_GAME)
+    //         {
+    //             packet >> m_seed;
+    //             LOG("Type " + tstr(type1) + " seed: " + tstr(m_seed));
+    //             m_wantsToChangeState = true;
 
-            }
-            else if (type == NetworkPacketType::CREATE_CHARACTER)
-            {
-                m_gameWorld.OnSpawnCharacterPacketReceived(packet);
-            }
-            else if (type == NetworkPacketType::REPLICATE_CHARACTER_POS)
-            {
-                m_gameWorld.OnReplicateCharacterPacketReceived(packet);
-            }
-            else if (type == NetworkPacketType::REPLICATE_CHARACTER_UNCOVER)
-            {
-                m_gameWorld.OnReplicateUncoverCellPacketReceived(packet);
-            }
-            else if (type == NetworkPacketType::REPLICATE_CHARACTER_TOGGLE)
-            {
-                m_gameWorld.OnReplicateToggleFlagCellPacketReceived(packet);
-            }
-        }
-        else
-        {
-            LOG_ERROR("The status of the socket: " + tstr(status));
-            break;
-        }       
+    //         }
+    //         else if (type == NetworkPacketType::CREATE_CHARACTER)
+    //         {
+    //             m_gameWorld.OnSpawnCharacterPacketReceived(packet);
+    //         }
+    //         else if (type == NetworkPacketType::REPLICATE_CHARACTER_POS)
+    //         {
+    //             m_gameWorld.OnReplicateCharacterPacketReceived(packet);
+    //         }
+    //         else if (type == NetworkPacketType::REPLICATE_CHARACTER_UNCOVER)
+    //         {
+    //             m_gameWorld.OnReplicateUncoverCellPacketReceived(packet);
+    //         }
+    //         else if (type == NetworkPacketType::REPLICATE_CHARACTER_TOGGLE)
+    //         {
+    //             m_gameWorld.OnReplicateToggleFlagCellPacketReceived(packet);
+    //         }
+    //     }
+    //     else
+    //     {
+    //         LOG_ERROR("The status of the socket: " + tstr(status));
+    //         break;
+    //     }       
 
-    }
+    // }
 
     updateState();
 
@@ -338,28 +338,3 @@ void Game::Draw(sf::RenderWindow* _window)
     m_infoPanel.Render(*_window);
 }
 
-void Game::CreateHost()
-{
-    if (m_localSocket.bind(sf::Socket::AnyPort) != sf::Socket::Done)
-    {
-        LOG_ERROR("Couldn't bind a port");
-        return;
-    }
-
-        m_localSocket.setBlocking(false);
-
-    LOG("\n\tHost created on a port:\t" + tstr(m_localSocket.getLocalPort()) 
-     + "\n\tLocal address:\t\t" +  sf::IpAddress::getLocalAddress().toString()
-     + "\n\tGlobal:\t\t\t" + sf::IpAddress::getPublicAddress().toString());
-
-}
-
-void Game::Send(sf::Packet _packet, sf::IpAddress _address, unsigned short _port)
-{
-    m_localSocket.send(_packet, _address, _port);
-}
-
-void Game::Send(sf::Packet _packet)
-{
-    m_localSocket.send(_packet, m_address, m_port);
-}
