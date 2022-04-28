@@ -21,6 +21,7 @@ void Camera::OnInit(WorldPosition _worldSize)
     ? m_worldSize.x / 2 : size.x / 2;
     m_initialTargetedPos.y = (m_worldSizeInWindowsCoord.y >= m_sizeInWindowsCoord.y) 
     ? m_worldSize.y / 2 : size.y / 2;
+    m_posInWindowsCoord = m_initialTargetedPos.getWindowPosition();
 }
 
 void Camera::Update(float _dt)

@@ -25,6 +25,11 @@ void GameWorld::CreateWorld(WorldPosition _worldSize, size_t _bombsNumber)
     m_characters.reserve(5);
 }
 
+void GameWorld::DestroyWorld()
+{
+    m_characters.clear();
+}
+
 void GameWorld::SpawnCharacter(bool _spawnMaster, unsigned _id)
 {
     m_characters.emplace_back(Character(_spawnMaster, _id));

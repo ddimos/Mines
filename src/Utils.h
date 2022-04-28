@@ -84,4 +84,5 @@ inline bool approximatelyEqual(float _a, float _b)
     return fabs(_a - _b) <= std::max(fabs(_a), fabs(_b)) * EPSILON;
 }
 
+void provideSeed(unsigned _seed);
 int getRand();

@@ -16,6 +16,7 @@ public:
 
     void CreateWorld(WorldPosition _worldSize, size_t _bombsNumber);
     void SpawnCharacter(bool _spawnMaster, unsigned _id);
+    void DestroyWorld();
 
     unsigned GenerateId();
     

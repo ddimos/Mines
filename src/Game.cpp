@@ -81,7 +81,7 @@ void Game::initGame()
         m_seed = time(NULL);
     WorldPosition worldSize = {CELL_COUNT, CELL_COUNT};
     LOG("Create a game world. Seed: " + tstr(m_seed) + " X: " + tstr(worldSize.x) + " Y: " + tstr(worldSize.y) + " Bombs: " + tstr(BOMBS_COUNT));
-    srand(m_seed);
+    provideSeed(m_seed);
     m_gameWorld.CreateWorld(worldSize, BOMBS_COUNT);
 }
 
@@ -92,7 +92,7 @@ void Game::spawnCharacters()
 
     unsigned id = m_gameWorld.GenerateId();
     m_gameWorld.SpawnCharacter(true, id);
-    // sendSpawnRequest()
+
     // for(number of connected peers)
     unsigned id2 = m_gameWorld.GenerateId();
     m_gameWorld.SpawnCharacter(false, id2);
@@ -111,7 +111,7 @@ void Game::spawnCharacters()
 
 void Game::resetGame()
 {
-    m_gameWorld.CreateWorld({CELL_COUNT, CELL_COUNT}, BOMBS_COUNT);
+    m_gameWorld.DestroyWorld();
     m_isGameEnded = false;
 }
  
@@ -120,8 +120,9 @@ void Game::onStateEnter(GameState _newState)
     switch (_newState)
     {
     case GameState::INIT:
-        // m_wantsToChangeState = true;
+        m_isMasterSession = true; // By default the value is true
         m_infoPanel.OnEnterInit();
+        m_infoPanel.OnTextEntered(m_enteredText);
         break;
     case GameState::LOBBY:
         initGame();
@@ -135,8 +136,6 @@ void Game::onStateEnter(GameState _newState)
         break;
     case GameState::FINISH:
         m_infoPanel.OnGameFinish();
-        // Draw menu
-        // m_wantsToChangeState = true;
         break;
     case GameState::None:
         break;
@@ -184,7 +183,7 @@ void Game::updateState()
         newState = GameState::FINISH;
         break;
     case GameState::FINISH:
-        newState = GameState::LOBBY; // ?INIT // if wants to restart
+        newState = GameState::INIT; // ?INIT // if wants to restart
         break;
     default:
         break;
@@ -244,7 +243,7 @@ void Game::OnTextEntered(sf::Uint32 _char)
 {
     if (m_currentState == GameState::INIT)
     {
-        if (_char < 46 || _char > 58) // Only numbers and dots
+        if ((_char < 46 || _char > 58) && _char != 8) // Only numbers and dots
             return;
         
         if (_char == 8) // Backspace
