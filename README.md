@@ -1,2 +1,2 @@
 # Mines
-A SFML copy of minesweeper
+A SFML multiplayer copy of minesweeper
