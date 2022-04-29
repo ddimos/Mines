@@ -25,6 +25,7 @@ public:
 
     Cell& getCell(int _x, int _y);
     Cell& getCell(WorldPosition _pos);
+    const std::vector<Character>& GetCharacters() const { return m_characters; }
 
     void OnPlayerUncoverCell(WorldPosition _pos);
     void OnPlayerToggleFlagCell(WorldPosition _pos);

@@ -130,7 +130,7 @@ void Character::replicatePos()
     if (m_prevPosition == m_position)
         return;
 
-    sf::Packet packet;
+    sf::Packet packet = Network::Get().CreatePacket();
     packet << static_cast<sf::Uint16>(NetworkPacketType::REPLICATE_CHARACTER_POS);
     packet << m_id;
     packet << (sf::Int32)m_position.x;
@@ -141,7 +141,7 @@ void Character::replicatePos()
 
 void Character::replicateUncoverCell()
 {
-    sf::Packet packet;
+    sf::Packet packet = Network::Get().CreatePacket();
     packet << static_cast<sf::Uint16>(NetworkPacketType::REPLICATE_CHARACTER_UNCOVER);
     packet << m_id;
     packet << (sf::Int32)m_position.x;
@@ -152,7 +152,7 @@ void Character::replicateUncoverCell()
 
 void Character::replicateToggleFlagCell()
 {
-    sf::Packet packet;
+    sf::Packet packet = Network::Get().CreatePacket();
     packet << static_cast<sf::Uint16>(NetworkPacketType::REPLICATE_CHARACTER_TOGGLE);
     packet << m_id;
     packet << (sf::Int32)m_position.x;

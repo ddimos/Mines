@@ -73,13 +73,11 @@ private:
     sf::View m_infoView;
 
     std::string m_enteredText = "192.168.1.11";
-
     bool m_isGameEnded = false;
-    
     unsigned m_seed = 0;
 
     bool m_isMasterSession = true; // Become a replica when sends a join request
-    NetworkAddress m_otherPeers;
+
     // State machine
     GameState m_currentState = GameState::None;
     bool m_wantsToChangeState = false;

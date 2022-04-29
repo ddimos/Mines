@@ -219,6 +219,7 @@ unsigned GameWorld::GenerateId()
 
 void GameWorld::OnSpawnCharacterPacketReceived(sf::Packet& _packet)
 {
+    (void)_packet;
     // unsigned id;
     // _packet >> id;
     // spawnCharacter(false, id);

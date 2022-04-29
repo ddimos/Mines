@@ -93,20 +93,32 @@ void Game::spawnCharacters()
     unsigned id = m_gameWorld.GenerateId();
     m_gameWorld.SpawnCharacter(true, id);
 
-    // for(number of connected peers)
-    unsigned id2 = m_gameWorld.GenerateId();
-    m_gameWorld.SpawnCharacter(false, id2);
+    for (const Peer& peer : Network::Get().GetPeers())
+    {
+        (void)peer;
+        id = m_gameWorld.GenerateId();
+        m_gameWorld.SpawnCharacter(false, id);   
+    }
 
-    sf::Packet packet;
-    packet << static_cast<sf::Uint16>(NetworkPacketType::CREATE_CHARACTER);
-    packet << false;
-    packet << id;
-    packet << true; // a master for this spesific peer
-    packet << id2;
-    // Position
-    // Send to all peers
-    Network::Get().Send(packet, m_otherPeers);
+    size_t peerToBeMaster = 0;
+    for (const Peer& peer : Network::Get().GetPeers())
+    {
+        sf::Packet packet = Network::Get().CreatePacket();
+        packet << static_cast<sf::Uint16>(NetworkPacketType::CREATE_CHARACTER);
+        
+        size_t peersNumber = Network::Get().GetPeers().size();
+        for(const Character& ch : m_gameWorld.GetCharacters())
+        {
+            bool isThisPeerMaster = !ch.IsMaster() && Network::Get().GetPeers().size() - peersNumber == peerToBeMaster;
+            packet << isThisPeerMaster;
+            packet << ch.GetId();
+            if (!ch.IsMaster())
+                --peersNumber;
+        }
 
+        Network::Get().Send(packet, peer.address);
+        ++peerToBeMaster;
+    }
 }
 
 void Game::resetGame()
@@ -230,13 +242,8 @@ void Game::OnStartButtonPressed()
     NetworkAddress address;
     address.address = sf::IpAddress(m_enteredText.substr(0, index));
     address.port = std::stoi(m_enteredText.substr(index+1));
-    m_otherPeers = address;
 
-    sf::Packet packet;
-    NetworkPacketType type = NetworkPacketType::JOIN_REQUEST;
-    packet << static_cast<sf::Uint16>(type);
-
-    Network::Get().Send(packet, address);
+    Network::Get().Connect(address);
 }
 
 void Game::OnTextEntered(sf::Uint32 _char)
@@ -265,29 +272,39 @@ void Game::Update(float _dt)
 
         switch (event.type)
         {
-        case NetEvent::Type::ON_CONNECT:    // TODO: implement
+        case NetEvent::Type::ON_CONNECT: 
+            LOG("ON_CONNECT");
+            
+            if(m_isMasterSession)
+            {
+                if (m_currentState == GameState::LOBBY)
+                {
+                    sf::Packet packet = Network::Get().CreatePacket();
+                    NetworkPacketType type = NetworkPacketType::CREATE_GAME;
+                    packet << static_cast<sf::Uint16>(type);
+                    packet << m_seed;
+
+                    Network::Get().Send(packet, event.sender);
+                }
+                else
+                {
+                    LOG("Cannot handle connection in this state");
+                    break;
+                }
+            }
+            break;
         case NetEvent::Type::ON_DISCONNECT:
+            LOG("ON_DISCONNECT");
             break;
         case NetEvent::Type::ON_RECEIVE:
         {
             sf::Uint16 type1;
             event.packet >> type1;
             NetworkPacketType type = static_cast<NetworkPacketType>(type1);   
-            if (type == NetworkPacketType::JOIN_REQUEST)
-            {
-                LOG("JOIN_REQUEST");
-                m_otherPeers = event.sender;
-                // Send the accept only if we are in the lobby state
-                sf::Packet packet;
-                NetworkPacketType type = NetworkPacketType::JOIN_ACCEPT;
-                packet << static_cast<sf::Uint16>(type);
-                packet << m_seed;
 
-                Network::Get().Send(packet, event.sender);
-            }
-            else if (type == NetworkPacketType::JOIN_ACCEPT)
+            if (type == NetworkPacketType::CREATE_GAME)
             {
-                LOG("JOIN_ACCEPT");
+                LOG("CREATE_GAME");
 
                 event.packet >> m_seed;
                 m_wantsToChangeState = true;
