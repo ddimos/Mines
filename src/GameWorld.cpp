@@ -28,6 +28,7 @@ void GameWorld::CreateWorld(WorldPosition _worldSize, size_t _bombsNumber)
 void GameWorld::DestroyWorld()
 {
     m_characters.clear();
+    m_mainCharachter = nullptr;
 }
 
 void GameWorld::SpawnCharacter(bool _spawnMaster, unsigned _id)
@@ -101,11 +102,14 @@ void GameWorld::OnPlayerToggleFlagCell(WorldPosition _pos)
 
 void GameWorld::onUncoverCell(WorldPosition _pos)
 {
-    getCell(_pos).OnUncoverCell();
-    m_cellsLeftToUncover--;
+    if (getCell(_pos).IsCovered())
+    {
+        getCell(_pos).OnUncoverCell();
+        m_cellsLeftToUncover--;
 
-    if (m_cellsLeftToUncover <= 0)
-        Game::Get().OnGameEnded(true);
+        if (m_cellsLeftToUncover <= 0)
+            Game::Get().OnGameEnded(true);
+    }
 }
 
 void GameWorld::createCells(WorldPosition _worldSize)
@@ -156,6 +160,14 @@ void GameWorld::generateBombs(size_t _bombsNumber)
 
 void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
 {
+    std::vector<WorldPosition> cellsToUncover;
+    std::function<bool(WorldPosition)> isInArrayToUncover = [&cellsToUncover] (WorldPosition _pos)
+    {
+        return std::find_if(cellsToUncover.begin(), cellsToUncover.end(), 
+                [_pos](WorldPosition _posInArray) { return _pos == _posInArray; }) 
+            != cellsToUncover.end();
+    };
+
     std::function<void(WorldPosition)> checkNeib = [&](WorldPosition _posToCheck)
     {
         if (_radius != InfiniteRadius && (_pos - _posToCheck).getLength() >= _radius)
@@ -163,9 +175,9 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
 
         std::function<void(WorldPosition)> checkAxis = [&](WorldPosition _posToCheckAxis)
         {
-            if (getCell(_posToCheckAxis).IsCovered())
+            if (!isInArrayToUncover(_posToCheckAxis))
             {
-                onUncoverCell(_posToCheckAxis);
+                cellsToUncover.push_back(_posToCheckAxis);
                 if (getCell(_posToCheckAxis).IsEmpty())
                     checkNeib(_posToCheckAxis);
             }
@@ -176,13 +188,13 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
             {
                 WorldPosition left {_posToCheckNum.x - 1, _posToCheckNum.y};
                 if (left.x >= 0)
-                    if (getCell(left).IsNumber() && getCell(left).IsCovered())
-                        onUncoverCell(left);
+                    if (getCell(left).IsNumber() && !isInArrayToUncover(left))
+                        cellsToUncover.push_back(left);
                 
                 WorldPosition right {_posToCheckNum.x + 1, _posToCheckNum.y};
                 if (right.x < m_worldSize.x)
-                    if (getCell(right).IsNumber() && getCell(right).IsCovered())
-                        onUncoverCell(right);
+                    if (getCell(right).IsNumber() && !isInArrayToUncover(right))
+                        cellsToUncover.push_back(right);
             }
         };
 
@@ -210,6 +222,9 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
     };
 
     checkNeib(_pos);
+
+    for (WorldPosition pos : cellsToUncover)
+        onUncoverCell(pos);
 }
 
 unsigned GameWorld::GenerateId()
