@@ -18,6 +18,7 @@ struct NetworkAddress
 {
     sf::IpAddress   address = {};
     unsigned short  port = 0;
+    std::string toString() const { return address.toString()+":"+std::to_string(port); }
 };
 inline bool operator==(const NetworkAddress& _lhs, const NetworkAddress& _rhs)
 {
@@ -38,9 +39,17 @@ struct Peer
         DISCONNECTING,
         DOWN
     };
+    static constexpr float TIME_TO_RETRY_CONNECT_s = 2.5f;
+    static constexpr float HEARTBEAT_TIMEOUT_s = 10.f;
+    static constexpr float HEARTBEAT_s = 1.f;
+    static const int CONNECTION_ATTEMPTS = 10;
 
     NetworkAddress address = {};
+    bool isFirstConnect = false;
     Status status = Status::None;
+    float timeout = TIME_TO_RETRY_CONNECT_s;
+    float hearbeat = HEARTBEAT_s;
+    int attemptsLeft = CONNECTION_ATTEMPTS;
 };
 
 struct NetEvent

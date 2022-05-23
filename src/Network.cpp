@@ -58,13 +58,16 @@ void Network::internalConnect(NetworkAddress _addressToConnect, bool _isFirstCon
     sf::Packet packet;
     packet << static_cast<sf::Int8>(InternalPacketType::INTERNAL_CONNECT_REQUEST);
     packet << _isFirstConnect;
-    m_peers.push_back(Peer{_addressToConnect, Peer::Status::CONNECTING});
+    Peer peer;
+    peer.address = _addressToConnect;
+    peer.isFirstConnect = _isFirstConnect;
+    peer.status = Peer::Status::CONNECTING;
+    m_peers.push_back(peer);
     Send(packet, _addressToConnect);
 }
 
 void Network::Update(float _dt)
 {
-    (void)_dt;
     while (true)
     {
         sf::Packet packet;
@@ -87,10 +90,10 @@ void Network::Update(float _dt)
             {
                 if (it != m_peers.end())
                 {
-                    LOG_ERROR("CONNECT_REQUEST received again from " + sender.address.toString() + ":" + tstr(sender.port));
+                    LOG_ERROR("CONNECT_REQUEST received again from " + sender.toString());
                     break;
                 }
-                LOG("CONNECT_REQUEST received from " + sender.address.toString() + ":" + tstr(sender.port));
+                LOG("CONNECT_REQUEST received from " + sender.toString());
                 
                 bool isFirstConnect;
                 packet >> isFirstConnect;
@@ -108,7 +111,11 @@ void Network::Update(float _dt)
                 
                 Send(packetResp, sender);
 
-                m_peers.push_back(Peer{sender, Peer::Status::UP});
+                Peer peer;
+                peer.address = sender;
+                peer.status = Peer::Status::UP;
+                peer.timeout = Peer::HEARTBEAT_TIMEOUT_s;
+                m_peers.push_back(peer);
                 m_events.push(NetEvent(NetEvent::Type::ON_CONNECT, sender));
                 break;
             }
@@ -116,18 +123,19 @@ void Network::Update(float _dt)
             {
                 if (it == m_peers.end())
                 {
-                    LOG_ERROR("CONNECT_ACCEPT received from " + sender.address.toString() + ":" + tstr(sender.port) + "who we didn't ask");
+                    LOG_ERROR("CONNECT_ACCEPT received from " + sender.toString() + "who we didn't ask");
                     break;
                 }
 
                 if (it->status != Peer::Status::CONNECTING)
                 {
-                    LOG_ERROR("The status of " + sender.address.toString() + ":" + tstr(sender.port) + " isn't CONNECTING");
+                    LOG_ERROR("The status of " + sender.toString() + " isn't CONNECTING");
                     break;
                 }
-                LOG("CONNECT_ACCEPT received from " + sender.address.toString() + ":" + tstr(sender.port));
+                LOG("CONNECT_ACCEPT received from " + sender.toString());
                 it->status = Peer::Status::UP;
-                
+                it->timeout = Peer::HEARTBEAT_TIMEOUT_s;
+
                 while (!packet.endOfPacket())
                 {
                     sf::Uint32 intAddress;
@@ -147,21 +155,43 @@ void Network::Update(float _dt)
                 break;
             }
             case InternalPacketType::INTERNAL_DISCONNECT:
-            case InternalPacketType::INTERNAL_HEARTBEAT:
                 break;
+            case InternalPacketType::INTERNAL_HEARTBEAT:
+            {
+                if (it == m_peers.end())
+                {
+                    LOG_ERROR("Received from " + sender.toString() + " who is not in the list of peers");
+                    break;
+                }
+                else if (it->status == Peer::Status::CONNECTING)
+                {
+                    it->status = Peer::Status::UP;
+                    m_events.push(NetEvent(NetEvent::Type::ON_CONNECT, sender));
+                    LOG("Received a heartbeat from " + sender.toString() + " while waiting for connection accept");
+                }
+                else if (it->status != Peer::Status::UP)
+                {
+                    LOG_ERROR("Received from " + sender.toString() + " who is not UP");
+                    break;
+                }
+                it->timeout = Peer::HEARTBEAT_TIMEOUT_s;
+                LOG("Received a heartbeat from " + sender.toString());
+
+                break;
+            }
             case InternalPacketType::USER_PACKET:
             {
                 if (it == m_peers.end())
                 {
-                    LOG_ERROR("Received from " + sender.address.toString() + ":" + tstr(sender.port) + " who is not in the list of peers");
+                    LOG_ERROR("Received from " + sender.toString() + " who is not in the list of peers");
                     break;
                 }
                 else if (it->status != Peer::Status::UP)
                 {
-                    LOG_ERROR("Received from " + sender.address.toString() + ":" + tstr(sender.port) + " who is not UP");
+                    LOG_ERROR("Received from " + sender.toString() + " who is not UP");
                     break;
                 }
-                LOG("Received from " + sender.address.toString() + ":" + tstr(sender.port));
+                LOG("Received from " + sender.toString());
 
                 m_events.push(NetEvent(NetEvent::Type::ON_RECEIVE, std::move(packet), sender));
                 break;
@@ -175,7 +205,52 @@ void Network::Update(float _dt)
             LOG_ERROR("The status of the socket: " + tstr(status));
             break;
         }       
+    }
 
+    for (Peer& peer : m_peers)
+    {
+        if (peer.status == Peer::Status::CONNECTING)
+        {
+            peer.timeout -= _dt;
+            if (peer.timeout > 0.f)
+                continue;
+
+            --peer.attemptsLeft;
+            if (peer.attemptsLeft < 0)
+            {
+                LOG("No atempts left, disconnect peer " + peer.address.toString());
+                peer.status = Peer::Status::DOWN;
+                continue;
+            }
+            
+            sf::Packet packet;
+            packet << static_cast<sf::Int8>(InternalPacketType::INTERNAL_CONNECT_REQUEST);
+            packet << peer.isFirstConnect;
+            Send(packet, peer.address);
+            peer.timeout = Peer::TIME_TO_RETRY_CONNECT_s;
+            LOG("Send a connect request to " + peer.address.toString());            
+        }
+        else if (peer.status == Peer::Status::UP)
+        {
+            peer.timeout -= _dt;
+            if (peer.timeout <= 0.f)
+            {       
+                LOG("Disconnect peer " + peer.address.toString() + " because didn't receive a heartbeat");
+                peer.status = Peer::Status::DOWN;
+                m_events.push(NetEvent(NetEvent::Type::ON_DISCONNECT, peer.address));
+                continue;
+            }
+            
+            peer.hearbeat -= _dt;
+            if (peer.hearbeat > 0)
+                continue;
+
+            sf::Packet packet;
+            packet << static_cast<sf::Int8>(InternalPacketType::INTERNAL_HEARTBEAT);
+            Send(packet, peer.address);
+            LOG("Send a heartbeat to " + peer.address.toString());
+            peer.hearbeat = Peer::HEARTBEAT_s;
+        }
     }
 }
 
