@@ -3,6 +3,9 @@
 #include "Log.h"
 #include <algorithm>
 
+
+#if 0
+
 Network* Network::ms_network = nullptr;
 
 Network::Network()
@@ -296,3 +299,5 @@ void Network::DisconnectMyself()
     m_peers.clear();
     // ? Send ON_DISCONNECT ?
 }
+
+#endif

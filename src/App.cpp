@@ -1,7 +1,7 @@
 #include "App.h"
 #include "Log.h"
 #include "Game.h"
-#include "Network.h"
+#include "Network/Network.h"
 
 #include <SFML/Graphics.hpp>
 

@@ -1,7 +1,8 @@
 #include "Game.h"
 #include "Utils.h"
 #include "Log.h"
-#include "Network.h"
+#include "Network/Network.h"
+#include "NetworkMessageType.h"
 
 Game* Game::ms_game = nullptr;
 std::array<bool, sf::Keyboard::KeyCount> Game::ms_keysState;
@@ -93,32 +94,32 @@ void Game::spawnCharacters()
     unsigned id = m_gameWorld.GenerateId();
     m_gameWorld.SpawnCharacter(true, id);
 
-    for (const Peer& peer : Network::Get().GetPeers())
-    {
-        (void)peer;
-        id = m_gameWorld.GenerateId();
-        m_gameWorld.SpawnCharacter(false, id);   
-    }
+ //   for (const Peer& peer : Network::Get().GetPeers())
+    // {
+    //     (void)peer;
+    //     id = m_gameWorld.GenerateId();
+    //     m_gameWorld.SpawnCharacter(false, id);   
+    // }
 
-    size_t peerToBeMaster = 0;
-    for (const Peer& peer : Network::Get().GetPeers())
-    {
-        sf::Packet packet = Network::Get().CreatePacket();
-        packet << static_cast<sf::Uint16>(NetworkPacketType::CREATE_CHARACTER);
+    // size_t peerToBeMaster = 0;
+    // for (const Peer& peer : Network::Get().GetPeers())
+    // {
+    //     sf::Packet packet = Network::Get().CreatePacket();
+    //     packet << static_cast<sf::Uint16>(NetworkPacketType::CREATE_CHARACTER);
         
-        size_t peersNumber = Network::Get().GetPeers().size();
-        for(const Character& ch : m_gameWorld.GetCharacters())
-        {
-            bool isThisPeerMaster = !ch.IsMaster() && Network::Get().GetPeers().size() - peersNumber == peerToBeMaster;
-            packet << isThisPeerMaster;
-            packet << ch.GetId();
-            if (!ch.IsMaster())
-                --peersNumber;
-        }
+    //     size_t peersNumber = Network::Get().GetPeers().size();
+    //     for(const Character& ch : m_gameWorld.GetCharacters())
+    //     {
+    //         bool isThisPeerMaster = !ch.IsMaster() && Network::Get().GetPeers().size() - peersNumber == peerToBeMaster;
+    //         packet << isThisPeerMaster;
+    //         packet << ch.GetId();
+    //         if (!ch.IsMaster())
+    //             --peersNumber;
+    //     }
 
-        Network::Get().Send(packet, peer.address);
-        ++peerToBeMaster;
-    }
+    //     Network::Get().Send(packet, peer.address);
+    //     ++peerToBeMaster;
+    // }
 }
 
 void Game::resetGame()
@@ -266,25 +267,30 @@ void Game::Update(float _dt)
 {
     while (true)
     {
-        NetEvent event;
+        NetworkEvent event;
         if (!Network::Get().PollEvents(event))
             break;
 
         switch (event.type)
         {
-        case NetEvent::Type::ON_CONNECT: 
+        case NetworkEvent::Type::ON_CONNECT: 
             LOG("ON_CONNECT");
             
+            // send all knows peers
+
             if(m_isMasterSession)
             {
                 if (m_currentState == GameState::LOBBY)
                 {
-                    sf::Packet packet = Network::Get().CreatePacket();
-                    NetworkPacketType type = NetworkPacketType::CREATE_GAME;
-                    packet << static_cast<sf::Uint16>(type);
-                    packet << m_seed;
+                    NetworkMessage message(event.sender, true);
+                    NetworkMessageType type = NetworkMessageType::CREATE_GAME;
+                    message.Write(static_cast<sf::Uint16>(type));
+                    message.Write(static_cast<sf::Uint32>(m_seed));
+                    // sf::Packet packet = Network::Get().CreatePacket();
+                    // packet << static_cast<sf::Uint16>(type);
+                    // packet << m_seed;
 
-                    Network::Get().Send(packet, event.sender);
+                    Network::Get().Send(message);
                 }
                 else
                 {
@@ -293,10 +299,10 @@ void Game::Update(float _dt)
                 }
             }
             break;
-        case NetEvent::Type::ON_DISCONNECT:
+        case NetworkEvent::Type::ON_DISCONNECT:
             LOG("ON_DISCONNECT");
             break;
-        case NetEvent::Type::ON_RECEIVE:
+        case NetworkEvent::Type::ON_RECEIVE:
         {
             sf::Uint16 type1;
             event.packet >> type1;

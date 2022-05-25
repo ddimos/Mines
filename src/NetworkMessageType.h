@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/System.hpp>
 
-enum class NetworkPacketType : sf::Uint16 // NetworkMessageType
+enum class NetworkMessageType : sf::Uint16 
 {
     None = 0,
     CREATE_GAME,
