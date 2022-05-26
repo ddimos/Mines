@@ -232,51 +232,51 @@ unsigned GameWorld::GenerateId()
     return m_characters.size() + 1; // TODO: a real bad way to generate ids
 }
 
-void GameWorld::OnSpawnCharacterPacketReceived(sf::Packet& _packet)
+void GameWorld::OnSpawnCharacterMessageReceived(NetworkMessage& _message)
 {
-    (void)_packet;
+    (void)_message;
     // unsigned id;
     // _packet >> id;
     // spawnCharacter(false, id);
 }
 
-void GameWorld::OnReplicateCharacterPacketReceived(sf::Packet& _packet)
+void GameWorld::OnReplicateCharacterMessageReceived(NetworkMessage& _message)
 {
     unsigned id;
-    _packet >> id;
+    _message.Read(id);
     for (Character& charac : m_characters)
     {
         if (charac.GetId() == id)
         {
-            charac.OnReplicateCharacterPacketReceived(_packet);
+            charac.OnReplicateCharacterMessageReceived(_message);
             break;
         }
     }
 }
 
-void GameWorld::OnReplicateUncoverCellPacketReceived(sf::Packet& _packet)
+void GameWorld::OnReplicateUncoverCellMessageReceived(NetworkMessage& _message)
 {
     unsigned id;
-    _packet >> id;
+    _message.Read(id);
     for (Character& charac : m_characters)
     {
         if (charac.GetId() == id)
         {
-            charac.OnReplicateUncoverCellPacketReceived(_packet);
+            charac.OnReplicateUncoverCellMessageReceived(_message);
             break;
         }
     }
 }
 
-void GameWorld::OnReplicateToggleFlagCellPacketReceived(sf::Packet& _packet)
+void GameWorld::OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _message)
 {
     unsigned id;
-    _packet >> id;
+    _message.Read(id);
     for (Character& charac : m_characters)
     {
         if (charac.GetId() == id)
         {
-            charac.OnReplicateToggleFlagCellPacketReceived(_packet);
+            charac.OnReplicateToggleFlagCellMessageReceived(_message);
             break;
         }
     }

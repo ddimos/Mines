@@ -94,32 +94,32 @@ void Game::spawnCharacters()
     unsigned id = m_gameWorld.GenerateId();
     m_gameWorld.SpawnCharacter(true, id);
 
- //   for (const Peer& peer : Network::Get().GetPeers())
-    // {
-    //     (void)peer;
-    //     id = m_gameWorld.GenerateId();
-    //     m_gameWorld.SpawnCharacter(false, id);   
-    // }
+   for (const Peer& peer : Network::Get().GetPeers())
+    {
+        (void)peer;
+        id = m_gameWorld.GenerateId();
+        m_gameWorld.SpawnCharacter(false, id);   
+    }
 
-    // size_t peerToBeMaster = 0;
-    // for (const Peer& peer : Network::Get().GetPeers())
-    // {
-    //     sf::Packet packet = Network::Get().CreatePacket();
-    //     packet << static_cast<sf::Uint16>(NetworkPacketType::CREATE_CHARACTER);
+    size_t peerToBeMaster = 0;
+    for (const Peer& peer : Network::Get().GetPeers())
+    {
+        NetworkMessage message(peer.GetAddress(), true);
+        message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_CHARACTER));
         
-    //     size_t peersNumber = Network::Get().GetPeers().size();
-    //     for(const Character& ch : m_gameWorld.GetCharacters())
-    //     {
-    //         bool isThisPeerMaster = !ch.IsMaster() && Network::Get().GetPeers().size() - peersNumber == peerToBeMaster;
-    //         packet << isThisPeerMaster;
-    //         packet << ch.GetId();
-    //         if (!ch.IsMaster())
-    //             --peersNumber;
-    //     }
+        size_t peersNumber = Network::Get().GetPeers().size();
+        for(const Character& ch : m_gameWorld.GetCharacters())
+        {
+            bool isThisPeerMaster = !ch.IsMaster() && Network::Get().GetPeers().size() - peersNumber == peerToBeMaster;
+            message.Write(isThisPeerMaster);
+            message.Write(ch.GetId());
+            if (!ch.IsMaster())
+                --peersNumber;
+        }
 
-    //     Network::Get().Send(packet, peer.address);
-    //     ++peerToBeMaster;
-    // }
+        Network::Get().Send(message);
+        ++peerToBeMaster;
+    }
 }
 
 void Game::resetGame()
@@ -286,10 +286,7 @@ void Game::Update(float _dt)
                     NetworkMessageType type = NetworkMessageType::CREATE_GAME;
                     message.Write(static_cast<sf::Uint16>(type));
                     message.Write(static_cast<sf::Uint32>(m_seed));
-                    // sf::Packet packet = Network::Get().CreatePacket();
-                    // packet << static_cast<sf::Uint16>(type);
-                    // packet << m_seed;
-
+       
                     Network::Get().Send(message);
                 }
                 else
@@ -305,41 +302,41 @@ void Game::Update(float _dt)
         case NetworkEvent::Type::ON_RECEIVE:
         {
             sf::Uint16 type1;
-            event.packet >> type1;
-            NetworkPacketType type = static_cast<NetworkPacketType>(type1);   
+            event.message.Read(type1);
+            NetworkMessageType type = static_cast<NetworkMessageType>(type1);   
 
-            if (type == NetworkPacketType::CREATE_GAME)
+            if (type == NetworkMessageType::CREATE_GAME)
             {
                 LOG("CREATE_GAME");
 
-                event.packet >> m_seed;
+                event.message.Read(m_seed);
                 m_wantsToChangeState = true;
             }
-            else if (type == NetworkPacketType::CREATE_CHARACTER)
+            else if (type == NetworkMessageType::CREATE_CHARACTER)
             {
                 LOG("CREATE_CHARACTER");
-                while (!event.packet.endOfPacket())
+                while (!event.message.IsEnd())
                 {
                     bool isMaster;
-                    event.packet >> isMaster;
+                    event.message.Read(isMaster);
                     unsigned id;
-                    event.packet >> id;
+                    event.message.Read(id);
                     m_gameWorld.SpawnCharacter(isMaster, id);
                 }
                 
                 m_wantsToChangeState = true;
             }
-            else if (type == NetworkPacketType::REPLICATE_CHARACTER_POS)
+            else if (type == NetworkMessageType::REPLICATE_CHARACTER_POS)
             {
-                m_gameWorld.OnReplicateCharacterPacketReceived(event.packet);
+                m_gameWorld.OnReplicateCharacterMessageReceived(event.message);
             }
-            else if (type == NetworkPacketType::REPLICATE_CHARACTER_UNCOVER)
+            else if (type == NetworkMessageType::REPLICATE_CHARACTER_UNCOVER)
             {
-                m_gameWorld.OnReplicateUncoverCellPacketReceived(event.packet);
+                m_gameWorld.OnReplicateUncoverCellMessageReceived(event.message);
             }
-            else if (type == NetworkPacketType::REPLICATE_CHARACTER_TOGGLE)
+            else if (type == NetworkMessageType::REPLICATE_CHARACTER_TOGGLE)
             {
-                m_gameWorld.OnReplicateToggleFlagCellPacketReceived(event.packet);
+                m_gameWorld.OnReplicateToggleFlagCellMessageReceived(event.message);
             }
 
             break;

@@ -21,7 +21,7 @@ void Transport::Update()
         }
         else if(status == sf::Socket::Status::Done)
         {
-            LOG("RECEIVE");
+            //LOG("RECEIVE");
             OnReceivePacket(packet, sender);
             // for (auto receiver : m_receivers)
             //     if (receiver.from == sender)    // TODO: support receiving packets from all??

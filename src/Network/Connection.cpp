@@ -1,23 +1,25 @@
 #include "Connection.h"
 #include "Log.h"
 #include "InternalPacketType.h"
+#include "PacketHeader.h"
 
 Connection::Connection(Transport& _transport, NetworkAddress _addressToConnect, bool _isCreatingFromRequest)
     : m_transport(_transport)
     , m_address(_addressToConnect)
 {
     sf::Packet packet;
+    PacketHeader header;
     if (!_isCreatingFromRequest)
     {
-        m_status = Status::CONNECTING;
-        packet << static_cast<sf::Int8>(InternalPacketType::INTERNAL_CONNECT_REQUEST);    
+        header.type = InternalPacketType::INTERNAL_CONNECT_REQUEST;
+        m_status = Status::CONNECTING;  
     }
     else
     {
+        header.type = InternalPacketType::INTERNAL_CONNECT_ACCEPT;
         m_status = Status::UP;
-        packet << static_cast<sf::Int8>(InternalPacketType::INTERNAL_CONNECT_ACCEPT);
     }
- 
+    header.Serialize(packet);
     Send(packet, _addressToConnect);
 }
 

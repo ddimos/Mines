@@ -3,7 +3,7 @@
 #include "Character.h"
 #include "Camera.h"
 #include "Cell.h"
-#include <SFML/Network.hpp>
+#include "Network/NetworkMessage.h"
 
 class GameWorld
 {
@@ -30,10 +30,10 @@ public:
     void OnPlayerUncoverCell(WorldPosition _pos);
     void OnPlayerToggleFlagCell(WorldPosition _pos);
 
-    void OnSpawnCharacterPacketReceived(sf::Packet& _packet);
-    void OnReplicateCharacterPacketReceived(sf::Packet& _packet);
-    void OnReplicateUncoverCellPacketReceived(sf::Packet& _packet);
-    void OnReplicateToggleFlagCellPacketReceived(sf::Packet& _packet);
+    void OnSpawnCharacterMessageReceived(NetworkMessage& _message);
+    void OnReplicateCharacterMessageReceived(NetworkMessage& _message);
+    void OnReplicateUncoverCellMessageReceived(NetworkMessage& _message);
+    void OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _message);
     
 private:
 

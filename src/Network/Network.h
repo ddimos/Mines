@@ -28,8 +28,9 @@ public:
 
     // Internal use
   //  Transport& GetTransport() { return m_transport; }
-    void PushEvent(); // or onreceive/onconnect...
+  //  void PushEvent(); // or onreceive/onconnect...
 
+    //void CreateHeader
 private:
     Network() = default;
     ~Network() = default;

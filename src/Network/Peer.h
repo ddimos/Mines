@@ -3,6 +3,7 @@
 #include "NetworkMessage.h"
 #include "Transport.h"
 #include "Connection.h"
+#include <queue>
 
 class Peer : public Connection
 {
@@ -29,10 +30,9 @@ private:
     // void onDisconnect() override;
 
    // NetworkAddress m_address = {};
-    
-    // reliableMessages
-    // unreliableMessages
 
+    // std::queue<NetworkMessage> m_reliableMessagesToSend;     
+    // std::queue<NetworkMessage> m_unreliableMessagesToSend;     
 
     //bool isFirstConnect = false;
     //float timeout = TIME_TO_RETRY_CONNECT_s;

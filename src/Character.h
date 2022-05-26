@@ -1,6 +1,6 @@
 #pragma once
 #include "Utils.h"
-#include <SFML/Network.hpp>
+#include "Network/NetworkMessage.h"
 
 class Character
 {
@@ -19,9 +19,9 @@ public:
     bool IsMaster() const { return m_isMaster; }
     unsigned GetId() const { return m_id; }
 
-    void OnReplicateCharacterPacketReceived(sf::Packet& _packet);
-    void OnReplicateUncoverCellPacketReceived(sf::Packet& _packet);
-    void OnReplicateToggleFlagCellPacketReceived(sf::Packet& _packet);
+    void OnReplicateCharacterMessageReceived(NetworkMessage& _message);
+    void OnReplicateUncoverCellMessageReceived(NetworkMessage& _message);
+    void OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _message);
 
 private:
 

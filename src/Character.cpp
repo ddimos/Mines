@@ -1,8 +1,8 @@
 #include "Character.h"
 #include "Game.h"
 #include "Log.h"
-#include "NetworkPacketType.h"
-#include "Network.h"
+#include "NetworkMessageType.h"
+#include "Network/Network.h"
 
 #include <algorithm>
 
@@ -129,58 +129,62 @@ void Character::replicatePos()
 {
     if (m_prevPosition == m_position)
         return;
-
-  //  sf::Packet packet = Network::Get().CreatePacket();
-  //  packet << static_cast<sf::Uint16>(NetworkPacketType::REPLICATE_CHARACTER_POS);
-  //  packet << m_id;
-  //  packet << (sf::Int32)m_position.x;
-  //  packet << (sf::Int32)m_position.y;
-//
-  //  Network::Get().Send(packet);
+    NetworkAddress address;
+    address.address = sf::IpAddress::Broadcast;
+    NetworkMessage message(address, false);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_POS));
+    message.Write(m_id);
+    message.Write((sf::Int32)m_position.x);
+    message.Write((sf::Int32)m_position.y);
+    
+    Network::Get().Send(message);
 }
 
 void Character::replicateUncoverCell()
 {
-  //  sf::Packet packet = Network::Get().CreatePacket();
-  //  packet << static_cast<sf::Uint16>(NetworkPacketType::REPLICATE_CHARACTER_UNCOVER);
-  //  packet << m_id;
-  //  packet << (sf::Int32)m_position.x;
-  //  packet << (sf::Int32)m_position.y;
-//
-  //  Network::Get().Send(packet);
+    NetworkAddress address;
+    address.address = sf::IpAddress::Broadcast;
+    NetworkMessage message(address, true);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_UNCOVER));
+    message.Write(m_id);
+    message.Write((sf::Int32)m_position.x);
+    message.Write((sf::Int32)m_position.y);
+
+    Network::Get().Send(message);
 }
 
 void Character::replicateToggleFlagCell()
 {
-  //  sf::Packet packet = Network::Get().CreatePacket();
-  //  packet << static_cast<sf::Uint16>(NetworkPacketType::REPLICATE_CHARACTER_TOGGLE);
-  //  packet << m_id;
-  //  packet << (sf::Int32)m_position.x;
-  //  packet << (sf::Int32)m_position.y;
-//
-  //  Network::Get().Send(packet);
+    NetworkAddress address;
+    address.address = sf::IpAddress::Broadcast;
+    NetworkMessage message(address, true);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_TOGGLE));
+    message.Write(m_id);
+    message.Write((sf::Int32)m_position.x);
+    message.Write((sf::Int32)m_position.y);
+
+    Network::Get().Send(message);
 }
 
-void Character::OnReplicateCharacterPacketReceived(sf::Packet& _packet)
+void Character::OnReplicateCharacterMessageReceived(NetworkMessage& _message)
 {
     if (m_isMaster)
         return;
 
-    // id is already taken
-    _packet >> m_position.x;
-    _packet >> m_position.y;
+    _message.Read(m_position.x);
+    _message.Read(m_position.y);
 }
 
-void Character::OnReplicateUncoverCellPacketReceived(sf::Packet& _packet)
+void Character::OnReplicateUncoverCellMessageReceived(NetworkMessage& _message)
 {
-    _packet >> m_position.x;
-    _packet >> m_position.y;
+    _message.Read(m_position.x);
+    _message.Read(m_position.y);
     onCharacterUncoverCell(m_position);
 }
 
-void Character::OnReplicateToggleFlagCellPacketReceived(sf::Packet& _packet)
+void Character::OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _message)
 {
-    _packet >> m_position.x;
-    _packet >> m_position.y;
+    _message.Read(m_position.x);
+    _message.Read(m_position.y);
     onCharacterToggleFlagCell(m_position);
 }

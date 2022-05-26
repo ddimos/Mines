@@ -2,6 +2,7 @@
 #include "Utils.h"
 #include "Log.h"
 #include "InternalPacketType.h"
+#include "PacketHeader.h"
 
 
 Network* Network::ms_network = nullptr;
@@ -77,10 +78,11 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
 {
     Peer* senderPeer = getPeer(_sender);
  
-    sf::Int8 internalType;
-    _packet >> internalType;
+    // read a header
+    PacketHeader header;
+    header.Deserialize(_packet);
 
-    switch (static_cast<InternalPacketType>(internalType))
+    switch (header.type)
     {
     case InternalPacketType::INTERNAL_CONNECT_REQUEST:
     {
@@ -117,7 +119,27 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
     case InternalPacketType::INTERNAL_HEARTBEAT:
         break;
     case InternalPacketType::USER_PACKET:
+    {
+        if (!senderPeer)
+        {
+            LOG_ERROR("Received from " + _sender.toString() + " who is not in the list of peers");
+            break;
+        }
+        else if (!senderPeer->IsUp())
+        {
+            LOG_ERROR("Received from " + _sender.toString() + " who is not UP");
+            break;
+        }
+        LOG("Received from " + _sender.toString());
+
+        NetworkMessage message;
+        message.m_data = std::move(_packet);
+        message.m_address = _sender;
+        message.m_isReliable = header.isReliable;
+
+        m_events.push(NetworkEvent(NetworkEvent::Type::ON_RECEIVE, std::move(message), _sender));
         break;
+    }
     default:
         break;
     }
