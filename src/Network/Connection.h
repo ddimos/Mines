@@ -17,6 +17,7 @@ public:
 
     Status GetStatus() const { return m_status; }
     void OnConnectionAcceptReceived();
+    void OnHeartbeatReceived();
 
 protected:
 
@@ -41,8 +42,11 @@ private:
     static constexpr float HEARTBEAT_s = 1.f;
     static const int CONNECTION_ATTEMPTS = 10;
 
-    Transport& m_transport;
+    Transport* m_transport;
     Status m_status = Status::None;
+    float m_timeout = 0.f;
+    int m_connectionAttemptsLeft = CONNECTION_ATTEMPTS;
+    float m_heartbeat = HEARTBEAT_s;
 };
 
 

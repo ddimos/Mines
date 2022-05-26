@@ -49,7 +49,16 @@ void Network::Update(float _dt)
         peer.Update(_dt);
     }
 
-    // if down delete
+    m_peers.erase(std::remove_if(m_peers.begin(), m_peers.end(), 
+    [this](const Peer& _peer)
+    {
+        if (_peer.IsDown())
+        {
+            m_events.push(NetworkEvent(NetworkEvent::Type::ON_DISCONNECT, _peer.GetAddress()));
+            return true;
+        }
+        return false;
+    }), m_peers.end());
 }
 
 void Network::Send(const NetworkMessage& _message)
@@ -117,7 +126,27 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
     case InternalPacketType::INTERNAL_DISCONNECT:
         break;
     case InternalPacketType::INTERNAL_HEARTBEAT:
+    {
+        if (!senderPeer)
+        {
+            LOG_ERROR("Received from " + _sender.toString() + " who is not in the list of peers");
+            break;
+        }
+        else if (senderPeer->GetStatus() == Peer::Status::CONNECTING)
+        {
+            senderPeer->OnConnectionAcceptReceived();
+            m_events.push(NetworkEvent(NetworkEvent::Type::ON_CONNECT, _sender));
+            LOG("Received a heartbeat from " + _sender.toString() + " while waiting for connection accept");
+        }
+        else if (!senderPeer->IsUp())
+        {
+            LOG_ERROR("Received from " + _sender.toString() + " who is not UP");
+            break;
+        }
+        senderPeer->OnHeartbeatReceived();
+        LOG("Received a heartbeat from " + _sender.toString());
         break;
+    }
     case InternalPacketType::USER_PACKET:
     {
         if (!senderPeer)
