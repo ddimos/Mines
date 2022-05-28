@@ -23,6 +23,7 @@ Connection::Connection(Transport& _transport, NetworkAddress _addressToConnect, 
     }
     header.Serialize(packet);
     Send(packet, _addressToConnect);
+    LOG_DEBUG("Send a connect request to " + m_address.toString());
 }
 
 void Connection::Update(float _dt)
@@ -44,7 +45,7 @@ void Connection::Update(float _dt)
                 PacketHeader header;
                 header.type = InternalPacketType::INTERNAL_CONNECT_REQUEST; 
                 m_timeout = TIME_TO_RETRY_CONNECT_s;
-                LOG("Send a connect request to " + m_address.toString());  
+                LOG_DEBUG("Send a connect request to " + m_address.toString());  
                 header.Serialize(packet);
                 Send(packet, m_address);
             }
@@ -65,7 +66,7 @@ void Connection::Update(float _dt)
                 sf::Packet packet;
                 PacketHeader header;
                 header.type = InternalPacketType::INTERNAL_HEARTBEAT; 
-                // LOG("Send a heartbeat to " + m_address.toString()); 
+                LOG_DEBUG("Send a heartbeat to " + m_address.toString()); 
                 header.Serialize(packet);
                 Send(packet, m_address);   
                 m_heartbeat = HEARTBEAT_s;

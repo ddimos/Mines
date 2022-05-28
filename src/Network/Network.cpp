@@ -142,7 +142,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             break;
         }
         senderPeer->OnHeartbeatReceived();
-        // LOG("Received a heartbeat from " + _sender.toString());
+        LOG_DEBUG("Received a heartbeat from " + _sender.toString());
         break;
     }
     case InternalPacketType::INTERNAL_AR:
@@ -157,7 +157,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             LOG_ERROR("Received from " + _sender.toString() + " who is not UP");
             break;
         }
-        LOG("AR received from " + _sender.toString() + " seqNum: " + tstr(header.sequenceNum));
+        LOG_DEBUG("AR received from " + _sender.toString() + " seqNum: " + tstr(header.sequenceNum));
 
         senderPeer->OnAcknowledgmentReceived(header.sequenceNum);
 
@@ -175,7 +175,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             LOG_ERROR("Received from " + _sender.toString() + " who is not UP");
             break;
         }
-       //   LOG("Received from " + _sender.toString());
+        LOG_DEBUG("Received from " + _sender.toString());
 
         NetworkMessage message;
         message.m_data = std::move(_packet);

@@ -21,7 +21,6 @@ void Transport::Update()
         }
         else if(status == sf::Socket::Status::Done)
         {
-            // LOG("RECEIVE");
             OnReceivePacket(packet, sender);
         }
         else
