@@ -69,7 +69,7 @@ void Connection::Update(float _dt)
                 sf::Packet packet;
                 PacketHeader header;
                 header.type = InternalPacketType::INTERNAL_HEARTBEAT; 
-                LOG("Send a heartbeat to " + m_address.toString()); 
+                // LOG("Send a heartbeat to " + m_address.toString()); 
                 header.Serialize(packet);
                 Send(packet, m_address);   
                 m_heartbeat = HEARTBEAT_s;

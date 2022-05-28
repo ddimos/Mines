@@ -87,7 +87,6 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
 {
     Peer* senderPeer = getPeer(_sender);
  
-    // read a header
     PacketHeader header;
     header.Deserialize(_packet);
 
@@ -144,7 +143,25 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             break;
         }
         senderPeer->OnHeartbeatReceived();
-        LOG("Received a heartbeat from " + _sender.toString());
+        // LOG("Received a heartbeat from " + _sender.toString());
+        break;
+    }
+    case InternalPacketType::INTERNAL_AR:
+    {
+        if (!senderPeer)
+        {
+            LOG_ERROR("Received from " + _sender.toString() + " who is not in the list of peers");
+            break;
+        }
+        else if (!senderPeer->IsUp())
+        {
+            LOG_ERROR("Received from " + _sender.toString() + " who is not UP");
+            break;
+        }
+        LOG("AR received from " + _sender.toString() + " seqNum: " + tstr(header.sequenceNum));
+
+        senderPeer->OnAcknowledgmentReceived(header.sequenceNum);
+
         break;
     }
     case InternalPacketType::USER_PACKET:
@@ -159,14 +176,29 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             LOG_ERROR("Received from " + _sender.toString() + " who is not UP");
             break;
         }
-        LOG("Received from " + _sender.toString());
+     //   LOG("Received from " + _sender.toString());
 
         NetworkMessage message;
         message.m_data = std::move(_packet);
         message.m_address = _sender;
         message.m_isReliable = header.isReliable;
 
-        m_events.push(NetworkEvent(NetworkEvent::Type::ON_RECEIVE, std::move(message), _sender));
+        if (header.isReliable)
+        {
+            senderPeer->OnReliableReceived(header.sequenceNum, message);
+            auto& messages = senderPeer->GetMessagesToDeliver();
+            while(!messages.empty())
+            {
+                m_events.push(NetworkEvent(NetworkEvent::Type::ON_RECEIVE, std::move(messages.front()), _sender));
+                messages.pop();
+            }
+        }
+        else
+        {
+            m_events.push(NetworkEvent(NetworkEvent::Type::ON_RECEIVE, std::move(message), _sender));
+        }
+        
+
         break;
     }
     default:

@@ -368,6 +368,17 @@ void Game::Update(float _dt)
             if (m_isMasterSession)
                 m_wantsToChangeState = true;            
         }
+        if (isKeyPressed(sf::Keyboard::S))
+        {
+            NetworkAddress address;
+            address.address = sf::IpAddress::Broadcast;
+            NetworkMessage message(address, true);
+            NetworkMessageType type = NetworkMessageType::None;
+            message.Write(static_cast<sf::Uint16>(type));
+            
+            Network::Get().Send(message);
+        }
+        
     }
     else if (m_currentState == GameState::GAME)
     {

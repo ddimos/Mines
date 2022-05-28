@@ -21,7 +21,7 @@ struct PacketHeader
         _readBuffer >> t;
         type = static_cast<InternalPacketType>(t);
         _readBuffer >> isReliable;
-        _readBuffer >> sequenceNum; 
+        _readBuffer >> sequenceNum;
     }
 
     InternalPacketType type = InternalPacketType::None;

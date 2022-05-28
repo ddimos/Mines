@@ -40,6 +40,7 @@ public:
     bool IsReliable() const { return m_isReliable; }
     const sf::Packet& GetData() const { return m_data; }
     bool IsEnd() const { return m_data.endOfPacket(); }
+    size_t GetDataSize() const { return m_data.getDataSize(); }
 
     template <typename T>
     void Write(const T& _value) { m_data << _value; }

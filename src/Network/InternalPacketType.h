@@ -9,5 +9,6 @@ enum class InternalPacketType : sf::Uint8
     INTERNAL_CONNECT_ACCEPT,
     INTERNAL_DISCONNECT,
     INTERNAL_HEARTBEAT,
+    INTERNAL_AR,
     USER_PACKET
 };
