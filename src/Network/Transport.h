@@ -3,13 +3,6 @@
 #include "NetworkAddress.h"
 #include <vector>
 
-// class IPacketReceiver
-// {
-// public:
-//     ~IPacketReceiver() = default;
-//     virtual void OnReceivePacket(sf::Packet _packet, NetworkAddress _sender) = 0;
-// };
-
 class Transport
 {
 public:
@@ -22,19 +15,11 @@ protected:
 
     void Update();
 
-    virtual void OnReceivePacket(sf::Packet _packet, NetworkAddress _sender) {}
-    // void RegisterReceiver(IPacketReceiver* _receiver, NetworkAddress _receiveFrom);
-    // void UnregisterReceiver(IPacketReceiver* _receiver);
+    virtual void OnReceivePacket(sf::Packet _packet, NetworkAddress _sender) = 0;
 
 private:
-    
     void createHost();
+
     sf::UdpSocket m_localSocket;
     NetworkAddress m_localAddress = {};
-    // struct ReceiverPair
-    // {
-    //     NetworkAddress from = {};
-    //     IPacketReceiver* receiver = nullptr;
-    // };
-    // std::vector<ReceiverPair> m_receivers;
 };

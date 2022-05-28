@@ -2,7 +2,6 @@
 #include "Game.h"
 #include "Utils.h"
 #include "Log.h"
-#include "NetworkPacketType.h"
 
 #include <functional>
 #include <set>
@@ -232,13 +231,6 @@ unsigned GameWorld::GenerateId()
     return m_characters.size() + 1; // TODO: a real bad way to generate ids
 }
 
-void GameWorld::OnSpawnCharacterMessageReceived(NetworkMessage& _message)
-{
-    (void)_message;
-    // unsigned id;
-    // _packet >> id;
-    // spawnCharacter(false, id);
-}
 
 void GameWorld::OnReplicateCharacterMessageReceived(NetworkMessage& _message)
 {

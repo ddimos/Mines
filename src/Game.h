@@ -5,8 +5,7 @@
 #include "Camera.h"
 #include "InfoPanel.h"
 #include "GameWorld.h"
-#include "NetworkPacketType.h"
-#include "Network.h"
+
 
 namespace sf
 {

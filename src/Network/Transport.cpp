@@ -21,11 +21,8 @@ void Transport::Update()
         }
         else if(status == sf::Socket::Status::Done)
         {
-            //LOG("RECEIVE");
+            // LOG("RECEIVE");
             OnReceivePacket(packet, sender);
-            // for (auto receiver : m_receivers)
-            //     if (receiver.from == sender)    // TODO: support receiving packets from all??
-            //         receiver.receiver->OnReceivePacket(packet, sender);
         }
         else
         {
@@ -40,21 +37,6 @@ void Transport::Send(sf::Packet _packet, NetworkAddress _address)
 {
     m_localSocket.send(_packet, _address.address, _address.port);
 }
-    
-// void Transport::RegisterReceiver(IPacketReceiver* _receiver, NetworkAddress _receiveFrom)
-// {
-//     m_receivers.push_back({_receiveFrom, _receiver});
-// }
-
-// void Transport::UnregisterReceiver(IPacketReceiver* _receiver)
-// {
-//     m_receivers.erase(
-//         std::remove_if(m_receivers.begin(), m_receivers.end(), 
-//         [_receiver](const ReceiverPair& _pair)
-//         {
-//             return _pair.receiver == _receiver;
-//         }));
-// }
 
 void Transport::createHost()
 {

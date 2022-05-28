@@ -276,7 +276,7 @@ void Game::Update(float _dt)
         case NetworkEvent::Type::ON_CONNECT: 
             LOG("ON_CONNECT");
             
-            // send all knows peers
+            // TODO: send all knows peers
 
             if(m_isMasterSession)
             {
@@ -342,7 +342,6 @@ void Game::Update(float _dt)
             break;
         }
         }   
-        
     }
 
     updateState();

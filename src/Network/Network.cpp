@@ -7,7 +7,6 @@
 
 Network* Network::ms_network = nullptr;
 
-
 bool Network::StartUp()
 {
     if (!ms_network)
@@ -176,7 +175,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             LOG_ERROR("Received from " + _sender.toString() + " who is not UP");
             break;
         }
-     //   LOG("Received from " + _sender.toString());
+       //   LOG("Received from " + _sender.toString());
 
         NetworkMessage message;
         message.m_data = std::move(_packet);
@@ -198,7 +197,6 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             m_events.push(NetworkEvent(NetworkEvent::Type::ON_RECEIVE, std::move(message), _sender));
         }
         
-
         break;
     }
     default:

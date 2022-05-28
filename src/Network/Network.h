@@ -26,11 +26,6 @@ public:
 
     const std::vector<Peer>& GetPeers() const { return m_peers; }
 
-    // Internal use
-  //  Transport& GetTransport() { return m_transport; }
-  //  void PushEvent(); // or onreceive/onconnect...
-
-    //void CreateHeader
 private:
     Network() = default;
     ~Network() = default;
@@ -39,12 +34,10 @@ private:
 
     void OnReceivePacket(sf::Packet _packet, NetworkAddress _sender) override;
     
-//   void internalConnect(NetworkAddress _addressToConnect, bool _isFirstConnect);
     Peer* getPeer(NetworkAddress _address);
 
     static Network* ms_network;
-  //  Transport m_transport;
-    
+  
     std::queue<NetworkEvent> m_events;
     std::vector<Peer>   m_peers;
 

@@ -29,10 +29,8 @@ void Peer::Update(float _dt)
             Connection::Send(_info.packet, m_address);
              LOG("onReliableSent again. Sequence number: " + tstr(_info.seqNum));
             _info.timeout = TIME_TO_RESEND_s;
-        }
-        
+        }   
     }
-    
 }
 
 void Peer::Send(const NetworkMessage& _message)
@@ -43,17 +41,8 @@ void Peer::Send(const NetworkMessage& _message)
     header.Serialize(packet);
     packet.append(_message.GetData().getData(),_message.GetData().getDataSize());
 
-static int s_skip = 0;
-    ++s_skip;
-    if (s_skip != 3)
-    {
     Connection::Send(packet, m_address);
-        /* code */
-    }
-    else{
-        s_skip = 0;
-    }
-    
+
     if (_message.IsReliable())
         onReliableSent(packet, seqNum);
 }
@@ -80,6 +69,7 @@ void Peer::sendAR(sf::Uint32 _seqNum)
 void Peer::OnReliableReceived(sf::Uint32 _seqNum, const NetworkMessage& _message)
 {
     sendAR(_seqNum);
+        // TODO:
         // send also m_sequenceNumberOfLastReceived
         // maybe also m_sequenceNumberOfLastSent
 
@@ -89,7 +79,6 @@ void Peer::OnReliableReceived(sf::Uint32 _seqNum, const NetworkMessage& _message
         return;
     }
     
-
     if (_seqNum - m_sequenceNumberOfLastDelivered > 1) // Store
     {
         LOG("Store the message. Received sequence number: " + tstr(_seqNum) + " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
@@ -99,9 +88,7 @@ void Peer::OnReliableReceived(sf::Uint32 _seqNum, const NetworkMessage& _message
 
     m_messagesToDeliver.push(_message);
     ++m_sequenceNumberOfLastDelivered;
-    // deliver
-    // array or a callback??
-    // check if the store array has smth
+
     LOG("Deliver message seqNum: " + tstr(_seqNum)+ " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
     for (const auto& [storeSeqNum, storeMessage] : m_messagesToStore)
     {

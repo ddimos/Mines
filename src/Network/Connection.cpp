@@ -4,8 +4,8 @@
 #include "PacketHeader.h"
 
 Connection::Connection(Transport& _transport, NetworkAddress _addressToConnect, bool _isCreatingFromRequest)
-    : m_transport(&_transport)
-    , m_address(_addressToConnect)
+    : m_address(_addressToConnect)
+    , m_transport(&_transport)
 {
     sf::Packet packet;
     PacketHeader header;
@@ -23,10 +23,6 @@ Connection::Connection(Transport& _transport, NetworkAddress _addressToConnect, 
     }
     header.Serialize(packet);
     Send(packet, _addressToConnect);
-}
-
-Connection::~Connection()
-{
 }
 
 void Connection::Update(float _dt)
@@ -93,10 +89,3 @@ void Connection::OnHeartbeatReceived()
 {
     m_timeout = HEARTBEAT_TIMEOUT_s;
 }
-
-// void Connection::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender) 
-// {
-//     // auto it = std::find_if(m_peers.begin(), m_peers.end(), 
-//     //             [&sender](const Peer& _peer) { return _peer.address == sender; });
-    
-// }

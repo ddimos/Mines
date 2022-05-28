@@ -28,7 +28,6 @@ public:
 
 private:
     static constexpr float TIME_TO_RESEND_s = 1.0f;
-    //static constexpr int NUMBERS_OF_PACKETS_TO_KEEP = 25;
 
     struct ReliablePacketInfo
     {
@@ -41,15 +40,13 @@ private:
     void sendAR(sf::Uint32 _seqNum);
 
     sf::Uint32 m_sequenceNumGenerator = 0;
-    std::deque<ReliablePacketInfo> m_reliableSent;
     sf::Uint32 m_sequenceNumberOfLastSent = 0;
-//    sf::Uint32 m_sequenceNumberOfLastReceived = 0;
     sf::Uint32 m_sequenceNumberOfLastDelivered = 0;
+    std::vector<ReliablePacketInfo> m_reliableSent;
     std::queue<NetworkMessage> m_messagesToDeliver;
     std::map<sf::Uint32, NetworkMessage> m_messagesToStore;
-    //std::map<sf::Uint32, ReliablePacketInfo> m_reliableSent;
+
+    // TODO:
     // std::queue<NetworkMessage> m_reliableMessagesToSend;     
     // std::queue<NetworkMessage> m_unreliableMessagesToSend;     
-
-    
 };

@@ -30,7 +30,6 @@ public:
     void OnPlayerUncoverCell(WorldPosition _pos);
     void OnPlayerToggleFlagCell(WorldPosition _pos);
 
-    void OnSpawnCharacterMessageReceived(NetworkMessage& _message);
     void OnReplicateCharacterMessageReceived(NetworkMessage& _message);
     void OnReplicateUncoverCellMessageReceived(NetworkMessage& _message);
     void OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _message);

@@ -22,15 +22,11 @@ public:
 protected:
 
     Connection(Transport& _transport, NetworkAddress _addressToConnect, bool _isCreatingFromRequest);
-    ~Connection();
+    virtual ~Connection() = default;
 
     void Update(float _dt);
     
     void Send(sf::Packet _packet, NetworkAddress _address);
-
-    // virtual void onReceive() {}
-    // virtual void onConnect() {}
-    // virtual void onDisconnect() {}
 
 protected:
     NetworkAddress m_address = {};
