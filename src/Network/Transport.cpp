@@ -39,17 +39,24 @@ void Transport::Send(sf::Packet _packet, NetworkAddress _address)
 
 void Transport::createHost()
 {
-    const unsigned short port = 20087;
-    if (m_localSocket.bind(port) != sf::Socket::Done)
+    int attemptsLeft = 20;
+    unsigned short port = 20087;    // TODO: pass from a config file
+    while (m_localSocket.bind(port) != sf::Socket::Done || attemptsLeft < 0)
+    {
+        ++port;
+        --attemptsLeft;
+    }
+    
+    if (attemptsLeft < 0)
     {
         LOG_ERROR("Couldn't bind a port");
         return;
     }
+
     m_localSocket.setBlocking(false);
 
     m_localAddress.address = sf::IpAddress::getLocalAddress();
     m_localAddress.port = m_localSocket.getLocalPort();
-
 
     LOG("\n\tHost created on a port:\t" + tstr(m_localSocket.getLocalPort()) 
      + "\n\tLocal address:\t\t" +  sf::IpAddress::getLocalAddress().toString()
