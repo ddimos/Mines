@@ -15,6 +15,8 @@ public:
         DOWN
     };
 
+    void Close(bool _forcibly = false);
+
     Status GetStatus() const { return m_status; }
     void OnConnectionAcceptReceived();
     void OnHeartbeatReceived();

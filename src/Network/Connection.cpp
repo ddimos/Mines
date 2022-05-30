@@ -26,6 +26,21 @@ Connection::Connection(Transport& _transport, NetworkAddress _addressToConnect, 
     LOG_DEBUG("Send a connect request to " + m_address.toString());
 }
 
+void Connection::Close(bool _forcibly /*= false*/)
+{
+    m_status = Status::DOWN;  
+    if (!_forcibly)
+    {
+        // TODO: wwait for the response or AR
+        sf::Packet packet;
+        PacketHeader header;
+        header.type = InternalPacketType::INTERNAL_DISCONNECT;
+        header.Serialize(packet);
+        Send(packet, m_address);
+    } 
+    LOG_DEBUG("Disconnect from " + m_address.toString() + (_forcibly?" f":" g"));
+}
+
 void Connection::Update(float _dt)
 {
     m_timeout -= _dt;

@@ -274,6 +274,7 @@ void Game::Update(float _dt)
         switch (event.type)
         {
         case NetworkEvent::Type::ON_CONNECT: 
+        {
             LOG("ON_CONNECT");
             
             // TODO: send all knows peers
@@ -296,9 +297,13 @@ void Game::Update(float _dt)
                 }
             }
             break;
+        }
         case NetworkEvent::Type::ON_DISCONNECT:
+        {
             LOG("ON_DISCONNECT");
+
             break;
+        }
         case NetworkEvent::Type::ON_RECEIVE:
         {
             sf::Uint16 type1;
@@ -367,6 +372,7 @@ void Game::Update(float _dt)
             if (m_isMasterSession)
                 m_wantsToChangeState = true;            
         }
+// #if DEBUG
         if (isKeyPressed(sf::Keyboard::S))
         {
             NetworkAddress address;
@@ -377,6 +383,13 @@ void Game::Update(float _dt)
             
             Network::Get().Send(message);
         }
+        if (isKeyPressed(sf::Keyboard::J))
+        {
+            NetworkAddress address;
+            address.address = sf::IpAddress::Broadcast;
+            Network::Get().Disconnect(address);
+        }
+// #endif
         
     }
     else if (m_currentState == GameState::GAME)

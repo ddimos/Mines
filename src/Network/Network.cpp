@@ -28,6 +28,11 @@ bool Network::ShutDown()
     return false;
 }
 
+Network::Network()
+{
+    m_peers.reserve(10);
+}
+
 bool Network::PollEvents(NetworkEvent& _event)
 {
     if (m_events.empty())
@@ -108,7 +113,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
     {
         if (!senderPeer)
         {
-            LOG_ERROR("CONNECT_ACCEPT received from " + _sender.toString() + "who we didn't ask");
+            LOG_ERROR("CONNECT_ACCEPT received from " + _sender.toString() + " who we didn't ask");
             break;
         }
         else if (senderPeer->GetStatus() != Peer::Status::CONNECTING)
@@ -122,7 +127,21 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
         break;
     }
     case InternalPacketType::INTERNAL_DISCONNECT:
+    {
+        if (!senderPeer)
+        {
+            LOG_ERROR("DISCONNECT received from " + _sender.toString() + " who is not in the list of peers");
+            break;
+        }
+        else if (senderPeer->GetStatus() == Peer::Status::DOWN)
+        {
+            LOG_ERROR("The status of " + _sender.toString() + " is already DOWN");
+            break;
+        }
+        LOG("DISCONNECT received from " + _sender.toString());
+        senderPeer->Close(true);
         break;
+    }
     case InternalPacketType::INTERNAL_HEARTBEAT:
     {
         if (!senderPeer)
@@ -214,9 +233,22 @@ void Network::Connect(NetworkAddress _addressToConnect)
     m_peers.emplace_back(Peer(*this, _addressToConnect, false));
 }
 
-void Network::DisconnectMyself()
+void Network::Disconnect(NetworkAddress _addressToDisconnect)
 {
-    // TODO
+    if (_addressToDisconnect.address == sf::IpAddress::Broadcast)
+    {
+        for (Peer& peer : m_peers)
+            peer.Close();
+    }
+    else
+    {
+        if (Peer* peer = getPeer(_addressToDisconnect))
+        {
+            peer->Close();
+            return;
+        }   
+        LOG_ERROR("Don't disconnect from " + _addressToDisconnect.toString() + " because this peer is not connected now.");
+    }
 }
 
 Peer* Network::getPeer(NetworkAddress _address)

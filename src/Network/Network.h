@@ -22,12 +22,12 @@ public:
     void Send(const NetworkMessage& _message);
 
     void Connect(NetworkAddress _addressToConnect);
-    void DisconnectMyself();   
+    void Disconnect(NetworkAddress _addressToDisconnect);   
 
     const std::vector<Peer>& GetPeers() const { return m_peers; }
 
 private:
-    Network() = default;
+    Network();
     ~Network() = default;
     Network(const Network&) = delete;
     Network& operator=(const Network&) = delete;
