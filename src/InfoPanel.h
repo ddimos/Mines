@@ -29,6 +29,8 @@ private:
     sf::Text m_enteredText;
     sf::Text m_bombsNumText;
 
+    bool m_isMaster = true;
+
     int m_bombsLeft = 0;
 };
 

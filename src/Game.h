@@ -60,8 +60,8 @@ private:
     void onStateEnter(GameState _newState);
     void onStateExit(GameState _oldState);
     void updateState();
-
- 
+    void receiveNetworkMessages();
+    void sendCreateGameMessage();
 
     static Game* ms_game;
     sf::RenderWindow* m_window = nullptr;

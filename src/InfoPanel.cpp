@@ -52,6 +52,7 @@ void InfoPanel::OnEnterInit()
 
 void InfoPanel::OnEnterLobby(bool _isMaster)
 {
+    m_isMaster = _isMaster;
     sf::String text = _isMaster
                 ? "Wait others\n\nStart - B\n"
                 : "Wait others\n\nThe host\nwill start\n";
@@ -69,7 +70,10 @@ void InfoPanel::OnGameStart(int _bombsNum)
 
 void InfoPanel::OnGameFinish()
 {
-    m_text.setString("To restart press R!!");
+    sf::String text = m_isMaster
+                ? "To restart press R!!"
+                : "Wait for the host\nto restart"; // TODO \n\nOr press R\nto go to Menu";
+    m_text.setString(text);
     m_bombsNumText.setString("");
 }
 

@@ -94,7 +94,7 @@ void Game::spawnCharacters()
     unsigned id = m_gameWorld.GenerateId();
     m_gameWorld.SpawnCharacter(true, id);
 
-   for (const Peer& peer : Network::Get().GetPeers())
+    for (const Peer& peer : Network::Get().GetPeers())
     {
         (void)peer;
         id = m_gameWorld.GenerateId();
@@ -139,6 +139,8 @@ void Game::onStateEnter(GameState _newState)
         break;
     case GameState::LOBBY:
         initGame();
+        if (m_isMasterSession)
+            sendCreateGameMessage();
         m_infoPanel.OnEnterLobby(m_isMasterSession );
         break;
     case GameState::GAME:
@@ -196,7 +198,8 @@ void Game::updateState()
         newState = GameState::FINISH;
         break;
     case GameState::FINISH:
-        newState = GameState::INIT; // ?INIT // if wants to restart
+        newState = GameState::LOBBY;
+        // TODO make an exit to main menu
         break;
     default:
         break;
@@ -205,6 +208,110 @@ void Game::updateState()
     onStateExit(m_currentState);
     m_currentState = newState;
     onStateEnter(m_currentState);
+}
+
+void Game::receiveNetworkMessages()
+{
+    while (true)
+    {
+        NetworkEvent event;
+        if (!Network::Get().PollEvents(event))
+            break;
+
+        switch (event.type)
+        {
+        case NetworkEvent::Type::ON_CONNECT: 
+        {
+            LOG("ON_CONNECT");
+            
+            // TODO: send all knows peers
+
+            if (m_currentState == GameState::LOBBY)
+            {
+                if (m_isMasterSession)
+                {
+                    NetworkMessage message(event.sender, true);
+                    message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
+                    message.Write(static_cast<sf::Uint32>(m_seed));
+                    Network::Get().Send(message);
+                }
+            }
+            
+            break;
+        }
+        case NetworkEvent::Type::ON_DISCONNECT:
+        {
+            LOG("ON_DISCONNECT");
+
+            break;
+        }
+        case NetworkEvent::Type::ON_RECEIVE:
+        {
+            sf::Uint16 type1;
+            event.message.Read(type1);
+            NetworkMessageType type = static_cast<NetworkMessageType>(type1);   
+
+            if (type == NetworkMessageType::CREATE_GAME)
+            {
+                LOG("CREATE_GAME");
+                if (m_currentState != GameState::INIT && m_currentState != GameState::FINISH)
+                {
+                    LOG_ERROR("Cannot handle the CreateGame message in this state");
+                    break;
+                }
+                
+                event.message.Read(m_seed);
+                m_wantsToChangeState = true;
+            }
+            else if (type == NetworkMessageType::CREATE_CHARACTER)
+            {
+                LOG("CREATE_CHARACTER");
+                if (m_currentState != GameState::LOBBY)
+                {
+                    LOG_ERROR("Cannot handle the CreateCharachter message in this state");
+                    break;
+                }
+                while (!event.message.IsEnd())
+                {
+                    bool isMaster;
+                    event.message.Read(isMaster);
+                    unsigned id;
+                    event.message.Read(id);
+                    m_gameWorld.SpawnCharacter(isMaster, id);
+                }
+                
+                m_wantsToChangeState = true;
+            }
+            else if (type == NetworkMessageType::REPLICATE_CHARACTER_POS)
+            {
+                m_gameWorld.OnReplicateCharacterMessageReceived(event.message);
+            }
+            else if (type == NetworkMessageType::REPLICATE_CHARACTER_UNCOVER)
+            {
+                m_gameWorld.OnReplicateUncoverCellMessageReceived(event.message);
+            }
+            else if (type == NetworkMessageType::REPLICATE_CHARACTER_TOGGLE)
+            {
+                m_gameWorld.OnReplicateToggleFlagCellMessageReceived(event.message);
+            }
+
+            break;
+        }
+        }   
+    }
+}
+
+void Game::sendCreateGameMessage()
+{
+    if(!m_isMasterSession)
+        return;
+
+    NetworkAddress address;
+    address.address = sf::IpAddress::Broadcast;
+    NetworkMessage message(address, true);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
+    message.Write(static_cast<sf::Uint32>(m_seed));
+    Network::Get().Send(message);
 }
 
 void Game::OnPlayerUncoverCell(WorldPosition _pos)
@@ -251,11 +358,14 @@ void Game::OnTextEntered(sf::Uint32 _char)
 {
     if (m_currentState == GameState::INIT)
     {
-        if ((_char < 46 || _char > 58) && _char != 8) // Only numbers and dots
+        if ((_char < 46 || _char > 58) && _char != 8) // Only numbers, a colon, a dot and Backspace
             return;
         
         if (_char == 8) // Backspace
-            m_enteredText.pop_back();
+        {
+            if (!m_enteredText.empty())
+                m_enteredText.pop_back();
+        }
         else
             m_enteredText += _char;
 
@@ -265,90 +375,7 @@ void Game::OnTextEntered(sf::Uint32 _char)
 
 void Game::Update(float _dt)
 {
-    while (true)
-    {
-        NetworkEvent event;
-        if (!Network::Get().PollEvents(event))
-            break;
-
-        switch (event.type)
-        {
-        case NetworkEvent::Type::ON_CONNECT: 
-        {
-            LOG("ON_CONNECT");
-            
-            // TODO: send all knows peers
-
-            if(m_isMasterSession)
-            {
-                if (m_currentState == GameState::LOBBY)
-                {
-                    NetworkMessage message(event.sender, true);
-                    NetworkMessageType type = NetworkMessageType::CREATE_GAME;
-                    message.Write(static_cast<sf::Uint16>(type));
-                    message.Write(static_cast<sf::Uint32>(m_seed));
-       
-                    Network::Get().Send(message);
-                }
-                else
-                {
-                    LOG("Cannot handle connection in this state");
-                    break;
-                }
-            }
-            break;
-        }
-        case NetworkEvent::Type::ON_DISCONNECT:
-        {
-            LOG("ON_DISCONNECT");
-
-            break;
-        }
-        case NetworkEvent::Type::ON_RECEIVE:
-        {
-            sf::Uint16 type1;
-            event.message.Read(type1);
-            NetworkMessageType type = static_cast<NetworkMessageType>(type1);   
-
-            if (type == NetworkMessageType::CREATE_GAME)
-            {
-                LOG("CREATE_GAME");
-
-                event.message.Read(m_seed);
-                m_wantsToChangeState = true;
-            }
-            else if (type == NetworkMessageType::CREATE_CHARACTER)
-            {
-                LOG("CREATE_CHARACTER");
-                while (!event.message.IsEnd())
-                {
-                    bool isMaster;
-                    event.message.Read(isMaster);
-                    unsigned id;
-                    event.message.Read(id);
-                    m_gameWorld.SpawnCharacter(isMaster, id);
-                }
-                
-                m_wantsToChangeState = true;
-            }
-            else if (type == NetworkMessageType::REPLICATE_CHARACTER_POS)
-            {
-                m_gameWorld.OnReplicateCharacterMessageReceived(event.message);
-            }
-            else if (type == NetworkMessageType::REPLICATE_CHARACTER_UNCOVER)
-            {
-                m_gameWorld.OnReplicateUncoverCellMessageReceived(event.message);
-            }
-            else if (type == NetworkMessageType::REPLICATE_CHARACTER_TOGGLE)
-            {
-                m_gameWorld.OnReplicateToggleFlagCellMessageReceived(event.message);
-            }
-
-            break;
-        }
-        }   
-    }
-
+    receiveNetworkMessages();
     updateState();
 
     for (size_t i = 0; i < ms_keysState.size(); ++i)
@@ -399,12 +426,7 @@ void Game::Update(float _dt)
         m_gameView.setSize(m_gameWorld.GetCamera().GetSize());		
         
         if (m_isGameEnded)
-        {
             m_wantsToChangeState = true;
-        }
-
-        // if (isKeyPressed(sf::Keyboard::S))
-        //     m_gameWorld.SpawnMasterCharacter();
     }
     else if (m_currentState == GameState::FINISH)
     {
@@ -424,4 +446,3 @@ void Game::Draw(sf::RenderWindow* _window)
     _window->setView(m_infoView);
     m_infoPanel.Render(*_window);
 }
-
