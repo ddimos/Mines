@@ -6,14 +6,18 @@
 
 #include <algorithm>
 
-Character::Character(bool _isMaster, unsigned _id)
+Character::Character(bool _isMaster, unsigned _id, const CharacterInfo& _info)
     :
     m_isMaster(_isMaster),
-    m_id(_id)
+    m_id(_id),
+    m_info(_info)
 {
     m_shape.setSize(sf::Vector2f{CELL_SIZE / DECREASE_KOEF, CELL_SIZE / DECREASE_KOEF});
     m_padding = {(CELL_SIZE - CELL_SIZE / DECREASE_KOEF) / 2, (CELL_SIZE - CELL_SIZE / DECREASE_KOEF) / 2};
-    m_shape.setFillColor(sf::Color::Yellow);
+    sf::Color color(m_info.color.r, m_info.color.g, m_info.color.b, 190);
+    m_shape.setFillColor(color);
+    m_shape.setOutlineColor(sf::Color::Black);
+    m_shape.setOutlineThickness(1.5f);
 }
 
 Character::~Character()
@@ -117,12 +121,12 @@ void Character::Render(sf::RenderWindow& _window)
 
 void Character::onCharacterUncoverCell(WorldPosition _pos)
 {
-    Game::Get().OnPlayerUncoverCell(_pos);
+    Game::Get().OnCharacterUncoverCell(_pos, *this);
 }
 
 void Character::onCharacterToggleFlagCell(WorldPosition _pos)
 {
-    Game::Get().OnPlayerToggleFlagCell(_pos);
+    Game::Get().OnCharacterToggleFlagCell(_pos, *this);
 }
 
 void Character::replicatePos()

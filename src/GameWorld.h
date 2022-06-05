@@ -15,10 +15,11 @@ public:
     void Render(sf::RenderWindow& _window);
 
     void CreateWorld(WorldPosition _worldSize, size_t _bombsNumber);
-    void SpawnCharacter(bool _spawnMaster, unsigned _id);
+    void SpawnCharacter(bool _spawnMaster, unsigned _id, const CharacterInfo& _info);
     void DestroyWorld();
 
     unsigned GenerateId();
+    sf::Color GenerateColor();
     
     const Camera& GetCamera() const { return m_camera; }
     WorldPosition GetWorldSize() const { return m_worldSize; }
@@ -27,8 +28,8 @@ public:
     Cell& getCell(WorldPosition _pos);
     const std::vector<Character>& GetCharacters() const { return m_characters; }
 
-    void OnPlayerUncoverCell(WorldPosition _pos);
-    void OnPlayerToggleFlagCell(WorldPosition _pos);
+    void OnCharacterUncoverCell(WorldPosition _pos, Character& _char);
+    void OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char);
 
     void OnReplicateCharacterMessageReceived(NetworkMessage& _message);
     void OnReplicateUncoverCellMessageReceived(NetworkMessage& _message);

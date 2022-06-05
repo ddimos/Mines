@@ -1,5 +1,6 @@
 #include "Cell.h"
 #include "Game.h"
+#include "Character.h"
 
 Cell::Cell(WorldPosition _position)
 	: m_position{_position}
@@ -18,9 +19,7 @@ Cell::Cell(WorldPosition _position)
     m_text.setPosition(_position.getWindowPosition());
     m_text.setFont(Game::Get().GetFont());
     m_text.setCharacterSize(24); 
-    //m_text.setString("H");
     m_text.setFillColor(sf::Color::Black);
-    //m_text.setStyle(sf::Text::Bold | sf::Text::Underlined);
 }
 
 
@@ -55,12 +54,13 @@ void Cell::OnUncoverCell()
 }
 
 
-void Cell::OnToggleFlag()
+void Cell::OnToggleFlag(Character& _char)
 {
     if (m_state == State::UNCOVERED)
         return;
     
     m_state = (m_state == State::FLAGGED) ? State::COVERED : State::FLAGGED;
+    m_flagShape.setFillColor(_char.GetInfo().color);
 }
 
 void Cell::Update(float _dt)

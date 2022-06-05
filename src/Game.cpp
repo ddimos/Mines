@@ -91,14 +91,20 @@ void Game::spawnCharacters()
     if (!m_isMasterSession)
         return;
 
-    unsigned id = m_gameWorld.GenerateId();
-    m_gameWorld.SpawnCharacter(true, id);
+    {
+        CharacterInfo info;
+        info.color = m_gameWorld.GenerateColor();
+        unsigned id = m_gameWorld.GenerateId();
+        m_gameWorld.SpawnCharacter(true, id, info);
+    }
 
     for (const Peer& peer : Network::Get().GetPeers())
     {
         (void)peer;
-        id = m_gameWorld.GenerateId();
-        m_gameWorld.SpawnCharacter(false, id);   
+        CharacterInfo info;
+        info.color = m_gameWorld.GenerateColor();
+        unsigned id = m_gameWorld.GenerateId();
+        m_gameWorld.SpawnCharacter(false, id, info);   
     }
 
     size_t peerToBeMaster = 0;
@@ -113,6 +119,7 @@ void Game::spawnCharacters()
             bool isThisPeerMaster = !ch.IsMaster() && Network::Get().GetPeers().size() - peersNumber == peerToBeMaster;
             message.Write(isThisPeerMaster);
             message.Write(ch.GetId());
+            message.Write(ch.GetInfo().color.toInteger());
             if (!ch.IsMaster())
                 --peersNumber;
         }
@@ -277,7 +284,11 @@ void Game::receiveNetworkMessages()
                     event.message.Read(isMaster);
                     unsigned id;
                     event.message.Read(id);
-                    m_gameWorld.SpawnCharacter(isMaster, id);
+                    sf::Uint32 color;
+                    event.message.Read(color);
+                    CharacterInfo info;
+                    info.color = sf::Color(color);
+                    m_gameWorld.SpawnCharacter(isMaster, id, info);
                 }
                 
                 m_wantsToChangeState = true;
@@ -314,14 +325,14 @@ void Game::sendCreateGameMessage()
     Network::Get().Send(message);
 }
 
-void Game::OnPlayerUncoverCell(WorldPosition _pos)
+void Game::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
 {
-    m_gameWorld.OnPlayerUncoverCell(_pos);
+    m_gameWorld.OnCharacterUncoverCell(_pos, _char);
 }
 
-void Game::OnPlayerToggleFlagCell(WorldPosition _pos)
+void Game::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 {
-    m_gameWorld.OnPlayerToggleFlagCell(_pos);
+    m_gameWorld.OnCharacterToggleFlagCell(_pos, _char);
 
     if (m_gameWorld.getCell(_pos).m_state == Cell::State::FLAGGED)
         m_infoPanel.OnFlagSet();
@@ -431,7 +442,8 @@ void Game::Update(float _dt)
     else if (m_currentState == GameState::FINISH)
     {
         if (isKeyPressed(sf::Keyboard::R))
-            m_wantsToChangeState = true;
+            if (m_isMasterSession)
+                m_wantsToChangeState = true;
     }
 
     m_infoPanel.Update(_dt);

@@ -2,10 +2,15 @@
 #include "Utils.h"
 #include "Network/NetworkMessage.h"
 
+struct CharacterInfo
+{
+    sf::Color color = sf::Color::Yellow;
+};
+
 class Character
 {
 public:
-    Character(bool _isMaster, unsigned _id);
+    Character(bool _isMaster, unsigned _id, const CharacterInfo& _info);
     ~Character();
 
     void Update(float _dt);
@@ -18,6 +23,7 @@ public:
 
     bool IsMaster() const { return m_isMaster; }
     unsigned GetId() const { return m_id; }
+    const CharacterInfo& GetInfo() const { return m_info; }
 
     void OnReplicateCharacterMessageReceived(NetworkMessage& _message);
     void OnReplicateUncoverCellMessageReceived(NetworkMessage& _message);
@@ -52,4 +58,6 @@ private:
 
     bool m_isMaster = true; 
     unsigned m_id = 0;
+
+    CharacterInfo m_info;
 };

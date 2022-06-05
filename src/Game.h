@@ -34,8 +34,8 @@ public:
     void Update(float _dt);
     void Draw(sf::RenderWindow* _window);
 
-    void OnPlayerUncoverCell(WorldPosition _pos);
-    void OnPlayerToggleFlagCell(WorldPosition _pos);
+    void OnCharacterUncoverCell(WorldPosition _pos, Character& _char);
+    void OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char);
     void OnGameEnded(bool _isVictory);
 
     void OnStartButtonPressed();

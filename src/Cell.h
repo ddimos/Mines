@@ -2,6 +2,8 @@
 #include "Utils.h"
 #include <set>
 
+class Character;
+
 class Cell
 {
 public:
@@ -35,7 +37,7 @@ public:
 	void Render(sf::RenderWindow& _window);
 
     void OnUncoverCell();
-    void OnToggleFlag();
+    void OnToggleFlag(Character& _char);
 
 //private
 

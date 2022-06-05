@@ -30,9 +30,9 @@ void GameWorld::DestroyWorld()
     m_mainCharachter = nullptr;
 }
 
-void GameWorld::SpawnCharacter(bool _spawnMaster, unsigned _id)
+void GameWorld::SpawnCharacter(bool _spawnMaster, unsigned _id, const CharacterInfo& _info)
 {
-    m_characters.emplace_back(Character(_spawnMaster, _id));
+    m_characters.emplace_back(Character(_spawnMaster, _id, _info));
     std::string roleStr = (_spawnMaster) ? "M":"R";
     LOG("Spawn " + roleStr + " Id: " + tstr(_id));
     if (_spawnMaster)
@@ -77,10 +77,12 @@ Cell& GameWorld::getCell(WorldPosition _pos)
     return getCell(_pos.x, _pos.y);
 }
 
-void GameWorld::OnPlayerUncoverCell(WorldPosition _pos)
+void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
 {
-    if ( getCell(_pos).m_state == Cell::State::FLAGGED)
-    return;
+    (void)_char;
+    
+    if (getCell(_pos).m_state == Cell::State::FLAGGED)
+        return;
 
     if (getCell(_pos).m_type == Cell::ValueType::BOMB)
     {
@@ -94,9 +96,9 @@ void GameWorld::OnPlayerUncoverCell(WorldPosition _pos)
         uncoverCellsInRadius(_pos, m_mainCharachter->GetUncoverRadius());
 }
 
-void GameWorld::OnPlayerToggleFlagCell(WorldPosition _pos)
+void GameWorld::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 {
-    getCell(_pos).OnToggleFlag();
+    getCell(_pos).OnToggleFlag(_char);
 }
 
 void GameWorld::onUncoverCell(WorldPosition _pos)
@@ -231,6 +233,18 @@ unsigned GameWorld::GenerateId()
     return m_characters.size() + 1; // TODO: a real bad way to generate ids
 }
 
+sf::Color GameWorld::GenerateColor()
+{
+    const int red = getRand() % 255;
+    const int green = getRand() % 255;
+    const int blue = getRand() % 255;
+    return sf::Color(red, green, blue);
+    // static std::vector<sf::Color> colors;
+    // colors.push_back(sf::Color::Yellow);
+    // colors.push_back(sf::Color::Red);
+    // colors.push_back(sf::Color::Magenta);
+    // return colors[m_characters.size() + 1];
+}
 
 void GameWorld::OnReplicateCharacterMessageReceived(NetworkMessage& _message)
 {
