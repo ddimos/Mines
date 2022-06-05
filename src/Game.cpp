@@ -243,6 +243,11 @@ void Game::receiveNetworkMessages()
                     Network::Get().Send(message);
                 }
             }
+
+            PlayerInfo player;
+            player.name = event.sender.toString();
+            m_infoPanel.OnPlayerJoined(player);
+            m_players.emplace_back(std::move(player));
             
             break;
         }
@@ -250,6 +255,11 @@ void Game::receiveNetworkMessages()
         {
             LOG("ON_DISCONNECT");
 
+            auto it = std::find_if(m_players.begin(), m_players.end(),
+            [&event](const PlayerInfo& _p){ return _p.name == event.sender.toString(); });
+            m_infoPanel.OnPlayerLeft(*it);
+
+            m_players.erase(it, m_players.end());
             break;
         }
         case NetworkEvent::Type::ON_RECEIVE:

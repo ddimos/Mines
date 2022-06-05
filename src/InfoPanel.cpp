@@ -1,4 +1,5 @@
 #include "InfoPanel.h"
+#include "Game.h"
 #include <string>
 
 InfoPanel::InfoPanel(/* args */)
@@ -77,6 +78,25 @@ void InfoPanel::OnGameFinish()
     m_bombsNumText.setString("");
 }
 
+void InfoPanel::OnPlayerJoined(const PlayerInfo& _info)
+{
+    PlayerText player;
+    player.info = _info;
+    player.text.setFont(Game::Get().GetFont());
+    player.text.setString(_info.name);
+    player.text.setFillColor(_info.color);
+    const float posY = 300.f + m_players.size() * 50.f;
+    player.text.setPosition(sf::Vector2f{20.f, posY});
+    m_players.emplace_back(std::move(player));
+}
+
+void InfoPanel::OnPlayerLeft(const PlayerInfo& _info)
+{
+    m_players.erase(std::find_if(m_players.begin(), m_players.end(),
+      [&_info](const PlayerText& _p){ return _p.info.name == _info.name; }),
+      m_players.end());
+}
+
 void InfoPanel::Update(float _dt)
 {
 (void)_dt;
@@ -87,5 +107,7 @@ void InfoPanel::Render(sf::RenderWindow& _window)
     _window.draw(m_text);
     _window.draw(m_bombsNumText);
     _window.draw(m_enteredText);
+    for (auto& player : m_players)
+        _window.draw(player.text);
 }
     

@@ -1,5 +1,6 @@
 #pragma once
 #include "Utils.h"
+#include "PlayerInfo.h"
 
 class InfoPanel
 {
@@ -16,6 +17,8 @@ public:
     void OnEnterLobby(bool _isMaster);
     void OnGameStart(int _bombsNum);
     void OnGameFinish();
+    void OnPlayerJoined(const PlayerInfo& _info);
+    void OnPlayerLeft(const PlayerInfo& _info);
 
     void OnTextEntered(const std::string& _text);
     void OnFlagSet();
@@ -32,5 +35,12 @@ private:
     bool m_isMaster = true;
 
     int m_bombsLeft = 0;
+
+    struct PlayerText
+    {
+        sf::Text text;
+        PlayerInfo info;
+    };
+    std::vector<PlayerText> m_players;
 };
 

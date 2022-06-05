@@ -5,7 +5,7 @@
 #include "Camera.h"
 #include "InfoPanel.h"
 #include "GameWorld.h"
-
+#include "PlayerInfo.h"
 
 namespace sf
 {
@@ -76,6 +76,8 @@ private:
     unsigned m_seed = 0;
 
     bool m_isMasterSession = true; // Become a replica when sends a join request
+
+    std::vector<PlayerInfo> m_players;
 
     // State machine
     GameState m_currentState = GameState::None;
