@@ -142,7 +142,6 @@ void Game::onStateEnter(GameState _newState)
     case GameState::INIT:
         m_isMasterSession = true; // By default the value is true
         m_infoPanel.OnEnterInit();
-        m_infoPanel.OnTextEntered(m_enteredText);
         break;
     case GameState::LOBBY:
         initGame();
@@ -359,7 +358,8 @@ void Game::OnGameEnded(bool _isVictory)
 
 void Game::OnStartButtonPressed()
 {
-    size_t index = m_enteredText.find(":");
+    std::string enteredText = m_infoPanel.GetEnteredAddress();
+    size_t index = enteredText.find(":");
     if (index == std::string::npos)
     {
         LOG("No entered text. Assume to be a master");
@@ -369,29 +369,15 @@ void Game::OnStartButtonPressed()
     m_isMasterSession = false;
 
     NetworkAddress address;
-    address.address = sf::IpAddress(m_enteredText.substr(0, index));
-    address.port = std::stoi(m_enteredText.substr(index+1));
+    address.address = sf::IpAddress(enteredText.substr(0, index));
+    address.port = std::stoi(enteredText.substr(index+1));
 
     Network::Get().Connect(address);
 }
 
 void Game::OnTextEntered(sf::Uint32 _char)
 {
-    if (m_currentState == GameState::INIT)
-    {
-        if ((_char < 46 || _char > 58) && _char != 8) // Only numbers, a colon, a dot and Backspace
-            return;
-        
-        if (_char == 8) // Backspace
-        {
-            if (!m_enteredText.empty())
-                m_enteredText.pop_back();
-        }
-        else
-            m_enteredText += _char;
-
-        m_infoPanel.OnTextEntered(m_enteredText);
-    }
+    m_infoPanel.OnTextEntered(_char);
 }
 
 void Game::Update(float _dt)

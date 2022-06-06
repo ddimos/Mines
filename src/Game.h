@@ -43,7 +43,8 @@ public:
     void OnTextEntered(sf::Uint32 _char);
 
     const GameWorld& GetGameWorld() const { return m_gameWorld; }
-     
+    GameState GetState() const { return m_currentState; }
+
     // Resources
     const sf::Font& GetFont() const { return m_font; }
 
@@ -71,7 +72,6 @@ private:
     sf::View m_gameView;
     sf::View m_infoView;
 
-    std::string m_enteredText = "192.168.1.11";
     bool m_isGameEnded = false;
     unsigned m_seed = 0;
 
