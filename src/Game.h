@@ -62,7 +62,8 @@ private:
     void onStateExit(GameState _oldState);
     void updateState();
     void receiveNetworkMessages();
-    void sendCreateGameMessage();
+    void sendCreateGameMessage(NetworkAddress _address);
+    void shareLocalPlayerInfo(NetworkAddress _address);
 
     static Game* ms_game;
     sf::RenderWindow* m_window = nullptr;
@@ -78,6 +79,9 @@ private:
 
     bool m_isMasterSession = true; // Become a replica when sends a join request
 
+    NetworkMessage m_messageWithPlayers;
+    
+    PlayerInfo m_localPlayerInfo;
     std::vector<PlayerInfo> m_players;
 
     // State machine

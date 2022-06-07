@@ -189,8 +189,8 @@ void InfoPanel::OnPlayerJoined(const PlayerInfo& _info)
     player.info = _info;
     player.text.setFont(Game::Get().GetFont());
     player.text.setString(_info.name);
-    player.text.setFillColor(_info.color);
-    const float posY = 300.f + m_players.size() * 50.f;
+  //  player.text.setFillColor(_info.color);
+    const float posY = 400.f + m_players.size() * 40.f;
     player.text.setPosition(sf::Vector2f{20.f, posY});
     m_players.emplace_back(std::move(player));
 }

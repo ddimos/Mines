@@ -4,6 +4,27 @@
 #include "Network/Network.h"
 #include "NetworkMessageType.h"
 
+namespace
+{
+    std::string toString(GameState _state)
+    {
+        switch (_state)
+        {
+        case GameState::INIT:
+            return "INIT";
+        case GameState::LOBBY:
+            return "LOBBY";
+        case GameState::GAME:
+            return "GAME";
+        case GameState::FINISH:
+            return "FINISH";
+        default:
+            return "";
+        }
+    }
+} // namespace
+
+
 Game* Game::ms_game = nullptr;
 std::array<bool, sf::Keyboard::KeyCount> Game::ms_keysState;
 
@@ -144,14 +165,39 @@ void Game::onStateEnter(GameState _newState)
         m_infoPanel.OnEnterInit();
         break;
     case GameState::LOBBY:
-        initGame();
-        if (m_isMasterSession)
-            sendCreateGameMessage();
+        m_localPlayerInfo.name = m_infoPanel.GetEnteredName();
+        if (m_localPlayerInfo.name.empty())
+            m_localPlayerInfo.name = "Player";
+        m_localPlayerInfo.address = Network::Get().GetLocalAddress();
+        m_players.push_back(m_localPlayerInfo);
+        m_infoPanel.OnPlayerJoined(m_localPlayerInfo);
+
+        shareLocalPlayerInfo(NetworkAddress(sf::IpAddress::Broadcast));
         m_infoPanel.OnEnterLobby(m_isMasterSession );
         break;
     case GameState::GAME:
+        initGame();
         if (m_isMasterSession)
+        {
+            sendCreateGameMessage(NetworkAddress(sf::IpAddress::Broadcast));
             spawnCharacters();
+        }
+        else
+        {
+            while (!m_messageWithPlayers.IsEnd())
+            {
+                bool isMaster;
+                m_messageWithPlayers.Read(isMaster);
+                unsigned id;
+                m_messageWithPlayers.Read(id);
+                sf::Uint32 color;
+                m_messageWithPlayers.Read(color);
+                CharacterInfo info;
+                info.color = sf::Color(color);
+                m_gameWorld.SpawnCharacter(isMaster, id, info);
+            }
+            m_messageWithPlayers = {};
+        }
         
         m_infoPanel.OnGameStart(BOMBS_COUNT);
         break;
@@ -204,7 +250,7 @@ void Game::updateState()
         newState = GameState::FINISH;
         break;
     case GameState::FINISH:
-        newState = GameState::LOBBY;
+        newState = GameState::GAME;
         // TODO make an exit to main menu
         break;
     default:
@@ -212,6 +258,7 @@ void Game::updateState()
     }
 
     onStateExit(m_currentState);
+    LOG("Change the game state from: " + toString(m_currentState) + " to: "+ toString(newState));
     m_currentState = newState;
     onStateEnter(m_currentState);
 }
@@ -230,23 +277,27 @@ void Game::receiveNetworkMessages()
         {
             LOG("ON_CONNECT");
             
-            // TODO: send all knows peers
-
-            if (m_currentState == GameState::LOBBY)
             {
-                if (m_isMasterSession)
+                NetworkMessage message(event.sender, true);
+                message.Write(static_cast<sf::Uint16>(NetworkMessageType::SHARE_PEERS));
+                for (const Peer& peer : Network::Get().GetPeers())
                 {
-                    NetworkMessage message(event.sender, true);
-                    message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
-                    message.Write(static_cast<sf::Uint32>(m_seed));
-                    Network::Get().Send(message);
+                    if (peer.IsDown() || peer.GetAddress() == event.sender)
+                        continue;
+                    
+                    message.Write(peer.GetAddress().address.toInteger());
+                    message.Write(peer.GetAddress().port);
                 }
+                Network::Get().Send(message);
             }
 
-            PlayerInfo player;
-            player.name = event.sender.toString();
-            m_infoPanel.OnPlayerJoined(player);
-            m_players.emplace_back(std::move(player));
+            if (m_currentState != GameState::INIT)
+                shareLocalPlayerInfo(event.sender);   
+
+            // TODO if in the Game state - share characters
+
+            if (!m_isMasterSession)
+                m_wantsToChangeState = true;
             
             break;
         }
@@ -267,39 +318,48 @@ void Game::receiveNetworkMessages()
             event.message.Read(type1);
             NetworkMessageType type = static_cast<NetworkMessageType>(type1);   
 
-            if (type == NetworkMessageType::CREATE_GAME)
+            if (type == NetworkMessageType::SHARE_PEERS)
+            {
+                LOG("SHARE_PEERS");
+                while (!event.message.IsEnd())
+                {
+                    sf::Uint32 address;
+                    event.message.Read(address);
+                    unsigned short port;
+                    event.message.Read(port);
+                    NetworkAddress connectAddress(sf::IpAddress(address), port);
+                    // TODO checks if connected Network::Get().Connect(connectAddress);
+                }   
+            }
+            else if (type == NetworkMessageType::SHARE_LOCAL_PLAYER_INFO)
+            {
+                LOG("SHARE_LOCAL_PLAYER_INFO");
+                PlayerInfo player;
+                event.message.Read(player.name);
+                player.address = event.sender;
+                m_infoPanel.OnPlayerJoined(player);
+                m_players.emplace_back(std::move(player));
+            }
+            else if (type == NetworkMessageType::CREATE_GAME)
             {
                 LOG("CREATE_GAME");
-                if (m_currentState != GameState::INIT && m_currentState != GameState::FINISH)
+                if (m_currentState != GameState::LOBBY && m_currentState != GameState::FINISH)
                 {
                     LOG_ERROR("Cannot handle the CreateGame message in this state");
                     break;
                 }
                 
                 event.message.Read(m_seed);
-                m_wantsToChangeState = true;
             }
             else if (type == NetworkMessageType::CREATE_CHARACTER)
             {
                 LOG("CREATE_CHARACTER");
-                if (m_currentState != GameState::LOBBY)
+                if (m_currentState != GameState::LOBBY && m_currentState != GameState::FINISH)
                 {
                     LOG_ERROR("Cannot handle the CreateCharachter message in this state");
                     break;
                 }
-                while (!event.message.IsEnd())
-                {
-                    bool isMaster;
-                    event.message.Read(isMaster);
-                    unsigned id;
-                    event.message.Read(id);
-                    sf::Uint32 color;
-                    event.message.Read(color);
-                    CharacterInfo info;
-                    info.color = sf::Color(color);
-                    m_gameWorld.SpawnCharacter(isMaster, id, info);
-                }
-                
+                m_messageWithPlayers = event.message;
                 m_wantsToChangeState = true;
             }
             else if (type == NetworkMessageType::REPLICATE_CHARACTER_POS)
@@ -321,16 +381,19 @@ void Game::receiveNetworkMessages()
     }
 }
 
-void Game::sendCreateGameMessage()
+void Game::sendCreateGameMessage(NetworkAddress _address)
 {
-    if(!m_isMasterSession)
-        return;
-
-    NetworkAddress address;
-    address.address = sf::IpAddress::Broadcast;
-    NetworkMessage message(address, true);
+    NetworkMessage message(_address, true);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
     message.Write(static_cast<sf::Uint32>(m_seed));
+    Network::Get().Send(message);
+}
+
+void Game::shareLocalPlayerInfo(NetworkAddress _address)
+{
+    NetworkMessage message(_address, true);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::SHARE_LOCAL_PLAYER_INFO));
+    message.Write(m_localPlayerInfo.name);
     Network::Get().Send(message);
 }
 

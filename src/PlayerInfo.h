@@ -1,8 +1,10 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include "Network/NetworkAddress.h"
 
 struct PlayerInfo
 {
     std::string name = "";
-    sf::Color color = sf::Color::White;
+    NetworkAddress address;
+    //sf::Color color = sf::Color::White;
 };

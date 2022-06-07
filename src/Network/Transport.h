@@ -7,7 +7,8 @@ class Transport
 {
 public:
     void Send(sf::Packet _packet, NetworkAddress _address);
-
+    NetworkAddress GetLocalAddress() const { return m_localAddress; }
+    
 protected:
 
     Transport();
