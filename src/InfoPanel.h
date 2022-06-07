@@ -51,7 +51,7 @@ public:
     void OnEnterInit();
     void OnEnterLobby(bool _isMaster);
     void OnGameStart(int _bombsNum);
-    void OnGameFinish();
+    void OnGameFinish(bool _isVictory);
     void OnPlayerJoined(const PlayerInfo& _info);
     void OnPlayerLeft(const PlayerInfo& _info);
 

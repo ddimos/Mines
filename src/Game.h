@@ -73,6 +73,7 @@ private:
     sf::View m_infoView;
 
     bool m_isGameEnded = false;
+    bool m_isVictory = false;
     unsigned m_seed = 0;
 
     bool m_isMasterSession = true; // Become a replica when sends a join request

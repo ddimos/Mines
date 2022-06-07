@@ -156,7 +156,7 @@ void Game::onStateEnter(GameState _newState)
         m_infoPanel.OnGameStart(BOMBS_COUNT);
         break;
     case GameState::FINISH:
-        m_infoPanel.OnGameFinish();
+        m_infoPanel.OnGameFinish(m_isVictory);
         break;
     case GameState::None:
         break;
@@ -352,7 +352,7 @@ void Game::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 
 void Game::OnGameEnded(bool _isVictory)
 {
-    (void)_isVictory;
+    m_isVictory = _isVictory;
     m_isGameEnded = true;
 }
 

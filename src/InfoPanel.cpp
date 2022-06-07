@@ -88,7 +88,7 @@ InfoPanel::InfoPanel()
     m_text.setFillColor(sf::Color::Magenta);
     m_text.setCharacterSize(CHARACTER_SIZE_M);
 
-    m_bombsNumText.setPosition(sf::Vector2f{20.f, 200.f});
+    m_bombsNumText.setPosition(sf::Vector2f{20.f, 220.f});
     m_bombsNumText.setFillColor(sf::Color::Magenta);
 
     m_enteredAddressText.setPosition(sf::Vector2f{20.f, 240.f});
@@ -168,15 +168,18 @@ void InfoPanel::OnEnterLobby(bool _isMaster)
 void InfoPanel::OnGameStart(int _bombsNum)
 {
     updateBombsLeftText(_bombsNum);
-    m_text.setString("PLAY!!\n\nMovement - Arrows\nUncover - Space\nFlag/Unflag - X");
+    m_welcomeText.setString("PLAY!!");
+    m_text.setString("Movement - Arrows\nUncover - Space\nFlag/Unflag - X");
 }
 
-void InfoPanel::OnGameFinish()
+void InfoPanel::OnGameFinish(bool _isVictory)
 {
-    sf::String text = m_isMaster
+    sf::String text1 = _isVictory ? ":)" : ":(" ;
+    m_welcomeText.setString(text1);
+    sf::String text2 = m_isMaster
                 ? "To restart press R!!"
                 : "Wait for the host\nto restart"; // TODO \n\nOr press R\nto go to Menu";
-    m_text.setString(text);
+    m_text.setString(text2);
     m_bombsNumText.setString("");
 }
 
