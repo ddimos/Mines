@@ -5,6 +5,7 @@
 struct CharacterInfo
 {
     sf::Color color = sf::Color::Yellow;
+    NetworkAddress address;
 };
 
 class Character

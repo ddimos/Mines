@@ -113,19 +113,27 @@ void Game::spawnCharacters()
         return;
 
     {
-        CharacterInfo info;
-        info.color = m_gameWorld.GenerateColor();
+        CharacterInfo charInfo;
+        charInfo.color = m_gameWorld.GenerateColor();
         unsigned id = m_gameWorld.GenerateId();
-        m_gameWorld.SpawnCharacter(true, id, info);
+        auto* playerInfo = GetPlayerInfo(m_localPlayerInfo.address);
+        charInfo.address = playerInfo->address;
+        playerInfo->charInfoCopy = charInfo;
+        m_gameWorld.SpawnCharacter(true, id, charInfo);
+        m_infoPanel.OnCharachterSpawned(*playerInfo);
     }
 
     for (const Peer& peer : Network::Get().GetPeers())
     {
         (void)peer;
-        CharacterInfo info;
-        info.color = m_gameWorld.GenerateColor();
+        CharacterInfo charInfo;
+        charInfo.color = m_gameWorld.GenerateColor();
         unsigned id = m_gameWorld.GenerateId();
-        m_gameWorld.SpawnCharacter(false, id, info);   
+        auto* playerInfo = GetPlayerInfo(peer.GetAddress());
+        charInfo.address = playerInfo->address;
+        playerInfo->charInfoCopy = charInfo;
+        m_gameWorld.SpawnCharacter(false, id, charInfo);   
+        m_infoPanel.OnCharachterSpawned(*playerInfo);
     }
 
     size_t peerToBeMaster = 0;
@@ -139,6 +147,8 @@ void Game::spawnCharacters()
         {
             bool isThisPeerMaster = !ch.IsMaster() && Network::Get().GetPeers().size() - peersNumber == peerToBeMaster;
             message.Write(isThisPeerMaster);
+            message.Write(ch.GetInfo().address.address.toInteger()); // TODO I need a better way to identify players
+            message.Write(ch.GetInfo().address.port);
             message.Write(ch.GetId());
             message.Write(ch.GetInfo().color.toInteger());
             if (!ch.IsMaster())
@@ -188,13 +198,22 @@ void Game::onStateEnter(GameState _newState)
             {
                 bool isMaster;
                 m_messageWithPlayers.Read(isMaster);
+                sf::Uint32 address;
+                m_messageWithPlayers.Read(address);
+                unsigned short port;
+                m_messageWithPlayers.Read(port);
+                NetworkAddress playerAddress(sf::IpAddress(address), port);
                 unsigned id;
                 m_messageWithPlayers.Read(id);
                 sf::Uint32 color;
                 m_messageWithPlayers.Read(color);
-                CharacterInfo info;
-                info.color = sf::Color(color);
-                m_gameWorld.SpawnCharacter(isMaster, id, info);
+                CharacterInfo charInfo;
+                charInfo.color = sf::Color(color);
+                auto* playerInfo = GetPlayerInfo(playerAddress);
+                charInfo.address = playerInfo->address;
+                playerInfo->charInfoCopy = charInfo;
+                m_gameWorld.SpawnCharacter(isMaster, id, charInfo);
+                m_infoPanel.OnCharachterSpawned(*playerInfo);
             }
             m_messageWithPlayers = {};
         }
@@ -306,7 +325,7 @@ void Game::receiveNetworkMessages()
             LOG("ON_DISCONNECT");
 
             auto it = std::find_if(m_players.begin(), m_players.end(),
-            [&event](const PlayerInfo& _p){ return _p.name == event.sender.toString(); });
+            [&event](const PlayerInfo& _p){ return _p.address == event.sender; });
             m_infoPanel.OnPlayerLeft(*it);
 
             m_players.erase(it, m_players.end());
@@ -443,6 +462,15 @@ void Game::OnTextEntered(sf::Uint32 _char)
     m_infoPanel.OnTextEntered(_char);
 }
 
+PlayerInfo* Game::GetPlayerInfo(NetworkAddress _address)
+{
+    auto it = std::find_if(m_players.begin(), m_players.end(),
+        [&_address](const PlayerInfo& _p){ return _p.address == _address; });
+    if (it == m_players.end())
+        return nullptr;
+    return &(*it);
+}
+
 void Game::Update(float _dt)
 {
     receiveNetworkMessages();
@@ -455,7 +483,7 @@ void Game::Update(float _dt)
 
     if (m_currentState == GameState::INIT)
     {
-        if (isKeyPressed(sf::Keyboard::B))
+        if (isKeyPressed(sf::Keyboard::B) && !m_infoPanel.IsInInputMode())
         {
             OnStartButtonPressed();
             if (m_isMasterSession)

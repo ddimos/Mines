@@ -1,5 +1,6 @@
 #include "InfoPanel.h"
 #include "Game.h"
+#include "Log.h"
 #include <string>
 
 namespace
@@ -144,8 +145,8 @@ void InfoPanel::OnEnterInit()
 
     m_text.setString(
     "Start - B\n"
-    "Enter the address - A\n"
-    "Enter the name - N\n");
+    "Enter the address - Q\n"
+    "Enter the name - W\n");
 
     m_inputField.SetMode(InputField::EnterMode::MENU);
 }
@@ -189,17 +190,35 @@ void InfoPanel::OnPlayerJoined(const PlayerInfo& _info)
     player.info = _info;
     player.text.setFont(Game::Get().GetFont());
     player.text.setString(_info.name);
-  //  player.text.setFillColor(_info.color);
+    player.shape.setSize(sf::Vector2f{CELL_SIZE/1.3f, CELL_SIZE/1.3f});
+    player.shape.setOutlineColor(sf::Color::White);
+    player.shape.setOutlineThickness(1.5f);
+    
     const float posY = 400.f + m_players.size() * 40.f;
-    player.text.setPosition(sf::Vector2f{20.f, posY});
+    player.shape.setPosition(sf::Vector2f{10.f, posY + 10.f});
+    player.text.setPosition(sf::Vector2f{50.f, posY});
     m_players.emplace_back(std::move(player));
 }
 
 void InfoPanel::OnPlayerLeft(const PlayerInfo& _info)
 {
     m_players.erase(std::find_if(m_players.begin(), m_players.end(),
-      [&_info](const PlayerText& _p){ return _p.info.name == _info.name; }),
+      [&_info](const PlayerText& _p){ return _p.info.address == _info.address; }),
       m_players.end());
+}
+
+void InfoPanel::OnCharachterSpawned(const PlayerInfo& _info)
+{
+    auto it = std::find_if(m_players.begin(), m_players.end(),
+      [&_info](const PlayerText& _p){ return _p.info.address == _info.address; });
+    if (it == m_players.end())
+    {
+        LOG_ERROR("No player info for this address: " + _info.address.toString());
+        return;
+    }
+    it->isCharacterSpawned = true;
+    it->shape.setFillColor(_info.charInfoCopy.color);
+    it->info.charInfoCopy = _info.charInfoCopy;
 }
 
 void InfoPanel::Update(float _dt)
@@ -210,10 +229,10 @@ void InfoPanel::Update(float _dt)
     {
         if (m_inputField.GetMode() == InputField::EnterMode::MENU)
         {
-            if (Game::isKeyPressed(sf::Keyboard::A))
+            if (Game::isKeyPressed(sf::Keyboard::Q))
                 m_inputField.SetMode(InputField::EnterMode::ENTER_ADDRESS);
             
-            if (Game::isKeyPressed(sf::Keyboard::N))
+            if (Game::isKeyPressed(sf::Keyboard::W))
                 m_inputField.SetMode(InputField::EnterMode::ENTER_NAME);
         }
         else
@@ -247,7 +266,12 @@ void InfoPanel::Render(sf::RenderWindow& _window)
     _window.draw(m_enteredAddressText);
     _window.draw(m_enteredNameText);
     for (auto& player : m_players)
+    {
+        if (player.isCharacterSpawned)
+            _window.draw(player.shape);
+                
         _window.draw(player.text);
+    }
 
     m_inputField.Render(_window);    
 }

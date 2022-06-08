@@ -46,6 +46,8 @@ public:
     const std::string& GetEnteredAddress() const { return m_enteredAddress; }
     const std::string& GetEnteredName() const { return m_enteredName; }
 
+    bool IsInInputMode() const { return m_inputField.GetMode() != InputField::EnterMode::MENU; }
+    
     void OnInit(const sf::Font& _font);
 
     void OnEnterInit();
@@ -54,6 +56,7 @@ public:
     void OnGameFinish(bool _isVictory);
     void OnPlayerJoined(const PlayerInfo& _info);
     void OnPlayerLeft(const PlayerInfo& _info);
+    void OnCharachterSpawned(const PlayerInfo& _info);
 
     void OnTextEntered(sf::Uint32 _char);
     void OnFlagSet();
@@ -76,6 +79,8 @@ private:
     {
         sf::Text text;
         PlayerInfo info;
+        bool isCharacterSpawned = false;
+        sf::RectangleShape shape;
     };
     std::vector<PlayerText> m_players;
 

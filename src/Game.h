@@ -45,6 +45,8 @@ public:
     const GameWorld& GetGameWorld() const { return m_gameWorld; }
     GameState GetState() const { return m_currentState; }
 
+    PlayerInfo* GetPlayerInfo(NetworkAddress _address);
+
     // Resources
     const sf::Font& GetFont() const { return m_font; }
 
