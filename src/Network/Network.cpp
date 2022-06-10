@@ -230,6 +230,8 @@ void Network::Connect(NetworkAddress _addressToConnect)
         LOG_ERROR("Don't connect to " + _addressToConnect.toString() + " because it is already connected.");
         return;
     }
+    LOG("Connect to " + _addressToConnect.toString());
+
     m_peers.emplace_back(Peer(*this, _addressToConnect, false));
 }
 
@@ -249,6 +251,14 @@ void Network::Disconnect(NetworkAddress _addressToDisconnect)
         }   
         LOG_ERROR("Don't disconnect from " + _addressToDisconnect.toString() + " because this peer is not connected now.");
     }
+}
+
+bool Network::DoesPeerExist(NetworkAddress _address) const
+{
+    for (const Peer& peer : m_peers)
+        if (peer.GetAddress() == _address)
+            return true;
+    return false;
 }
 
 Peer* Network::getPeer(NetworkAddress _address)

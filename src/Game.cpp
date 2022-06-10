@@ -315,7 +315,7 @@ void Game::receiveNetworkMessages()
 
             // TODO if in the Game state - share characters
 
-            if (!m_isMasterSession)
+            if (!m_isMasterSession && m_currentState == GameState::INIT)
                 m_wantsToChangeState = true;
             
             break;
@@ -347,7 +347,8 @@ void Game::receiveNetworkMessages()
                     unsigned short port;
                     event.message.Read(port);
                     NetworkAddress connectAddress(sf::IpAddress(address), port);
-                    // TODO checks if connected Network::Get().Connect(connectAddress);
+                    if (!Network::Get().DoesPeerExist(connectAddress))
+                        Network::Get().Connect(connectAddress);
                 }   
             }
             else if (type == NetworkMessageType::SHARE_LOCAL_PLAYER_INFO)

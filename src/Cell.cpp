@@ -14,7 +14,8 @@ Cell::Cell(WorldPosition _position)
     m_flagShape.setPosition(_position.getWindowPosition() + sf::Vector2f{padding, padding});
     m_flagShape.setFillColor(sf::Color::Red);
     m_flagShape.setRadius(CELL_SIZE / RADIUS_DECREASE_KOEF);
-
+    m_flagShape.setOutlineColor(sf::Color::Black);
+    m_flagShape.setOutlineThickness(2.f);
 
     m_text.setPosition(_position.getWindowPosition());
     m_text.setFont(Game::Get().GetFont());

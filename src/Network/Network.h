@@ -25,6 +25,7 @@ public:
     void Disconnect(NetworkAddress _addressToDisconnect);   
 
     const std::vector<Peer>& GetPeers() const { return m_peers; }
+    bool DoesPeerExist(NetworkAddress _address) const;
 
 private:
     Network();
