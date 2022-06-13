@@ -1,5 +1,6 @@
 #include "App.h"
 #include "Log.h"
+#include "Config.h"
 #include "Game.h"
 #include "Network/Network.h"
 
@@ -17,6 +18,7 @@ bool Application::StartUp(sf::RenderWindow* window)
         LOG_ERROR("window is nullptr");
         return false;
     }
+    Config::StartUp("gameConfig.conf");
     Network::StartUp();
     Game::StartUp(window);
 
@@ -68,6 +70,7 @@ bool Application::ShutDown()
 
     Game::ShutDown();
     Network::ShutDown();
+    Config::ShutDown();
 
     return true;
 }
