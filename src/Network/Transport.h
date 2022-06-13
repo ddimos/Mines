@@ -8,7 +8,8 @@ class Transport
 public:
     void Send(sf::Packet _packet, NetworkAddress _address);
     NetworkAddress GetLocalAddress() const { return m_localAddress; }
-    
+    NetworkAddress GetPublicAddress() const { return m_publicAddress; }
+
 protected:
 
     Transport();
@@ -23,4 +24,5 @@ private:
 
     sf::UdpSocket m_localSocket;
     NetworkAddress m_localAddress = {};
+    NetworkAddress m_publicAddress = {};
 };

@@ -57,8 +57,10 @@ void Transport::createHost()
 
     m_localAddress.address = sf::IpAddress::getLocalAddress();
     m_localAddress.port = m_localSocket.getLocalPort();
+    m_publicAddress.address = sf::IpAddress::getPublicAddress();
+    m_publicAddress.port = m_localSocket.getLocalPort();
 
     LOG("\n\tHost created on a port:\t" + tstr(m_localSocket.getLocalPort()) 
      + "\n\tLocal address:\t\t" +  sf::IpAddress::getLocalAddress().toString()
-     + "\n\tGlobal:\t\t\t" + sf::IpAddress::getPublicAddress().toString());
+     + "\n\tGlobal:\t\t\t" + m_publicAddress.address.toString());
 }

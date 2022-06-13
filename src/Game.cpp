@@ -178,7 +178,8 @@ void Game::onStateEnter(GameState _newState)
         m_localPlayerInfo.name = m_infoPanel.GetEnteredName();
         if (m_localPlayerInfo.name.empty())
             m_localPlayerInfo.name = "Player";
-        m_localPlayerInfo.address = Network::Get().GetLocalAddress();
+        m_localPlayerInfo.address = Network::Get().GetPublicAddress();
+        // m_localPlayerInfo.address = Network::Get().GetLocalAddress();
         m_players.push_back(m_localPlayerInfo);
         m_infoPanel.OnPlayerJoined(m_localPlayerInfo);
 
