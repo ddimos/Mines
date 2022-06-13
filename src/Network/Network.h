@@ -12,7 +12,7 @@
 class Network : public Transport
 {
 public:
-    static bool StartUp();
+    static bool StartUp(unsigned short _port);
     static bool ShutDown();
     static Network& Get() {return *ms_network; }
 
@@ -28,7 +28,7 @@ public:
     bool DoesPeerExist(NetworkAddress _address) const;
 
 private:
-    Network();
+    Network(unsigned short _port);
     ~Network() = default;
     Network(const Network&) = delete;
     Network& operator=(const Network&) = delete;

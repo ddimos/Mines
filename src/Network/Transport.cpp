@@ -2,9 +2,9 @@
 #include "Log.h"
 #include <algorithm>
 
-Transport::Transport()
+Transport::Transport(unsigned short _port)
 {
-    createHost();
+    createHost(_port);
 }
 
 void Transport::Update()
@@ -37,13 +37,12 @@ void Transport::Send(sf::Packet _packet, NetworkAddress _address)
     m_localSocket.send(_packet, _address.address, _address.port);
 }
 
-void Transport::createHost()
+void Transport::createHost(unsigned short _port)
 {
     int attemptsLeft = 20;
-    unsigned short port = 20087;    // TODO: pass from a config file
-    while (m_localSocket.bind(port) != sf::Socket::Done || attemptsLeft < 0)
+    while (m_localSocket.bind(_port) != sf::Socket::Done || attemptsLeft < 0)
     {
-        ++port;
+        ++_port;
         --attemptsLeft;
     }
     

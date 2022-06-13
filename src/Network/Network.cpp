@@ -1,5 +1,4 @@
 #include "Network.h"
-#include "Utils.h"
 #include "Log.h"
 #include "InternalPacketType.h"
 #include "PacketHeader.h"
@@ -7,11 +6,11 @@
 
 Network* Network::ms_network = nullptr;
 
-bool Network::StartUp()
+bool Network::StartUp(unsigned short _port)
 {
     if (!ms_network)
     {
-        ms_network = new Network();
+        ms_network = new Network(_port);
         return true;
     }
     return false;
@@ -28,7 +27,8 @@ bool Network::ShutDown()
     return false;
 }
 
-Network::Network()
+Network::Network(unsigned short _port)
+    : Transport(_port)
 {
     m_peers.reserve(10);
 }

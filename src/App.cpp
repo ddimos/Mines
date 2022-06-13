@@ -1,5 +1,6 @@
 #include "App.h"
 #include "Log.h"
+#include "Constants.h"
 #include "Config.h"
 #include "Game.h"
 #include "Network/Network.h"
@@ -19,7 +20,7 @@ bool Application::StartUp(sf::RenderWindow* window)
         return false;
     }
     Config::StartUp("gameConfig.conf");
-    Network::StartUp();
+    Network::StartUp(Config::Get().GetConfig("port", DEFAULT_PORT));
     Game::StartUp(window);
 
     return true;

@@ -12,7 +12,7 @@ public:
 
 protected:
 
-    Transport();
+    Transport(unsigned short _port);
     virtual ~Transport() = default;
 
     void Update();
@@ -20,7 +20,7 @@ protected:
     virtual void OnReceivePacket(sf::Packet _packet, NetworkAddress _sender) = 0;
 
 private:
-    void createHost();
+    void createHost(unsigned short _port);
 
     sf::UdpSocket m_localSocket;
     NetworkAddress m_localAddress = {};
