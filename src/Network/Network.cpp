@@ -87,6 +87,34 @@ void Network::Send(const NetworkMessage& _message)
     }
 }
 
+void Network::CreateSession()
+{
+    m_isSessionMaster = true;
+    m_isSessionCreated = true;  // TODO: onSessionCreatedEvent
+}
+
+void Network::JoinSession(NetworkAddress _address, const std::string& _name)
+{
+    if (!m_isSessionCreated)
+    {
+        LOG_ERROR("Cannot join the session, because it isn't created");
+        return;
+    }
+
+
+    if (m_isSessionMaster)
+    {
+        auto& player = m_players.emplace_back(NetworkPlayer(_name, ++m_playerIdGenerator, true));
+        m_events.push(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, player)); // it's a copy
+    }
+    else
+    {
+        connect(_address);
+    }
+
+    
+}
+
 void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
 {
     Peer* senderPeer = getPeer(_sender);
@@ -105,8 +133,9 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
         }
         LOG("CONNECT_REQUEST received from " + _sender.toString());
 
-        m_peers.emplace_back(Peer(*this, _sender, true));
-        m_events.push(NetworkEvent(NetworkEvent::Type::ON_CONNECT, _sender));
+        Peer& peer = m_peers.emplace_back(Peer(*this, _sender, true));
+        onConnect(peer);
+    //    m_events.push(NetworkEvent(NetworkEvent::Type::ON_CONNECT, _sender));
         break;
     }
     case InternalPacketType::INTERNAL_CONNECT_ACCEPT:
@@ -123,7 +152,8 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
         }
         LOG("CONNECT_ACCEPT received from " + _sender.toString());
         senderPeer->OnConnectionAcceptReceived();
-        m_events.push(NetworkEvent(NetworkEvent::Type::ON_CONNECT, _sender));
+        onConnect(*senderPeer);
+        //m_events.push(NetworkEvent(NetworkEvent::Type::ON_CONNECT, _sender));
         break;
     }
     case InternalPacketType::INTERNAL_DISCONNECT:
@@ -182,6 +212,32 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
 
         break;
     }
+    //case InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST:
+    //{
+        // if (!senderPeer)
+        // {
+        //     LOG_ERROR("Received from " + _sender.toString() + " who is not in the list of peers");
+        //     break;
+        // }
+        // else if (!senderPeer->IsUp())
+        // {
+        //     LOG_ERROR("Received from " + _sender.toString() + " who is not UP");
+        //     break;
+        // }
+        // if (!m_isSessionMaster)
+        // {
+        //     LOG_ERROR("Cannot process the JoinRequest recieved from " + _sender.toString() + " because not the session master");
+        //     break;
+        // }
+        // LOG_DEBUG("JoinRequest received from " + _sender.toString());
+
+        // auto& player = m_players.emplace_back(NetworkPlayer(_name, ++m_playerIdGenerator, true));
+        // m_events.push(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, player));
+        
+        break;
+    //}
+    case InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST:
+    case InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT:
     case InternalPacketType::USER_PACKET:
     {
         if (!senderPeer)
@@ -223,7 +279,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
     }
 }
 
-void Network::Connect(NetworkAddress _addressToConnect)
+void Network::connect(NetworkAddress _addressToConnect)
 {
     if (getPeer(_addressToConnect))
     {
@@ -235,7 +291,7 @@ void Network::Connect(NetworkAddress _addressToConnect)
     m_peers.emplace_back(Peer(*this, _addressToConnect, false));
 }
 
-void Network::Disconnect(NetworkAddress _addressToDisconnect)
+void Network::disconnect(NetworkAddress _addressToDisconnect)
 {
     if (_addressToDisconnect.address == sf::IpAddress::Broadcast)
     {
@@ -268,4 +324,16 @@ Peer* Network::getPeer(NetworkAddress _address)
             return &peer;
         
     return nullptr;
+}
+
+void Network::onConnect(Peer& _peer)
+{
+    if (m_isSessionMaster)
+        return;
+    
+    NetworkMessage message(_peer.GetAddress(), true);
+    message.m_type = InternalPacketType::INTERNAL_JOIN_SESSION_REQUEST;
+    message.Write(m_pendingPlayerToJoin);
+    LOG_DEBUG("Send a join session request to " + _peer.GetAddress().toString());  
+    _peer.Send(message);
 }

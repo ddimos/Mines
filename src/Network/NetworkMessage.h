@@ -30,4 +30,5 @@ private:
     NetworkAddress m_address = {};
     bool m_isReliable = false;
     sf::Packet m_data;
+    InternalPacketType m_type = InternalPacketType::USER_PACKET;
 };

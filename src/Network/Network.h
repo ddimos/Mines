@@ -3,6 +3,7 @@
 #include "NetworkAddress.h"
 #include "NetworkMessage.h"
 #include "NetworkEvent.h"
+#include "NetworkPlayer.h"
 #include "Peer.h"
 #include "Transport.h"
 
@@ -21,8 +22,10 @@ public:
 
     void Send(const NetworkMessage& _message);
 
-    void Connect(NetworkAddress _addressToConnect);
-    void Disconnect(NetworkAddress _addressToDisconnect);   
+    void CreateSession();
+    void JoinSession(NetworkAddress _address, const std::string& _name);
+
+  
 
     const std::vector<Peer>& GetPeers() const { return m_peers; }
     bool DoesPeerExist(NetworkAddress _address) const;
@@ -37,9 +40,25 @@ private:
     
     Peer* getPeer(NetworkAddress _address);
 
+    void connect(NetworkAddress _addressToConnect);
+    void disconnect(NetworkAddress _addressToDisconnect); 
+
+    void onConnect(Peer& _peer);
+    void onDisconnect(NetworkAddress _addressToDisconnect) {} 
+
+    
     static Network* ms_network;
   
     std::queue<NetworkEvent> m_events;
     std::vector<Peer>   m_peers;
 
+    // session
+    std::vector<NetworkPlayer> m_players; // TODO sharedPtr
+
+    bool m_isSessionMaster = false;
+    bool m_isSessionCreated = false;
+
+    PlayerID m_playerIdGenerator = 0;
+
+    std::string m_pendingPlayerToJoin;
 };

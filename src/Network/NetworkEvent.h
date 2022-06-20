@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NetworkAddress.h"
+#include "NetworkPlayer.h"
 
 struct NetworkEvent
 {
@@ -8,10 +9,16 @@ struct NetworkEvent
     {
         ON_CONNECT,
         ON_RECEIVE,
-        ON_DISCONNECT
+        ON_DISCONNECT,
+        ON_PLAYER_JOIN,
+        ON_PLAYER_LEAVE
     };
 
     NetworkEvent() = default;
+    NetworkEvent(Type _type, const NetworkPlayer& _player)
+    : type(_type), player(_player)
+    {}
+
     NetworkEvent(Type _type, const NetworkAddress& _sender)
     : type(_type), sender(_sender)
     {}
@@ -21,5 +28,8 @@ struct NetworkEvent
     
     Type type;
     NetworkMessage message;
+    NetworkPlayer player;
+
+    /**/
     NetworkAddress sender;
 };
