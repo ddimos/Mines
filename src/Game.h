@@ -45,8 +45,9 @@ public:
     const GameWorld& GetGameWorld() const { return m_gameWorld; }
     GameState GetState() const { return m_currentState; }
 
-    PlayerInfo* GetPlayerInfo(NetworkAddress _address);
+    PlayerInfo* GetPlayerInfo(PlayerID _playerId);
 
+    bool IsSessionMaster() const;
     // Resources
     const sf::Font& GetFont() const { return m_font; }
 
@@ -65,7 +66,6 @@ private:
     void updateState();
     void receiveNetworkMessages();
     void sendCreateGameMessage(NetworkAddress _address);
-    void shareLocalPlayerInfo(NetworkAddress _address);
 
     static Game* ms_game;
     sf::RenderWindow* m_window = nullptr;
@@ -78,8 +78,6 @@ private:
     bool m_isGameEnded = false;
     bool m_isVictory = false;
     unsigned m_seed = 0;
-
-    bool m_isMasterSession = true; // Become a replica when sends a join request
 
     NetworkMessage m_messageWithPlayers;
     

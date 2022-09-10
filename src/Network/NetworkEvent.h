@@ -7,9 +7,7 @@ struct NetworkEvent
 {
     enum class Type
     {
-        ON_CONNECT,
         ON_RECEIVE,
-        ON_DISCONNECT,
         ON_PLAYER_JOIN,
         ON_PLAYER_LEAVE
     };

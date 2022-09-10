@@ -31,6 +31,7 @@ Network::Network(unsigned short _port)
     : Transport(_port)
 {
     m_peers.reserve(10);
+    m_players.reserve(10); // TODO use ptrs
 }
 
 bool Network::PollEvents(NetworkEvent& _event)
@@ -58,7 +59,7 @@ void Network::Update(float _dt)
     {
         if (_peer.IsDown())
         {
-            m_events.push(NetworkEvent(NetworkEvent::Type::ON_DISCONNECT, _peer.GetAddress()));
+            onDisconnect(_peer);
             return true;
         }
         return false;
@@ -87,32 +88,23 @@ void Network::Send(const NetworkMessage& _message)
     }
 }
 
-void Network::CreateSession()
+void Network::CreateAndJoinSession(const std::string& _playerName)
 {
     m_isSessionMaster = true;
     m_isSessionCreated = true;  // TODO: onSessionCreatedEvent
+
+    m_localPlayer = createPlayerIntrernal(_playerName, ++m_playerIdGenerator, true);
+    m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, *m_localPlayer)); // it's a copy
 }
 
-void Network::JoinSession(NetworkAddress _address, const std::string& _name)
+void Network::JoinSession(NetworkAddress _address, const std::string& _playerName)
 {
-    if (!m_isSessionCreated)
-    {
-        LOG_ERROR("Cannot join the session, because it isn't created");
+    if (m_isSessionMaster || m_connectingToHost)
         return;
-    }
-
-
-    if (m_isSessionMaster)
-    {
-        auto& player = m_players.emplace_back(NetworkPlayer(_name, ++m_playerIdGenerator, true));
-        m_events.push(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, player)); // it's a copy
-    }
-    else
-    {
-        connect(_address);
-    }
-
     
+    m_connectingToHost = true;
+    m_localPlayer = createPlayerIntrernal(_playerName, PlayerIdInvalid, true);
+    connect(_address);
 }
 
 void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
@@ -131,11 +123,16 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             LOG_ERROR("CONNECT_REQUEST received again from " + _sender.toString());
             break;
         }
+        if (!m_isSessionMaster)
+        {
+            LOG_ERROR("Cannot process CONNECT_REQUEST recieved from " + _sender.toString() + " because not the session master");
+            break;
+        }
+        
         LOG("CONNECT_REQUEST received from " + _sender.toString());
 
         Peer& peer = m_peers.emplace_back(Peer(*this, _sender, true));
         onConnect(peer);
-    //    m_events.push(NetworkEvent(NetworkEvent::Type::ON_CONNECT, _sender));
         break;
     }
     case InternalPacketType::INTERNAL_CONNECT_ACCEPT:
@@ -153,7 +150,6 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
         LOG("CONNECT_ACCEPT received from " + _sender.toString());
         senderPeer->OnConnectionAcceptReceived();
         onConnect(*senderPeer);
-        //m_events.push(NetworkEvent(NetworkEvent::Type::ON_CONNECT, _sender));
         break;
     }
     case InternalPacketType::INTERNAL_DISCONNECT:
@@ -182,7 +178,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
         else if (senderPeer->GetStatus() == Peer::Status::CONNECTING)
         {
             senderPeer->OnConnectionAcceptReceived();
-            m_events.push(NetworkEvent(NetworkEvent::Type::ON_CONNECT, _sender));
+            onConnect(*senderPeer);
             LOG("Received a heartbeat from " + _sender.toString() + " while waiting for connection accept");
         }
         else if (!senderPeer->IsUp())
@@ -212,30 +208,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
 
         break;
     }
-    //case InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST:
-    //{
-        // if (!senderPeer)
-        // {
-        //     LOG_ERROR("Received from " + _sender.toString() + " who is not in the list of peers");
-        //     break;
-        // }
-        // else if (!senderPeer->IsUp())
-        // {
-        //     LOG_ERROR("Received from " + _sender.toString() + " who is not UP");
-        //     break;
-        // }
-        // if (!m_isSessionMaster)
-        // {
-        //     LOG_ERROR("Cannot process the JoinRequest recieved from " + _sender.toString() + " because not the session master");
-        //     break;
-        // }
-        // LOG_DEBUG("JoinRequest received from " + _sender.toString());
-
-        // auto& player = m_players.emplace_back(NetworkPlayer(_name, ++m_playerIdGenerator, true));
-        // m_events.push(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, player));
-        
-        break;
-    //}
+    
     case InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST:
     case InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT:
     case InternalPacketType::USER_PACKET:
@@ -256,6 +229,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
         message.m_data = std::move(_packet);
         message.m_address = _sender;
         message.m_isReliable = header.isReliable;
+        message.m_type = header.type;
 
         if (header.isReliable)
         {
@@ -263,7 +237,14 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             auto& messages = senderPeer->GetMessagesToDeliver();
             while(!messages.empty())
             {
-                m_events.push(NetworkEvent(NetworkEvent::Type::ON_RECEIVE, std::move(messages.front()), _sender));
+                auto& mes = messages.front();   // It's a real mess to have different types here
+                if (mes.m_type == InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST)
+                    processSessionJoinRequest(mes, senderPeer);
+                else if (mes.m_type == InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT)
+                    processSessionJoinAccept(mes);
+                else
+                    m_events.push(NetworkEvent(NetworkEvent::Type::ON_RECEIVE, std::move(mes), _sender));
+                
                 messages.pop();
             }
         }
@@ -332,8 +313,95 @@ void Network::onConnect(Peer& _peer)
         return;
     
     NetworkMessage message(_peer.GetAddress(), true);
-    message.m_type = InternalPacketType::INTERNAL_JOIN_SESSION_REQUEST;
-    message.Write(m_pendingPlayerToJoin);
+    message.m_type = InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST;
+    message.Write(m_localPlayer->m_name);
     LOG_DEBUG("Send a join session request to " + _peer.GetAddress().toString());  
     _peer.Send(message);
 }
+
+void Network::onDisconnect(const Peer& _peer)
+{
+    if (m_isSessionMaster)
+    {
+        // One player leave
+        // send a brodacast 
+    }
+    else
+    {
+        // All players leave
+        // for (NetworkPlayer& player : m_players) 
+        //m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_LEAVE, *player));
+    }
+    
+    // add a player left if it's a master
+    // ? a host left if not a master?
+}
+
+NetworkPlayer* Network::createPlayerIntrernal(const std::string& _name, PlayerID _id, bool _isLocal)
+{
+    auto& player = m_players.emplace_back(NetworkPlayer(_name, _id, _isLocal));
+    return &player;
+}
+
+void Network::processSessionJoinRequest(NetworkMessage& _message, Peer* _peer)
+{
+    if (!m_isSessionMaster)
+    {
+        LOG_ERROR("Cannot process the JoinRequest recieved from " + _message.GetAddress().toString() + " because not the session master");
+        return;
+    }
+    LOG_DEBUG("JoinRequest received from " + _message.GetAddress().toString()); // TODO replace with a peer id
+
+    std::string newPlayerName;
+    _message.Read(newPlayerName);
+    PlayerID newPlayerId = ++m_playerIdGenerator;
+
+    NetworkMessage message(_peer->GetAddress(), true);
+    message.m_type = InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT;
+    message.Write(newPlayerName);
+    message.Write(newPlayerId);
+    for (const auto& player : m_players)
+    {
+        message.Write(player.m_name);
+        message.Write(player.m_id);
+    }
+    
+    LOG_DEBUG("Send a join session accept to " + _peer->GetAddress().toString());  
+    Send(message);   
+     
+    auto* player = createPlayerIntrernal(newPlayerName, newPlayerId, false);
+    player->m_peer = _peer; // I guess I need this only on the host side
+    m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, *player));
+}
+
+void Network::processSessionJoinAccept(NetworkMessage& _message)
+{
+    if (m_isSessionMaster)
+    {
+        LOG_ERROR("The session master should not receive a JoinAccept");
+        return;
+    }
+
+    LOG_DEBUG("JoinAccept received from " + _message.GetAddress().toString());
+
+    std::string playerName;
+    PlayerID playerId;
+    _message.Read(playerName);
+    _message.Read(playerId);
+
+    if (m_localPlayer->m_name != playerName)
+    {
+        LOG_ERROR("The local player name is not equal to the one received from the host: " + m_localPlayer->m_name + " != " + playerName);
+        return;
+    }
+    m_localPlayer->m_id = playerId;
+    m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, *m_localPlayer));
+    while (!_message.IsEnd())
+    {
+        _message.Read(playerName);
+        _message.Read(playerId);
+        auto player = createPlayerIntrernal(playerName, playerId, false);
+        m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, *player));
+    }
+}
+    

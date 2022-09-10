@@ -22,10 +22,10 @@ public:
 
     void Send(const NetworkMessage& _message);
 
-    void CreateSession();
+    void CreateAndJoinSession(const std::string& _playerName);  // Should be just CreateSession when I have a server
     void JoinSession(NetworkAddress _address, const std::string& _name);
 
-  
+    bool IsSessionMaster() const { return m_isSessionMaster; }
 
     const std::vector<Peer>& GetPeers() const { return m_peers; }
     bool DoesPeerExist(NetworkAddress _address) const;
@@ -44,19 +44,25 @@ private:
     void disconnect(NetworkAddress _addressToDisconnect); 
 
     void onConnect(Peer& _peer);
-    void onDisconnect(NetworkAddress _addressToDisconnect) {} 
+    void onDisconnect(const Peer& _peer);
 
+    void processSessionJoinRequest(NetworkMessage& _message, Peer* _peer);
+    void processSessionJoinAccept(NetworkMessage& _message);
     
     static Network* ms_network;
   
     std::queue<NetworkEvent> m_events;
     std::vector<Peer>   m_peers;
 
+
     // session
+    NetworkPlayer* createPlayerIntrernal(const std::string& _name, PlayerID _id, bool _isLocal);
     std::vector<NetworkPlayer> m_players; // TODO sharedPtr
+    NetworkPlayer* m_localPlayer = nullptr;
 
     bool m_isSessionMaster = false;
     bool m_isSessionCreated = false;
+    bool m_connectingToHost = false;
 
     PlayerID m_playerIdGenerator = 0;
 

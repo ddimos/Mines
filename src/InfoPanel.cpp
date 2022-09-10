@@ -189,7 +189,7 @@ void InfoPanel::OnPlayerJoined(const PlayerInfo& _info)
     PlayerText player;
     player.info = _info;
     player.text.setFont(Game::Get().GetFont());
-    player.text.setString(_info.name);
+    player.text.setString(_info.networkPlayerCopy.GetName());
     player.shape.setSize(sf::Vector2f{CELL_SIZE/1.3f, CELL_SIZE/1.3f});
     player.shape.setOutlineColor(sf::Color::White);
     player.shape.setOutlineThickness(1.5f);
@@ -203,17 +203,17 @@ void InfoPanel::OnPlayerJoined(const PlayerInfo& _info)
 void InfoPanel::OnPlayerLeft(const PlayerInfo& _info)
 {
     m_players.erase(std::find_if(m_players.begin(), m_players.end(),
-      [&_info](const PlayerText& _p){ return _p.info.address == _info.address; }),
+      [&_info](const PlayerText& _p){ return _p.info.networkPlayerCopy.GetPlayerId() == _info.networkPlayerCopy.GetPlayerId(); }),
       m_players.end());
 }
 
 void InfoPanel::OnCharachterSpawned(const PlayerInfo& _info)
 {
     auto it = std::find_if(m_players.begin(), m_players.end(),
-      [&_info](const PlayerText& _p){ return _p.info.address == _info.address; });
+      [&_info](const PlayerText& _p){ return _p.info.networkPlayerCopy.GetPlayerId() == _info.networkPlayerCopy.GetPlayerId(); });
     if (it == m_players.end())
     {
-        LOG_ERROR("No player info for this address: " + _info.address.toString());
+        LOG_ERROR("No player info for this id: " + tstr(_info.networkPlayerCopy.GetPlayerId()));
         return;
     }
     it->isCharacterSpawned = true;

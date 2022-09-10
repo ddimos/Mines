@@ -1,11 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "Network/NetworkAddress.h"
+#include "Network/NetworkPlayer.h"
 #include "Character.h"
 
 struct PlayerInfo
 {
-    std::string name = "";
-    NetworkAddress address;
+
+    // TODO add GetPlayerId() GetName()
+    NetworkPlayer networkPlayerCopy;
     CharacterInfo charInfoCopy;
 };

@@ -1,8 +1,10 @@
 #pragma once 
 #include "NetworkAddress.h"
+#include "InternalPacketType.h"
 #include <SFML/Network.hpp>
 
 class Network;
+class Peer;
 
 class NetworkMessage final
 {
@@ -26,6 +28,7 @@ public:
 
 private:
     friend class Network;
+    friend class Peer;
 
     NetworkAddress m_address = {};
     bool m_isReliable = false;

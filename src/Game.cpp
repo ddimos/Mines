@@ -3,6 +3,7 @@
 #include "Config.h"
 #include "Log.h"
 #include "Network/Network.h"
+#include "Network/NetworkPlayer.h"
 #include "NetworkMessageType.h"
 
 namespace
@@ -100,7 +101,7 @@ void Game::loadResources()
 
 void Game::initGame()
 {
-    if (m_isMasterSession)
+    if (IsSessionMaster())
         m_seed = time(NULL);
     WorldPosition worldSize = {CELL_COUNT, CELL_COUNT};
     LOG("Create a game world. Seed: " + tstr(m_seed) + " X: " + tstr(worldSize.x) + " Y: " + tstr(worldSize.y) + " Bombs: " + tstr(BOMBS_COUNT));
@@ -110,35 +111,22 @@ void Game::initGame()
 
 void Game::spawnCharacters()
 {
-    if (!m_isMasterSession)
+    if (!IsSessionMaster())
         return;
 
+    for (PlayerInfo& playerInfo : m_players)
     {
         CharacterInfo charInfo;
         charInfo.color = m_gameWorld.GenerateColor();
-        unsigned id = m_gameWorld.GenerateId();
-        auto* playerInfo = GetPlayerInfo(m_localPlayerInfo.address);
-        charInfo.address = playerInfo->address;
-        playerInfo->charInfoCopy = charInfo;
-        m_gameWorld.SpawnCharacter(true, id, charInfo);
-        m_infoPanel.OnCharachterSpawned(*playerInfo);
-    }
-
-    for (const Peer& peer : Network::Get().GetPeers())
-    {
-        (void)peer;
-        CharacterInfo charInfo;
-        charInfo.color = m_gameWorld.GenerateColor();
-        unsigned id = m_gameWorld.GenerateId();
-        auto* playerInfo = GetPlayerInfo(peer.GetAddress());
-        charInfo.address = playerInfo->address;
-        playerInfo->charInfoCopy = charInfo;
-        m_gameWorld.SpawnCharacter(false, id, charInfo);   
-        m_infoPanel.OnCharachterSpawned(*playerInfo);
+        unsigned id = m_gameWorld.GenerateId();      // Maybe I can use a player id
+        charInfo.playerId = playerInfo.networkPlayerCopy.GetPlayerId();
+        playerInfo.charInfoCopy = charInfo;
+        m_gameWorld.SpawnCharacter(playerInfo.networkPlayerCopy.IsLocal(), id, charInfo);   
+        m_infoPanel.OnCharachterSpawned(playerInfo);
     }
 
     size_t peerToBeMaster = 0;
-    for (const Peer& peer : Network::Get().GetPeers())
+    for (const Peer& peer : Network::Get().GetPeers())  // ?Iterate network players
     {
         NetworkMessage message(peer.GetAddress(), true);
         message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_CHARACTER));
@@ -146,10 +134,10 @@ void Game::spawnCharacters()
         size_t peersNumber = Network::Get().GetPeers().size();
         for(const Character& ch : m_gameWorld.GetCharacters())
         {
+            // TODO masters only on the host
             bool isThisPeerMaster = !ch.IsMaster() && Network::Get().GetPeers().size() - peersNumber == peerToBeMaster;
             message.Write(isThisPeerMaster);
-            message.Write(ch.GetInfo().address.address.toInteger()); // TODO I need a better way to identify players
-            message.Write(ch.GetInfo().address.port);
+            message.Write(ch.GetInfo().playerId);
             message.Write(ch.GetId());
             message.Write(ch.GetInfo().color.toInteger());
             if (!ch.IsMaster())
@@ -172,26 +160,14 @@ void Game::onStateEnter(GameState _newState)
     switch (_newState)
     {
     case GameState::INIT:
-        m_isMasterSession = true; // By default the value is true
         m_infoPanel.OnEnterInit();
         break;
     case GameState::LOBBY:
-        m_localPlayerInfo.name = m_infoPanel.GetEnteredName();
-        if (m_localPlayerInfo.name.empty())
-            m_localPlayerInfo.name = "Player";
-        
-        m_localPlayerInfo.address = (Config::Get().GetConfig("isLocalPlay", true)) 
-                    ? Network::Get().GetLocalAddress()
-                    : Network::Get().GetPublicAddress();
-        m_players.push_back(m_localPlayerInfo);
-        m_infoPanel.OnPlayerJoined(m_localPlayerInfo);
-
-        shareLocalPlayerInfo(NetworkAddress(sf::IpAddress::Broadcast));
-        m_infoPanel.OnEnterLobby(m_isMasterSession );
+        m_infoPanel.OnEnterLobby(IsSessionMaster());
         break;
     case GameState::GAME:
         initGame();
-        if (m_isMasterSession)
+        if (IsSessionMaster())
         {
             sendCreateGameMessage(NetworkAddress(sf::IpAddress::Broadcast));
             spawnCharacters();
@@ -202,21 +178,19 @@ void Game::onStateEnter(GameState _newState)
             {
                 bool isMaster;
                 m_messageWithPlayers.Read(isMaster);
-                sf::Uint32 address;
-                m_messageWithPlayers.Read(address);
-                unsigned short port;
-                m_messageWithPlayers.Read(port);
-                NetworkAddress playerAddress(sf::IpAddress(address), port);
-                unsigned id;
-                m_messageWithPlayers.Read(id);
+                PlayerID playerId;
+                m_messageWithPlayers.Read(playerId);
+                unsigned characterId;
+                m_messageWithPlayers.Read(characterId);
                 sf::Uint32 color;
                 m_messageWithPlayers.Read(color);
+                
                 CharacterInfo charInfo;
                 charInfo.color = sf::Color(color);
-                auto* playerInfo = GetPlayerInfo(playerAddress);
-                charInfo.address = playerInfo->address;
+                charInfo.playerId = playerId;
+                m_gameWorld.SpawnCharacter(isMaster, characterId, charInfo);
+                auto* playerInfo = GetPlayerInfo(playerId);
                 playerInfo->charInfoCopy = charInfo;
-                m_gameWorld.SpawnCharacter(isMaster, id, charInfo);
                 m_infoPanel.OnCharachterSpawned(*playerInfo);
             }
             m_messageWithPlayers = {};
@@ -296,40 +270,28 @@ void Game::receiveNetworkMessages()
 
         switch (event.type)
         {
-        case NetworkEvent::Type::ON_CONNECT: 
+        case NetworkEvent::Type::ON_PLAYER_JOIN: 
         {
-            LOG("ON_CONNECT");
+            LOG("ON_PLAYER_JOIN " + event.player.GetName());
             
+            PlayerInfo playerInfo;  // Do I even need this playerInfo??
+            playerInfo.networkPlayerCopy = event.player;
+            m_players.push_back(playerInfo);
+            m_infoPanel.OnPlayerJoined(playerInfo);
+            
+            if (event.player.IsLocal())
             {
-                NetworkMessage message(event.sender, true);
-                message.Write(static_cast<sf::Uint16>(NetworkMessageType::SHARE_PEERS));
-                for (const Peer& peer : Network::Get().GetPeers())
-                {
-                    if (peer.IsDown() || peer.GetAddress() == event.sender)
-                        continue;
-                    
-                    message.Write(peer.GetAddress().address.toInteger());
-                    message.Write(peer.GetAddress().port);
-                }
-                Network::Get().Send(message);
-            }
-
-            if (m_currentState != GameState::INIT)
-                shareLocalPlayerInfo(event.sender);   
-
-            // TODO if in the Game state - share characters
-
-            if (!m_isMasterSession && m_currentState == GameState::INIT)
+                m_localPlayerInfo = playerInfo;
                 m_wantsToChangeState = true;
-            
+            }
             break;
         }
-        case NetworkEvent::Type::ON_DISCONNECT:
+        case NetworkEvent::Type::ON_PLAYER_LEAVE:
         {
-            LOG("ON_DISCONNECT");
+            LOG("ON_PLAYER_LEAVE " + event.player.GetName());
 
             auto it = std::find_if(m_players.begin(), m_players.end(),
-            [&event](const PlayerInfo& _p){ return _p.address == event.sender; });
+            [&event](const PlayerInfo& _p){ return _p.networkPlayerCopy.GetPlayerId() == event.player.GetPlayerId(); });
             m_infoPanel.OnPlayerLeft(*it);
 
             m_players.erase(it, m_players.end());
@@ -341,30 +303,7 @@ void Game::receiveNetworkMessages()
             event.message.Read(type1);
             NetworkMessageType type = static_cast<NetworkMessageType>(type1);   
 
-            if (type == NetworkMessageType::SHARE_PEERS)
-            {
-                LOG("SHARE_PEERS");
-                while (!event.message.IsEnd())
-                {
-                    sf::Uint32 address;
-                    event.message.Read(address);
-                    unsigned short port;
-                    event.message.Read(port);
-                    NetworkAddress connectAddress(sf::IpAddress(address), port);
-                    if (!Network::Get().DoesPeerExist(connectAddress))
-                        Network::Get().Connect(connectAddress);
-                }   
-            }
-            else if (type == NetworkMessageType::SHARE_LOCAL_PLAYER_INFO)
-            {
-                LOG("SHARE_LOCAL_PLAYER_INFO");
-                PlayerInfo player;
-                event.message.Read(player.name);
-                player.address = event.sender;
-                m_infoPanel.OnPlayerJoined(player);
-                m_players.emplace_back(std::move(player));
-            }
-            else if (type == NetworkMessageType::CREATE_GAME)
+            if (type == NetworkMessageType::CREATE_GAME)
             {
                 LOG("CREATE_GAME");
                 if (m_currentState != GameState::LOBBY && m_currentState != GameState::FINISH)
@@ -413,14 +352,6 @@ void Game::sendCreateGameMessage(NetworkAddress _address)
     Network::Get().Send(message);
 }
 
-void Game::shareLocalPlayerInfo(NetworkAddress _address)
-{
-    NetworkMessage message(_address, true);
-    message.Write(static_cast<sf::Uint16>(NetworkMessageType::SHARE_LOCAL_PLAYER_INFO));
-    message.Write(m_localPlayerInfo.name);
-    Network::Get().Send(message);
-}
-
 void Game::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
 {
     m_gameWorld.OnCharacterUncoverCell(_pos, _char);
@@ -449,17 +380,16 @@ void Game::OnStartButtonPressed()
     size_t index = enteredText.find(":");
     if (index == std::string::npos)
     {
+        Network::Get().CreateAndJoinSession(m_infoPanel.GetEnteredName());
         LOG("No entered text. Assume to be a master");
         return;
     }
-
-    m_isMasterSession = false;
 
     NetworkAddress address;
     address.address = sf::IpAddress(enteredText.substr(0, index));
     address.port = std::stoi(enteredText.substr(index+1));
 
-    Network::Get().Connect(address);
+    Network::Get().JoinSession(address, m_infoPanel.GetEnteredName());
 }
 
 void Game::OnTextEntered(sf::Uint32 _char)
@@ -467,13 +397,18 @@ void Game::OnTextEntered(sf::Uint32 _char)
     m_infoPanel.OnTextEntered(_char);
 }
 
-PlayerInfo* Game::GetPlayerInfo(NetworkAddress _address)
+PlayerInfo* Game::GetPlayerInfo(PlayerID _playerId)
 {
     auto it = std::find_if(m_players.begin(), m_players.end(),
-        [&_address](const PlayerInfo& _p){ return _p.address == _address; });
+        [_playerId](const PlayerInfo& _p){ return _p.networkPlayerCopy.GetPlayerId() == _playerId; });
     if (it == m_players.end())
         return nullptr;
     return &(*it);
+}
+
+bool Game::IsSessionMaster() const
+{
+    return Network::Get().IsSessionMaster();
 }
 
 void Game::Update(float _dt)
@@ -491,7 +426,7 @@ void Game::Update(float _dt)
         if (isKeyPressed(sf::Keyboard::B) && !m_infoPanel.IsInInputMode())
         {
             OnStartButtonPressed();
-            if (m_isMasterSession)
+            if (IsSessionMaster())
                 m_wantsToChangeState = true;            
         }
     }
@@ -499,7 +434,7 @@ void Game::Update(float _dt)
     {
         if (isKeyPressed(sf::Keyboard::B))
         {
-            if (m_isMasterSession)
+            if (IsSessionMaster())
                 m_wantsToChangeState = true;            
         }
 // #if DEBUG
@@ -517,7 +452,7 @@ void Game::Update(float _dt)
         {
             NetworkAddress address;
             address.address = sf::IpAddress::Broadcast;
-            Network::Get().Disconnect(address);
+            // TODO Network::Get().Disconnect(address);
         }
 // #endif
         
@@ -534,7 +469,7 @@ void Game::Update(float _dt)
     else if (m_currentState == GameState::FINISH)
     {
         if (isKeyPressed(sf::Keyboard::R))
-            if (m_isMasterSession)
+            if (IsSessionMaster())
                 m_wantsToChangeState = true;
     }
 

@@ -1,11 +1,12 @@
 #pragma once
 #include "Utils.h"
 #include "Network/NetworkMessage.h"
+#include "Network/NetworkPlayer.h"
 
 struct CharacterInfo
 {
     sf::Color color = sf::Color::Yellow;
-    NetworkAddress address;
+    PlayerID playerId = PlayerIdInvalid;
 };
 
 class Character
