@@ -78,6 +78,19 @@ void Network::Send(const NetworkMessage& _message)
                 LOG("Don't send the message to the peer " + _message.GetAddress().toString() + " because it isn't up.");
         }
     }
+    else if(_message.IsExcludeBroadcast())
+    {
+        for (Peer& peer : m_peers)
+        {
+            if (peer.GetAddress() == _message.GetAddress())
+                continue;
+            
+            if (peer.IsUp())
+                peer.Send(_message);
+            else
+                LOG("Don't send the message to the peer " + _message.GetAddress().toString() + " because it isn't up.");
+        }
+    }
     else
     {
         Peer* peer = getPeer(_message.GetAddress());
@@ -211,6 +224,8 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
     
     case InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST:
     case InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT:
+    case InternalPacketType::INTERNAL_SESSION_ON_JOIN:
+    case InternalPacketType::INTERNAL_SESSION_ON_LEAVE:
     case InternalPacketType::USER_PACKET:
     {
         if (!senderPeer)
@@ -229,7 +244,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
         message.m_data = std::move(_packet);
         message.m_address = _sender;
         message.m_isReliable = header.isReliable;
-        message.m_type = header.type;
+        message.m_messageType = header.type;
 
         if (header.isReliable)
         {
@@ -238,10 +253,14 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             while(!messages.empty())
             {
                 auto& mes = messages.front();   // It's a real mess to have different types here
-                if (mes.m_type == InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST)
+                if (mes.m_messageType == InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST)
                     processSessionJoinRequest(mes, senderPeer);
-                else if (mes.m_type == InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT)
+                else if (mes.m_messageType == InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT)
                     processSessionJoinAccept(mes);
+                else if (mes.m_messageType == InternalPacketType::INTERNAL_SESSION_ON_JOIN)
+                    processSessionOnJoin(mes);
+                else if (mes.m_messageType == InternalPacketType::INTERNAL_SESSION_ON_LEAVE)
+                    processSessionOnLeave(mes);
                 else
                     m_events.push(NetworkEvent(NetworkEvent::Type::ON_RECEIVE, std::move(mes), _sender));
                 
@@ -313,7 +332,7 @@ void Network::onConnect(Peer& _peer)
         return;
     
     NetworkMessage message(_peer.GetAddress(), true);
-    message.m_type = InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST;
+    message.m_messageType = InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST;
     message.Write(m_localPlayer->m_name);
     LOG_DEBUG("Send a join session request to " + _peer.GetAddress().toString());  
     _peer.Send(message);
@@ -356,8 +375,8 @@ void Network::processSessionJoinRequest(NetworkMessage& _message, Peer* _peer)
     _message.Read(newPlayerName);
     PlayerID newPlayerId = ++m_playerIdGenerator;
 
-    NetworkMessage message(_peer->GetAddress(), true);
-    message.m_type = InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT;
+    NetworkMessage message(NetworkMessage::Type::UNICAST, _peer->GetAddress(), true);
+    message.m_messageType = InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT;
     message.Write(newPlayerName);
     message.Write(newPlayerId);
     for (const auto& player : m_players)
@@ -368,7 +387,15 @@ void Network::processSessionJoinRequest(NetworkMessage& _message, Peer* _peer)
     
     LOG_DEBUG("Send a join session accept to " + _peer->GetAddress().toString());  
     Send(message);   
+
+    NetworkMessage messageOnJoin(NetworkMessage::Type::EXCLUDE_BRODCAST, _peer->GetAddress(), true);
+    messageOnJoin.m_messageType = InternalPacketType::INTERNAL_SESSION_ON_JOIN;
+    messageOnJoin.Write(newPlayerName);
+    messageOnJoin.Write(newPlayerId);
      
+    LOG_DEBUG("Send a onPlayerJoin");  
+    Send(messageOnJoin);   
+
     auto* player = createPlayerIntrernal(newPlayerName, newPlayerId, false);
     player->m_peer = _peer; // I guess I need this only on the host side
     m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, *player));
@@ -403,5 +430,34 @@ void Network::processSessionJoinAccept(NetworkMessage& _message)
         auto player = createPlayerIntrernal(playerName, playerId, false);
         m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, *player));
     }
+}
+
+void Network::processSessionOnJoin(NetworkMessage& _message)
+{
+    if (m_isSessionMaster)
+    {
+        LOG_ERROR("The session master should not receive a JoinAccept");
+        return;
+    }
+
+    LOG_DEBUG("OnJoin received from " + _message.GetAddress().toString());
+
+    std::string playerName;
+    PlayerID playerId;
+    _message.Read(playerName);
+    _message.Read(playerId);
+
+    auto player = createPlayerIntrernal(playerName, playerId, false);
+    m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, *player));
+}
+
+void Network::processSessionOnLeave(NetworkMessage& _message)
+{
+    if (m_isSessionMaster)
+    {
+        LOG_ERROR("The session master should not receive a JoinAccept");
+        return;
+    }
+
 }
     

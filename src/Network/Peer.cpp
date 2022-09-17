@@ -37,7 +37,7 @@ void Peer::Send(const NetworkMessage& _message)
 {
     sf::Packet packet;
     sf::Uint32 seqNum = _message.IsReliable() ? ++m_sequenceNumGenerator : 0;
-    PacketHeader header(_message.m_type, _message.IsReliable(), seqNum);
+    PacketHeader header(_message.m_messageType, _message.IsReliable(), seqNum);
     header.Serialize(packet);
     packet.append(_message.GetData().getData(),_message.GetData().getDataSize());
 

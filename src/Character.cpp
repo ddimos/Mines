@@ -133,9 +133,8 @@ void Character::replicatePos()
 {
     if (m_prevPosition == m_position)
         return;
-    NetworkAddress address;
-    address.address = sf::IpAddress::Broadcast;
-    NetworkMessage message(address, false);
+
+    NetworkMessage message(false);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_POS));
     message.Write(m_id);
     message.Write((sf::Int32)m_position.x);
@@ -146,9 +145,7 @@ void Character::replicatePos()
 
 void Character::replicateUncoverCell()
 {
-    NetworkAddress address;
-    address.address = sf::IpAddress::Broadcast;
-    NetworkMessage message(address, true);
+    NetworkMessage message(true);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_UNCOVER));
     message.Write(m_id);
     message.Write((sf::Int32)m_position.x);
@@ -159,9 +156,7 @@ void Character::replicateUncoverCell()
 
 void Character::replicateToggleFlagCell()
 {
-    NetworkAddress address;
-    address.address = sf::IpAddress::Broadcast;
-    NetworkMessage message(address, true);
+    NetworkMessage message(true);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_TOGGLE));
     message.Write(m_id);
     message.Write((sf::Int32)m_position.x);

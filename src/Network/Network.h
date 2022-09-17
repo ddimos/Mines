@@ -48,6 +48,8 @@ private:
 
     void processSessionJoinRequest(NetworkMessage& _message, Peer* _peer);
     void processSessionJoinAccept(NetworkMessage& _message);
+    void processSessionOnJoin(NetworkMessage& _message);
+    void processSessionOnLeave(NetworkMessage& _message);
     
     static Network* ms_network;
   
