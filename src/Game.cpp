@@ -121,32 +121,19 @@ void Game::spawnCharacters()
         unsigned id = m_gameWorld.GenerateId();      // Maybe I can use a player id
         charInfo.playerId = playerInfo.networkPlayerCopy.GetPlayerId();
         playerInfo.charInfoCopy = charInfo;
-        m_gameWorld.SpawnCharacter(playerInfo.networkPlayerCopy.IsLocal(), id, charInfo);   
+        m_gameWorld.SpawnCharacter(true, playerInfo.networkPlayerCopy.IsLocal(), id, charInfo);   
         m_infoPanel.OnCharachterSpawned(playerInfo);
     }
 
-    size_t peerToBeMaster = 0;
-    for (const Peer& peer : Network::Get().GetPeers())  // ?Iterate network players
+    NetworkMessage message(true);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_CHARACTER));
+    for(const Character& ch : m_gameWorld.GetCharacters())
     {
-        NetworkMessage message(peer.GetAddress(), true);
-        message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_CHARACTER));
-        
-        size_t peersNumber = Network::Get().GetPeers().size();
-        for(const Character& ch : m_gameWorld.GetCharacters())
-        {
-            // TODO masters only on the host
-            bool isThisPeerMaster = !ch.IsMaster() && Network::Get().GetPeers().size() - peersNumber == peerToBeMaster;
-            message.Write(isThisPeerMaster);
-            message.Write(ch.GetInfo().playerId);
-            message.Write(ch.GetId());
-            message.Write(ch.GetInfo().color.toInteger());
-            if (!ch.IsMaster())
-                --peersNumber;
-        }
-
-        Network::Get().Send(message);
-        ++peerToBeMaster;
+        message.Write(ch.GetInfo().playerId);
+        message.Write(ch.GetId());
+        message.Write(ch.GetInfo().color.toInteger());
     }
+    Network::Get().Send(message);
 }
 
 void Game::resetGame()
@@ -169,15 +156,13 @@ void Game::onStateEnter(GameState _newState)
         initGame();
         if (IsSessionMaster())
         {
-            sendCreateGameMessage(NetworkAddress(sf::IpAddress::Broadcast));
+            sendCreateGameMessage();
             spawnCharacters();
         }
         else
         {
             while (!m_messageWithPlayers.IsEnd())
             {
-                bool isMaster;
-                m_messageWithPlayers.Read(isMaster);
                 PlayerID playerId;
                 m_messageWithPlayers.Read(playerId);
                 unsigned characterId;
@@ -188,7 +173,7 @@ void Game::onStateEnter(GameState _newState)
                 CharacterInfo charInfo;
                 charInfo.color = sf::Color(color);
                 charInfo.playerId = playerId;
-                m_gameWorld.SpawnCharacter(isMaster, characterId, charInfo);
+                m_gameWorld.SpawnCharacter(false, m_localPlayerInfo.networkPlayerCopy.GetPlayerId() == playerId, characterId, charInfo);
                 auto* playerInfo = GetPlayerInfo(playerId);
                 playerInfo->charInfoCopy = charInfo;
                 m_infoPanel.OnCharachterSpawned(*playerInfo);
@@ -325,6 +310,10 @@ void Game::receiveNetworkMessages()
                 m_messageWithPlayers = event.message;
                 m_wantsToChangeState = true;
             }
+            else if (type == NetworkMessageType::REPLICATE_CHARACTER_CONTROLS)
+            {
+                m_gameWorld.OnReplicateCharacterControlsMessageReceived(event.message);
+            }
             else if (type == NetworkMessageType::REPLICATE_CHARACTER_POS)
             {
                 m_gameWorld.OnReplicateCharacterMessageReceived(event.message);
@@ -344,9 +333,9 @@ void Game::receiveNetworkMessages()
     }
 }
 
-void Game::sendCreateGameMessage(NetworkAddress _address)
+void Game::sendCreateGameMessage() // TODO  join in progress
 {
-    NetworkMessage message(_address, true);
+    NetworkMessage message(true);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
     message.Write(static_cast<sf::Uint32>(m_seed));
     Network::Get().Send(message);

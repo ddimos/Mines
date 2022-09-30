@@ -12,7 +12,8 @@ struct CharacterInfo
 class Character
 {
 public:
-    Character(bool _isMaster, unsigned _id, const CharacterInfo& _info);
+                        // TODO move to the character info?
+    Character(bool _isMaster, bool _canControl, unsigned _id, const CharacterInfo& _info);
     ~Character();
 
     void Update(float _dt);
@@ -27,38 +28,51 @@ public:
     unsigned GetId() const { return m_id; }
     const CharacterInfo& GetInfo() const { return m_info; }
 
+    void OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message);
     void OnReplicateCharacterMessageReceived(NetworkMessage& _message);
     void OnReplicateUncoverCellMessageReceived(NetworkMessage& _message);
     void OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _message);
 
 private:
 
+    struct Controls
+    {
+        Controls(const Controls&) = default;
+        bool isLeftPressed = false;
+        bool isRightPressed = false;
+        bool isUpPressed = false;
+        bool isDownPressed = false;
+        bool isSpacePressed = false;
+        bool isXPressed = false;
+
+        void reset();
+        bool hasValue() const;
+    };
+
     void onCharacterUncoverCell(WorldPosition _pos);
     void onCharacterToggleFlagCell(WorldPosition _pos);
 
+    void readControls();
+    void updateStateFromControls();
+    void replicateControls();
     void replicatePos();
     void replicateUncoverCell();
     void replicateToggleFlagCell();
 
     const float DECREASE_KOEF = 1.25;
-    const float m_cooldown = 0.3f; 
-    
+
     WorldPosition m_position;
     WorldPosition m_prevPosition;
     sf::Vector2f m_padding = {};
 
-    bool m_isLeftWasDown = false;
-    bool m_isRightWasDown = false;
-    bool m_isUpWasDown = false;
-    bool m_isDownWasDown = false;
-    float m_cooldownX = m_cooldown; 
-    float m_cooldownY = m_cooldown; 
-    
+    Controls m_controls = {};
+
     unsigned m_uncoverRadius = 10;
 
     sf::RectangleShape m_shape;
 
     bool m_isMaster = true; 
+    bool m_canControl = false;
     unsigned m_id = 0;
 
     CharacterInfo m_info;

@@ -15,7 +15,7 @@ public:
     void Render(sf::RenderWindow& _window);
 
     void CreateWorld(WorldPosition _worldSize, size_t _bombsNumber);
-    void SpawnCharacter(bool _spawnMaster, unsigned _id, const CharacterInfo& _info);
+    void SpawnCharacter(bool _spawnMaster, bool _canControl, unsigned _id, const CharacterInfo& _info);
     void DestroyWorld();
 
     unsigned GenerateId();
@@ -31,6 +31,7 @@ public:
     void OnCharacterUncoverCell(WorldPosition _pos, Character& _char);
     void OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char);
 
+    void OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message);
     void OnReplicateCharacterMessageReceived(NetworkMessage& _message);
     void OnReplicateUncoverCellMessageReceived(NetworkMessage& _message);
     void OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _message);

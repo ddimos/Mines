@@ -30,12 +30,13 @@ void GameWorld::DestroyWorld()
     m_mainCharachter = nullptr;
 }
 
-void GameWorld::SpawnCharacter(bool _spawnMaster, unsigned _id, const CharacterInfo& _info)
+void GameWorld::SpawnCharacter(bool _spawnMaster, bool _canControl, unsigned _id, const CharacterInfo& _info)
 {
-    m_characters.emplace_back(Character(_spawnMaster, _id, _info));
+    m_characters.emplace_back(Character(_spawnMaster, _canControl, _id, _info));
     std::string roleStr = (_spawnMaster) ? "M":"R";
+    roleStr += (_canControl) ? "+":"";
     LOG("Spawn " + roleStr + " Id: " + tstr(_id));
-    if (_spawnMaster)
+    if (_canControl)
     {
         if (m_mainCharachter != nullptr)
             LOG_ERROR("Main charachter is already created");
@@ -93,7 +94,7 @@ void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
     onUncoverCell(_pos);
     
     if (getCell(_pos).m_type == Cell::ValueType::EMPTY)
-        uncoverCellsInRadius(_pos, m_mainCharachter->GetUncoverRadius());
+        uncoverCellsInRadius(_pos, m_mainCharachter->GetUncoverRadius()); // TODO should be a character who uncovers
 }
 
 void GameWorld::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
@@ -244,6 +245,20 @@ sf::Color GameWorld::GenerateColor()
     // colors.push_back(sf::Color::Red);
     // colors.push_back(sf::Color::Magenta);
     // return colors[m_characters.size() + 1];
+}
+
+void GameWorld::OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message)
+{
+    unsigned id;
+    _message.Read(id);
+    for (Character& charac : m_characters)
+    {
+        if (charac.GetId() == id)
+        {
+            charac.OnReplicateCharacterControlsMessageReceived(_message);
+            break;
+        }
+    }
 }
 
 void GameWorld::OnReplicateCharacterMessageReceived(NetworkMessage& _message)

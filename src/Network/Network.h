@@ -26,6 +26,7 @@ public:
     void JoinSession(NetworkAddress _address, const std::string& _name);
 
     bool IsSessionMaster() const { return m_isSessionMaster; }
+    NetworkAddress GetHostAddress() const;  // TODO get peerid
 
     const std::vector<Peer>& GetPeers() const { return m_peers; }
     bool DoesPeerExist(NetworkAddress _address) const;

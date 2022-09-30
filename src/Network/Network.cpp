@@ -317,6 +317,14 @@ bool Network::DoesPeerExist(NetworkAddress _address) const
     return false;
 }
 
+NetworkAddress Network::GetHostAddress() const
+{
+    if (m_isSessionMaster)
+        return GetLocalAddress();
+
+    return m_peers.begin()->GetAddress();
+}
+
 Peer* Network::getPeer(NetworkAddress _address)
 {
     for (Peer& peer : m_peers)

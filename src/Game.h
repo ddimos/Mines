@@ -65,7 +65,7 @@ private:
     void onStateExit(GameState _oldState);
     void updateState();
     void receiveNetworkMessages();
-    void sendCreateGameMessage(NetworkAddress _address);
+    void sendCreateGameMessage();
 
     static Game* ms_game;
     sf::RenderWindow* m_window = nullptr;

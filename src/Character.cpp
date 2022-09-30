@@ -6,9 +6,10 @@
 
 #include <algorithm>
 
-Character::Character(bool _isMaster, unsigned _id, const CharacterInfo& _info)
+Character::Character(bool _isMaster, bool _canControl, unsigned _id, const CharacterInfo& _info)
     :
     m_isMaster(_isMaster),
+    m_canControl(_canControl),
     m_id(_id),
     m_info(_info)
 {
@@ -26,90 +27,31 @@ Character::~Character()
 
 void Character::Update(float _dt)
 {
-    if (!m_isMaster)
+    (void)_dt;
+    if (!m_isMaster && !m_canControl)
         return;
-    
-    sf::Vector2i deltaPos = {0, 0};
-    if (Game::isKeyDown(sf::Keyboard::Left))
+
+    if (m_canControl)
     {
-        m_cooldownX = (m_isLeftWasDown)
-                    ? m_cooldownX - _dt
-                    : 0.f;
-        if (m_cooldownX <= 0.f)
+        readControls();
+        if (!m_isMaster)
         {
-            deltaPos.x -= 1;
-            m_cooldownX = m_cooldown;
+            updateStateFromControls();   // TODO ?don't update the state but wait it from the host or do preupdate
+            replicateControls();
+            return;
         }
-        m_isLeftWasDown = true;
     }
-    else
-        m_isLeftWasDown = false;
 
-    if (Game::isKeyDown(sf::Keyboard::Right))
-    {
-        m_cooldownX = (m_isRightWasDown)
-                    ? m_cooldownX - _dt
-                    : 0.f;
-        if (m_cooldownX <= 0.f)
-        {
-            deltaPos.x += 1;
-            m_cooldownX = m_cooldown;
-        }
-        m_isRightWasDown = true;
-    }
-    else
-        m_isRightWasDown = false;
-    
-
-    if (Game::isKeyDown(sf::Keyboard::Up))
-    {
-        m_cooldownY = (m_isUpWasDown)
-                    ? m_cooldownY - _dt
-                    : 0.f;
-        if (m_cooldownY <= 0.f)
-        {
-            deltaPos.y -= 1;
-            m_cooldownY = m_cooldown;
-        }
-        m_isUpWasDown = true;
-    }
-    else
-        m_isUpWasDown = false;
-
-    if (Game::isKeyDown(sf::Keyboard::Down))
-    {
-        m_cooldownY = (m_isDownWasDown)
-                    ? m_cooldownY - _dt
-                    : 0.f;
-        if (m_cooldownY <= 0.f)
-        {
-            deltaPos.y += 1;
-            m_cooldownY = m_cooldown;
-        }
-        m_isDownWasDown = true;
-    }
-    else
-        m_isDownWasDown = false;
-
-    const auto worldSize = Game::Get().GetGameWorld().GetWorldSize();
-    m_position.x = std::clamp(m_position.x + deltaPos.x, 0, (int)worldSize.x - 1);
-    m_position.y = std::clamp(m_position.y + deltaPos.y, 0, (int)worldSize.y - 1);
-
+    updateStateFromControls();
     replicatePos();
-    // LOG("X: " + tstr(m_position.x) + " Y: " + tstr(m_position.y));
 
-    if (Game::isKeyPressed(sf::Keyboard::Space))
-    {
-        onCharacterUncoverCell(m_position);
+    if (m_controls.isSpacePressed)
         replicateUncoverCell();
-    }
     
-    if (Game::isKeyPressed(sf::Keyboard::X))
-    {
-        onCharacterToggleFlagCell(m_position);   
+    if (m_controls.isXPressed)
         replicateToggleFlagCell();
-    }
 
+    m_controls.reset();
     m_prevPosition = m_position;
 }
 
@@ -127,6 +69,57 @@ void Character::onCharacterUncoverCell(WorldPosition _pos)
 void Character::onCharacterToggleFlagCell(WorldPosition _pos)
 {
     Game::Get().OnCharacterToggleFlagCell(_pos, *this);
+}
+
+void Character::readControls()
+{
+    m_controls.reset();
+    m_controls.isLeftPressed = Game::isKeyPressed(sf::Keyboard::Left);
+    m_controls.isRightPressed = Game::isKeyPressed(sf::Keyboard::Right);
+    m_controls.isUpPressed = Game::isKeyPressed(sf::Keyboard::Up);
+    m_controls.isDownPressed = Game::isKeyPressed(sf::Keyboard::Down);
+    m_controls.isSpacePressed = Game::isKeyPressed(sf::Keyboard::Space);
+    m_controls.isXPressed = Game::isKeyPressed(sf::Keyboard::X);
+}
+
+void Character::updateStateFromControls()
+{
+    sf::Vector2i deltaPos = {0, 0};
+    if (m_controls.isLeftPressed)
+        deltaPos.x -= 1;
+    if (m_controls.isRightPressed)
+        deltaPos.x += 1;
+    if (m_controls.isUpPressed)
+        deltaPos.y -= 1;
+    if (m_controls.isDownPressed)
+        deltaPos.y += 1;
+
+    const auto worldSize = Game::Get().GetGameWorld().GetWorldSize();
+    m_position.x = std::clamp(m_position.x + deltaPos.x, 0, (int)worldSize.x - 1);
+    m_position.y = std::clamp(m_position.y + deltaPos.y, 0, (int)worldSize.y - 1);
+
+    if (m_controls.isSpacePressed)
+        onCharacterUncoverCell(m_position);
+    if (m_controls.isXPressed)
+        onCharacterToggleFlagCell(m_position);   
+}
+
+void Character::replicateControls()
+{
+    if (!m_controls.hasValue())
+        return;
+    
+    NetworkMessage message(Network::Get().GetHostAddress(), false);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_CONTROLS));
+    message.Write(m_id);
+    message.Write(m_controls.isLeftPressed);
+    message.Write(m_controls.isRightPressed);
+    message.Write(m_controls.isUpPressed);
+    message.Write(m_controls.isDownPressed);
+    message.Write(m_controls.isSpacePressed);
+    message.Write(m_controls.isXPressed);
+
+    Network::Get().Send(message);
 }
 
 void Character::replicatePos()
@@ -165,9 +158,19 @@ void Character::replicateToggleFlagCell()
     Network::Get().Send(message);
 }
 
+void Character::OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message)
+{
+    _message.Read(m_controls.isLeftPressed);
+    _message.Read(m_controls.isRightPressed);
+    _message.Read(m_controls.isUpPressed);
+    _message.Read(m_controls.isDownPressed);
+    _message.Read(m_controls.isSpacePressed);
+    _message.Read(m_controls.isXPressed);
+}
+
 void Character::OnReplicateCharacterMessageReceived(NetworkMessage& _message)
 {
-    if (m_isMaster)
+    if (m_canControl)   // TODO don't send it to this player at all
         return;
 
     _message.Read(m_position.x);
@@ -176,6 +179,9 @@ void Character::OnReplicateCharacterMessageReceived(NetworkMessage& _message)
 
 void Character::OnReplicateUncoverCellMessageReceived(NetworkMessage& _message)
 {
+    if (m_canControl)   // TODO don't send it to this player at all
+        return;
+
     _message.Read(m_position.x);
     _message.Read(m_position.y);
     onCharacterUncoverCell(m_position);
@@ -183,7 +189,26 @@ void Character::OnReplicateUncoverCellMessageReceived(NetworkMessage& _message)
 
 void Character::OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _message)
 {
+    if (m_canControl)   // TODO don't send it to this player at all
+        return;
+
     _message.Read(m_position.x);
     _message.Read(m_position.y);
     onCharacterToggleFlagCell(m_position);
+}
+
+void Character::Controls::reset()
+{
+    isLeftPressed = false;
+    isRightPressed = false;
+    isUpPressed = false;
+    isDownPressed = false;
+    isSpacePressed = false;
+    isXPressed = false;
+}
+
+bool Character::Controls::hasValue() const
+{
+    return isLeftPressed || isRightPressed || isUpPressed
+        || isDownPressed || isSpacePressed || isXPressed;
 }
