@@ -221,7 +221,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
 
         break;
     }
-    
+
     case InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST:
     case InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT:
     case InternalPacketType::INTERNAL_SESSION_ON_JOIN:
@@ -343,21 +343,35 @@ void Network::onConnect(Peer& _peer)
     message.m_messageType = InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST;
     message.Write(m_localPlayer->m_name);
     LOG_DEBUG("Send a join session request to " + _peer.GetAddress().toString());  
-    _peer.Send(message);
+    Send(message);
 }
 
 void Network::onDisconnect(const Peer& _peer)
 {
     if (m_isSessionMaster)
     {
-        // One player leave
-        // send a brodacast 
+        for (NetworkPlayer& player : m_players)
+        {
+            if (!player.IsLocal() && player.m_peer->GetAddress() == _peer.GetAddress())
+            {
+                NetworkMessage message(true);
+                message.m_messageType = InternalPacketType::INTERNAL_SESSION_ON_LEAVE;
+                message.Write(player.m_id);
+                LOG_DEBUG("Send a session leave message");  
+                Send(message);
+                m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_LEAVE, player));
+                // TODO erase from the array
+                break;
+            }
+        }
     }
     else
     {
         // All players leave
-        // for (NetworkPlayer& player : m_players) 
-        //m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_LEAVE, *player));
+        for (NetworkPlayer& player : m_players) 
+            m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_LEAVE, player));
+
+        m_players.clear();
     }
     
     // add a player left if it's a master
@@ -401,7 +415,7 @@ void Network::processSessionJoinRequest(NetworkMessage& _message, Peer* _peer)
     messageOnJoin.Write(newPlayerName);
     messageOnJoin.Write(newPlayerId);
      
-    LOG_DEBUG("Send a onPlayerJoin");  
+    LOG_DEBUG("Send a session join message");  
     Send(messageOnJoin);   
 
     auto* player = createPlayerIntrernal(newPlayerName, newPlayerId, false);
@@ -448,7 +462,7 @@ void Network::processSessionOnJoin(NetworkMessage& _message)
         return;
     }
 
-    LOG_DEBUG("OnJoin received from " + _message.GetAddress().toString());
+    LOG_DEBUG("OnJoin received");
 
     std::string playerName;
     PlayerID playerId;
@@ -467,5 +481,19 @@ void Network::processSessionOnLeave(NetworkMessage& _message)
         return;
     }
 
+    LOG_DEBUG("OnLeave received");
+
+    PlayerID playerId;
+    _message.Read(playerId);
+
+    for (NetworkPlayer& player : m_players)
+    {
+        if (player.m_id == playerId)
+        {
+            m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_LEAVE, player));
+            // TODO erase from the array
+            break;
+        }
+    }
 }
     
