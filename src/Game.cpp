@@ -441,7 +441,7 @@ void Game::Update(float _dt)
         {
             NetworkAddress address;
             address.address = sf::IpAddress::Broadcast;
-            // TODO Network::Get().Disconnect(address);
+            // TODO Network::Get().LeaveSession;
         }
 // #endif
         

@@ -373,9 +373,6 @@ void Network::onDisconnect(const Peer& _peer)
 
         m_players.clear();
     }
-    
-    // add a player left if it's a master
-    // ? a host left if not a master?
 }
 
 NetworkPlayer* Network::createPlayerIntrernal(const std::string& _name, PlayerID _id, bool _isLocal)

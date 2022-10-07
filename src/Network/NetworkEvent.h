@@ -28,6 +28,5 @@ struct NetworkEvent
     NetworkMessage message;
     NetworkPlayer player;
 
-    /**/
     NetworkAddress sender;
 };
