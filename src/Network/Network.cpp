@@ -75,29 +75,29 @@ void Network::Send(const NetworkMessage& _message)
             if (peer.IsUp())
                 peer.Send(_message);
             else
-                LOG("Don't send the message to the peer " + _message.GetAddress().toString() + " because it isn't up.");
+                LOG("Don't send the message to the peer " + tstr(_message.GetPeerId()) + " because it isn't up.");
         }
     }
     else if(_message.IsExcludeBroadcast())
     {
         for (Peer& peer : m_peers)
         {
-            if (peer.GetAddress() == _message.GetAddress())
+            if (peer.GetPeerId() == _message.GetPeerId())
                 continue;
             
             if (peer.IsUp())
                 peer.Send(_message);
             else
-                LOG("Don't send the message to the peer " + _message.GetAddress().toString() + " because it isn't up.");
+                LOG("Don't send the message to the peer " + tstr(_message.GetPeerId()) + " because it isn't up.");
         }
     }
     else
     {
-        Peer* peer = getPeer(_message.GetAddress());
+        Peer* peer = getPeer(_message.GetPeerId());
         if (peer && peer->IsUp())
             peer->Send(_message);
         else
-            LOG("Don't send the message to the peer " + _message.GetAddress().toString() + " because it isn't up.");
+            LOG("Don't send the message to the peer " + tstr(_message.GetPeerId()) + " because it isn't up.");
     }
 }
 
@@ -144,7 +144,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
         
         LOG("CONNECT_REQUEST received from " + _sender.toString());
 
-        Peer& peer = m_peers.emplace_back(Peer(*this, _sender, true));
+        Peer& peer = createPeerInternal(_sender, true);
         onConnect(peer);
         break;
     }
@@ -242,7 +242,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
 
         NetworkMessage message;
         message.m_data = std::move(_packet);
-        message.m_address = _sender;
+        message.m_peerId = senderPeer->GetPeerId();
         message.m_isReliable = header.isReliable;
         message.m_messageType = header.type;
 
@@ -281,14 +281,13 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
 
 void Network::connect(NetworkAddress _addressToConnect)
 {
-    if (getPeer(_addressToConnect))
+    if (getPeer(_addressToConnect) != nullptr)
     {
         LOG_ERROR("Don't connect to " + _addressToConnect.toString() + " because it is already connected.");
         return;
     }
     LOG("Connect to " + _addressToConnect.toString());
-
-    m_peers.emplace_back(Peer(*this, _addressToConnect, false));
+    createPeerInternal(_addressToConnect, false);
 }
 
 void Network::disconnect(NetworkAddress _addressToDisconnect)
@@ -309,26 +308,19 @@ void Network::disconnect(NetworkAddress _addressToDisconnect)
     }
 }
 
-bool Network::DoesPeerExist(NetworkAddress _address) const
-{
-    for (const Peer& peer : m_peers)
-        if (peer.GetAddress() == _address)
-            return true;
-    return false;
-}
-
-NetworkAddress Network::GetHostAddress() const
-{
-    if (m_isSessionMaster)
-        return GetLocalAddress();
-
-    return m_peers.begin()->GetAddress();
-}
-
 Peer* Network::getPeer(NetworkAddress _address)
 {
     for (Peer& peer : m_peers)
         if (peer.GetAddress() == _address)
+            return &peer;
+        
+    return nullptr;
+}
+
+Peer* Network::getPeer(PeerID _peerId)
+{
+    for (Peer& peer : m_peers)
+        if (peer.GetPeerId() == _peerId)
             return &peer;
         
     return nullptr;
@@ -339,10 +331,12 @@ void Network::onConnect(Peer& _peer)
     if (m_isSessionMaster)
         return;
     
-    NetworkMessage message(_peer.GetAddress(), true);
+    m_hostPeerId = _peer.GetPeerId();
+
+    NetworkMessage message(m_hostPeerId, true);
     message.m_messageType = InternalPacketType::INTERNAL_SESSION_JOIN_REQUEST;
     message.Write(m_localPlayer->m_name);
-    LOG_DEBUG("Send a join session request to " + _peer.GetAddress().toString());  
+    LOG_DEBUG("Send a join session request to " + tstr(_peer.GetPeerId()));  
     Send(message);
 }
 
@@ -352,7 +346,7 @@ void Network::onDisconnect(const Peer& _peer)
     {
         for (NetworkPlayer& player : m_players)
         {
-            if (!player.IsLocal() && player.m_peer->GetAddress() == _peer.GetAddress())
+            if (!player.IsLocal() && player.m_peerId == _peer.GetPeerId())
             {
                 NetworkMessage message(true);
                 message.m_messageType = InternalPacketType::INTERNAL_SESSION_ON_LEAVE;
@@ -375,6 +369,13 @@ void Network::onDisconnect(const Peer& _peer)
     }
 }
 
+Peer& Network::createPeerInternal(NetworkAddress _addressToConnect, bool _isCreatingFromRequest)
+{
+    PeerID peerId = ++m_peerIdGenerator;
+    LOG("Create a new peer. id: " + tstr(peerId) + " address: " + _addressToConnect.toString());
+    return m_peers.emplace_back(Peer(*this, _addressToConnect, peerId, _isCreatingFromRequest));
+}
+
 NetworkPlayer* Network::createPlayerIntrernal(const std::string& _name, PlayerID _id, bool _isLocal)
 {
     auto& player = m_players.emplace_back(NetworkPlayer(_name, _id, _isLocal));
@@ -385,16 +386,16 @@ void Network::processSessionJoinRequest(NetworkMessage& _message, Peer* _peer)
 {
     if (!m_isSessionMaster)
     {
-        LOG_ERROR("Cannot process the JoinRequest recieved from " + _message.GetAddress().toString() + " because not the session master");
+        LOG_ERROR("Cannot process the JoinRequest recieved from " + tstr(_message.GetPeerId()) + " because not the session master");
         return;
     }
-    LOG_DEBUG("JoinRequest received from " + _message.GetAddress().toString()); // TODO replace with a peer id
+    LOG_DEBUG("JoinRequest received from " + tstr(_message.GetPeerId()));
 
     std::string newPlayerName;
     _message.Read(newPlayerName);
     PlayerID newPlayerId = ++m_playerIdGenerator;
 
-    NetworkMessage message(NetworkMessage::Type::UNICAST, _peer->GetAddress(), true);
+    NetworkMessage message(NetworkMessage::Type::UNICAST, _peer->GetPeerId(), true);
     message.m_messageType = InternalPacketType::INTERNAL_SESSION_JOIN_ACCEPT;
     message.Write(newPlayerName);
     message.Write(newPlayerId);
@@ -404,10 +405,10 @@ void Network::processSessionJoinRequest(NetworkMessage& _message, Peer* _peer)
         message.Write(player.m_id);
     }
     
-    LOG_DEBUG("Send a join session accept to " + _peer->GetAddress().toString());  
+    LOG_DEBUG("Send a join session accept to " + tstr(_peer->GetPeerId()));  
     Send(message);   
 
-    NetworkMessage messageOnJoin(NetworkMessage::Type::EXCLUDE_BRODCAST, _peer->GetAddress(), true);
+    NetworkMessage messageOnJoin(NetworkMessage::Type::EXCLUDE_BRODCAST, _peer->GetPeerId(), true);
     messageOnJoin.m_messageType = InternalPacketType::INTERNAL_SESSION_ON_JOIN;
     messageOnJoin.Write(newPlayerName);
     messageOnJoin.Write(newPlayerId);
@@ -416,7 +417,7 @@ void Network::processSessionJoinRequest(NetworkMessage& _message, Peer* _peer)
     Send(messageOnJoin);   
 
     auto* player = createPlayerIntrernal(newPlayerName, newPlayerId, false);
-    player->m_peer = _peer; // I guess I need this only on the host side
+    player->m_peerId = _peer->GetPeerId(); // I guess I need this only on the host side
     m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_JOIN, *player));
 }
 
@@ -428,7 +429,7 @@ void Network::processSessionJoinAccept(NetworkMessage& _message)
         return;
     }
 
-    LOG_DEBUG("JoinAccept received from " + _message.GetAddress().toString());
+    LOG_DEBUG("JoinAccept received from " + tstr(_message.GetPeerId()));
 
     std::string playerName;
     PlayerID playerId;

@@ -1,5 +1,5 @@
 #pragma once 
-#include "NetworkAddress.h"
+#include "NetworkUtils.h"
 #include "InternalPacketType.h"
 #include <SFML/Network.hpp>
 
@@ -18,16 +18,16 @@ public:
 
     NetworkMessage()=default;
     NetworkMessage(bool _isReliable)
-        : m_type(Type::BRODCAST), m_address(), m_isReliable(_isReliable)
+        : m_type(Type::BRODCAST), m_peerId(PeerIdInvalid), m_isReliable(_isReliable)
     {}
-    NetworkMessage(NetworkAddress _address, bool _isReliable)
-        : m_type(Type::UNICAST), m_address(_address), m_isReliable(_isReliable)
+    NetworkMessage(PeerID _peerId, bool _isReliable)
+        : m_type(Type::UNICAST), m_peerId(_peerId), m_isReliable(_isReliable)
     {}
-    NetworkMessage(Type _type, NetworkAddress _address, bool _isReliable)
-        : m_type(_type), m_address(_address), m_isReliable(_isReliable)
+    NetworkMessage(Type _type, PeerID _peerId, bool _isReliable)
+        : m_type(_type), m_peerId(_peerId), m_isReliable(_isReliable)
     {}
 
-    NetworkAddress GetAddress() const { return m_address; }
+    PeerID GetPeerId() const { return m_peerId; }
     bool IsBroadcast() const { return m_type == Type::BRODCAST; }
     bool IsExcludeBroadcast() const { return m_type == Type::EXCLUDE_BRODCAST; }
     bool IsUnicast() const { return m_type == Type::UNICAST; }
@@ -47,7 +47,7 @@ private:
     friend class Peer;
 
     Type m_type = Type::BRODCAST;
-    NetworkAddress m_address = {};
+    PeerID m_peerId = PeerIdInvalid;
     bool m_isReliable = false;
     sf::Packet m_data;
     InternalPacketType m_messageType = InternalPacketType::USER_PACKET;// ? messageType

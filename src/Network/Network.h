@@ -4,6 +4,7 @@
 #include "NetworkMessage.h"
 #include "NetworkEvent.h"
 #include "NetworkPlayer.h"
+#include "NetworkUtils.h"
 #include "Peer.h"
 #include "Transport.h"
 
@@ -26,10 +27,9 @@ public:
     void JoinSession(NetworkAddress _address, const std::string& _name);
 
     bool IsSessionMaster() const { return m_isSessionMaster; }
-    NetworkAddress GetHostAddress() const;  // TODO get peerid
+    PeerID GetHostPeerId() const { return m_hostPeerId; }
 
     const std::vector<Peer>& GetPeers() const { return m_peers; }
-    bool DoesPeerExist(NetworkAddress _address) const;
 
 private:
     Network(unsigned short _port);
@@ -40,6 +40,7 @@ private:
     void OnReceivePacket(sf::Packet _packet, NetworkAddress _sender) override;
     
     Peer* getPeer(NetworkAddress _address);
+    Peer* getPeer(PeerID _peerId);
 
     void connect(NetworkAddress _addressToConnect);
     void disconnect(NetworkAddress _addressToDisconnect); 
@@ -52,11 +53,13 @@ private:
     void processSessionOnJoin(NetworkMessage& _message);
     void processSessionOnLeave(NetworkMessage& _message);
     
+    Peer& createPeerInternal(NetworkAddress _addressToConnect, bool _isCreatingFromRequest);
+
     static Network* ms_network;
   
     std::queue<NetworkEvent> m_events;
     std::vector<Peer>   m_peers;
-
+    PeerID m_hostPeerId = PeerIdInvalid;
 
     // session
     NetworkPlayer* createPlayerIntrernal(const std::string& _name, PlayerID _id, bool _isLocal);
@@ -67,6 +70,7 @@ private:
     bool m_isSessionCreated = false;
     bool m_connectingToHost = false;
 
+    PeerID m_peerIdGenerator = 0;
     PlayerID m_playerIdGenerator = 0;
 
     std::string m_pendingPlayerToJoin;

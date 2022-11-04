@@ -1,10 +1,6 @@
 #pragma once 
-
 #include <string>
-#include <SFML/Config.hpp>
-
-using PlayerID = sf::Uint16;
-const PlayerID PlayerIdInvalid = 65535; 
+#include "NetworkUtils.h"
 
 class Network;
 class Peer;
@@ -30,6 +26,6 @@ private:
     std::string m_name = "Player";
     PlayerID m_id = PlayerIdInvalid;
     bool m_isLocalPlayer = false;
-    Peer* m_peer = nullptr;
-    // peerid or a ptr // I guess I need this only on the host side
+
+    PeerID  m_peerId = PeerIdInvalid;
 };

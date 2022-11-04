@@ -429,9 +429,7 @@ void Game::Update(float _dt)
 // #if DEBUG
         if (isKeyPressed(sf::Keyboard::S))
         {
-            NetworkAddress address;
-            address.address = sf::IpAddress::Broadcast;
-            NetworkMessage message(address, true);
+            NetworkMessage message(true);
             NetworkMessageType type = NetworkMessageType::None;
             message.Write(static_cast<sf::Uint16>(type));
             

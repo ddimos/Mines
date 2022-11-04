@@ -1,6 +1,7 @@
 #pragma once
 #include "NetworkAddress.h"
 #include "NetworkMessage.h"
+#include "NetworkUtils.h"
 #include "Transport.h"
 #include "Connection.h"
 #include <queue>
@@ -12,11 +13,12 @@ class Peer : public Connection
 {
 public:
 
-    Peer(Transport& _transport, NetworkAddress _addressToConnect, bool _isCreatingFromRequest);
+    Peer(Transport& _transport, NetworkAddress _addressToConnect, PeerID _peerId, bool _isCreatingFromRequest);
 
     void Update(float _dt);
     void Send(const NetworkMessage& _message);
     
+    PeerID GetPeerId() const { return m_peerId; }
     NetworkAddress GetAddress() const { return m_address; }
     
     bool IsUp() const { return GetStatus() == Connection::Status::UP; }
@@ -38,6 +40,8 @@ private:
     };
     void onReliableSent(sf::Packet _packet, sf::Uint32 _seqNum);
     void sendAR(sf::Uint32 _seqNum);
+
+    PeerID m_peerId = PeerIdInvalid;
 
     sf::Uint32 m_sequenceNumGenerator = 0;
     sf::Uint32 m_sequenceNumberOfLastSent = 0;

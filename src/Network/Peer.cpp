@@ -3,8 +3,9 @@
 #include "PacketHeader.h"
 #include <algorithm>
 
-Peer::Peer(Transport& _transport, NetworkAddress _addressToConnect, bool _isCreatingFromRequest)
+Peer::Peer(Transport& _transport, NetworkAddress _addressToConnect, PeerID _peerId, bool _isCreatingFromRequest)
     : Connection(_transport, _addressToConnect, _isCreatingFromRequest)
+    , m_peerId(_peerId)
 {
 }
 

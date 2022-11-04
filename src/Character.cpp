@@ -109,7 +109,7 @@ void Character::replicateControls()
     if (!m_controls.hasValue())
         return;
     
-    NetworkMessage message(Network::Get().GetHostAddress(), false);
+    NetworkMessage message(Network::Get().GetHostPeerId(), false);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_CONTROLS));
     message.Write(m_id);
     message.Write(m_controls.isLeftPressed);
