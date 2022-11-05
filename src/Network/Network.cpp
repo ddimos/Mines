@@ -64,6 +64,9 @@ void Network::Update(float _dt)
         }
         return false;
     }), m_peers.end());
+
+    m_players.erase(std::remove_if(m_players.begin(), m_players.end(),
+        [](const NetworkPlayer& _player) { return _player.m_isLeft; }), m_players.end());
 }
 
 void Network::Send(const NetworkMessage& _message)
@@ -354,7 +357,7 @@ void Network::onDisconnect(const Peer& _peer)
                 LOG_DEBUG("Send a session leave message");  
                 Send(message);
                 m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_LEAVE, player));
-                // TODO erase from the array
+                player.m_isLeft = true;
                 break;
             }
         }
@@ -363,9 +366,10 @@ void Network::onDisconnect(const Peer& _peer)
     {
         // All players leave
         for (NetworkPlayer& player : m_players) 
+        {
+            player.m_isLeft = true;
             m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_LEAVE, player));
-
-        m_players.clear();
+        }
     }
 }
 
@@ -489,7 +493,7 @@ void Network::processSessionOnLeave(NetworkMessage& _message)
         if (player.m_id == playerId)
         {
             m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_LEAVE, player));
-            // TODO erase from the array
+            player.m_isLeft = true;
             break;
         }
     }

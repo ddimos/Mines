@@ -28,4 +28,6 @@ private:
     bool m_isLocalPlayer = false;
 
     PeerID  m_peerId = PeerIdInvalid;
+
+    bool m_isLeft = false;
 };

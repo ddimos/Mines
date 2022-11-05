@@ -278,7 +278,9 @@ void Game::receiveNetworkMessages()
             auto it = std::find_if(m_players.begin(), m_players.end(),
             [&event](const PlayerInfo& _p){ return _p.networkPlayerCopy.GetPlayerId() == event.player.GetPlayerId(); });
             m_infoPanel.OnPlayerLeft(*it);
-
+            
+            // TODO when the host leaves return to the main menu
+            // TODO session leave/join events
             m_players.erase(it, m_players.end());
             break;
         }
