@@ -13,7 +13,7 @@ void Logger::Log(std::string const& _message, std::string const& _func, int _lin
     case Type::DEBUG:
     case Type::INFO:
     {
-        std::cout << "[ "<< _func << " ] [ " << _line << " ] " << _message << std::endl;
+        std::cout << "[ "<< _func << " ] [ " << _line << " ] " << _message <<  "\n";
         break;
     }
     case Type::ERROR:

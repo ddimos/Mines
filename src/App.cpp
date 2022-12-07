@@ -29,10 +29,16 @@ bool Application::StartUp(sf::RenderWindow* window)
 void Application::MainLoop()
 {
     sf::Clock clock;
+    sf::Clock throttlingClock;
     float accumulator = 0.f;
 
     while (m_window->isOpen())
     {
+        sf::Time elapsed = clock.restart();
+        sf::Time elapsedLoop = throttlingClock.restart();
+
+        accumulator += elapsed.asSeconds();
+
         sf::Event event;
         while (m_window->pollEvent(event))
         {
@@ -46,9 +52,6 @@ void Application::MainLoop()
             }
         }
 
-        sf::Time elapsed = clock.restart();
-        accumulator += elapsed.asSeconds();
-
         while (accumulator >= DT)
         {
             Network::Get().Update(DT);
@@ -58,8 +61,12 @@ void Application::MainLoop()
 
         m_window->clear(BACKGROUND_COLOR);
         Game::Get().Draw(m_window);
-
         m_window->display();
+
+        elapsedLoop = throttlingClock.restart();
+        sf::Time t = sf::seconds(DT-elapsedLoop.asSeconds());
+        if (t.asMilliseconds() > 0)
+            sf::sleep(t);
     }
 }
 

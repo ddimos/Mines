@@ -47,7 +47,9 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "typeinfo": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp"
     },
     "terminal.integrated.shell.windows": "cmd.exe"
 }

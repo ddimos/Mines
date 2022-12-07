@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include "Log.h"
 
 
 sf::Vector2f WorldPosition::getWindowPosition() const
@@ -34,4 +35,19 @@ void provideSeed(unsigned _seed)
 int getRand()
 {
     return rand();
+}
+
+Profiler::Profiler(const std::string& _context)
+    : m_context(_context)
+{
+    m_context.append(" ");
+    m_t = std::chrono::high_resolution_clock::now();
+}
+
+Profiler::~Profiler()
+{
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration_ms = t2 - m_t;
+
+    LOG(m_context + tstr(duration_ms.count()));
 }
