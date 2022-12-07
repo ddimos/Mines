@@ -3,13 +3,15 @@
 #include "Character.h"
 #include "Camera.h"
 #include "Cell.h"
+#include "WorldMap.h"
 #include "Network/NetworkMessage.h"
+#include <set>
 
 class GameWorld
 {
 public:
-    GameWorld();
-    ~GameWorld();
+    GameWorld() = default;
+    ~GameWorld() = default;
 
     void Update(float _dt);
     void Render(sf::RenderWindow& _window);
@@ -45,7 +47,7 @@ private:
         getPositionsOfNotBombNeighboringCells(WorldPosition _position);
     void uncoverCellsInRadius(WorldPosition _pos, int _radius);
 
-
+    WorldMap m_worldMap;
 
     WorldPosition m_worldSize = {};
     std::vector<Cell> m_cells;

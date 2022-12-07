@@ -30,7 +30,7 @@ void Application::MainLoop()
 {
     sf::Clock clock;
     float accumulator = 0.f;
-    
+
     while (m_window->isOpen())
     {
         sf::Event event;
@@ -56,12 +56,11 @@ void Application::MainLoop()
             accumulator -= DT;
         }
 
-        m_window->clear();
+        m_window->clear(BACKGROUND_COLOR);
         Game::Get().Draw(m_window);
 
         m_window->display();
     }
-
 }
 
 bool Application::ShutDown()

@@ -4,15 +4,6 @@
 #include "Log.h"
 
 #include <functional>
-#include <set>
-
-GameWorld::GameWorld(/* args */)
-{
-}
-
-GameWorld::~GameWorld()
-{
-}
 
 void GameWorld::CreateWorld(WorldPosition _worldSize, size_t _bombsNumber)
 {
@@ -22,6 +13,7 @@ void GameWorld::CreateWorld(WorldPosition _worldSize, size_t _bombsNumber)
     generateBombs(_bombsNumber);
     m_camera.OnInit(_worldSize);
     m_characters.reserve(5);
+    m_worldMap.CreateMap(_worldSize);
 }
 
 void GameWorld::DestroyWorld()
@@ -50,18 +42,14 @@ void GameWorld::Update(float _dt)
 {
     for (Character& character : m_characters)
         character.Update(_dt);
-    // for (Cell& cell : m_cells)
-    //     cell.Update(_dt);
 
     m_camera.Update(_dt);
 }
 
 void GameWorld::Render(sf::RenderWindow& _window)
 {
-    for (Cell& cell : m_cells)
-    {
-        cell.Render(_window);
-    }
+    _window.draw(m_worldMap);
+
     for (Character& character : m_characters)
         character.Render(_window);
 }
@@ -99,7 +87,10 @@ void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
 
 void GameWorld::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 {
-    getCell(_pos).OnToggleFlag(_char);
+    (void)_char;
+
+    getCell(_pos).OnToggleFlag();
+    m_worldMap.OnToggleFlag(getCell(_pos));
 }
 
 void GameWorld::onUncoverCell(WorldPosition _pos)
@@ -107,6 +98,7 @@ void GameWorld::onUncoverCell(WorldPosition _pos)
     if (getCell(_pos).IsCovered())
     {
         getCell(_pos).OnUncoverCell();
+        m_worldMap.OnUncoverCell(getCell(_pos));
         m_cellsLeftToUncover--;
 
         if (m_cellsLeftToUncover <= 0)
@@ -116,6 +108,7 @@ void GameWorld::onUncoverCell(WorldPosition _pos)
 
 void GameWorld::createCells(WorldPosition _worldSize)
 {
+    m_cells.reserve(_worldSize.x*_worldSize.y);
 	for (int y = 0; y < _worldSize.y; y++)
 		for (int x = 0; x < _worldSize.x; x++)
 			m_cells.push_back({WorldPosition{x, y}});
@@ -133,7 +126,7 @@ void GameWorld::generateBombs(size_t _bombsNumber)
 		if(getCell(X, Y).m_type == Cell::ValueType::BOMB)
 			continue;
 
-		getCell(X, Y).SetType(Cell::ValueType::BOMB);
+		getCell(X, Y).setType(Cell::ValueType::BOMB);
 
 		for (int i = -1; i <= 1; i++)
 		{
@@ -152,8 +145,8 @@ void GameWorld::generateBombs(size_t _bombsNumber)
 
 				if (getCell(x, y).m_type == Cell::ValueType::BOMB)
 					continue;
-				getCell(x, y).SetType(Cell::ValueType::NUMBER);
-				getCell(x, y).IncreaseNumber();
+				getCell(x, y).setType(Cell::ValueType::NUMBER);
+				getCell(x, y).increaseNumber();
 			}
 		}
 		_bombsNumber--;
@@ -240,11 +233,6 @@ sf::Color GameWorld::GenerateColor()
     const int green = getRand() % 255;
     const int blue = getRand() % 255;
     return sf::Color(red, green, blue);
-    // static std::vector<sf::Color> colors;
-    // colors.push_back(sf::Color::Yellow);
-    // colors.push_back(sf::Color::Red);
-    // colors.push_back(sf::Color::Magenta);
-    // return colors[m_characters.size() + 1];
 }
 
 void GameWorld::OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message)

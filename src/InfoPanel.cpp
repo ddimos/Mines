@@ -82,21 +82,22 @@ void InputField::Render(sf::RenderWindow& _window)
 
 InfoPanel::InfoPanel()
 {
+    const auto textColor = sf::Color(246, 244, 234); 
     m_welcomeText.setPosition(sf::Vector2f{20.f, 20.f});
-    m_welcomeText.setFillColor(sf::Color::Magenta);
+    m_welcomeText.setFillColor(textColor);
 
     m_text.setPosition(sf::Vector2f{20.f, 80.f});
-    m_text.setFillColor(sf::Color::Magenta);
+    m_text.setFillColor(textColor);
     m_text.setCharacterSize(CHARACTER_SIZE_M);
 
     m_bombsNumText.setPosition(sf::Vector2f{20.f, 220.f});
-    m_bombsNumText.setFillColor(sf::Color::Magenta);
+    m_bombsNumText.setFillColor(textColor);
 
     m_enteredAddressText.setPosition(sf::Vector2f{20.f, 240.f});
-    m_enteredAddressText.setFillColor(sf::Color::Magenta);
+    m_enteredAddressText.setFillColor(textColor);
     m_enteredAddressText.setCharacterSize(CHARACTER_SIZE_M);
     m_enteredNameText.setPosition(sf::Vector2f{20.f, 300.f});
-    m_enteredNameText.setFillColor(sf::Color::Magenta);
+    m_enteredNameText.setFillColor(textColor);
     m_enteredNameText.setCharacterSize(CHARACTER_SIZE_M);
 }
 

@@ -352,9 +352,9 @@ void Game::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 {
     m_gameWorld.OnCharacterToggleFlagCell(_pos, _char);
 
-    if (m_gameWorld.getCell(_pos).m_state == Cell::State::FLAGGED)
+    if (m_gameWorld.getCell(_pos).GetState() == Cell::State::FLAGGED)
         m_infoPanel.OnFlagSet();
-    else if (m_gameWorld.getCell(_pos).m_state == Cell::State::COVERED)
+    else if (m_gameWorld.getCell(_pos).GetState() == Cell::State::COVERED)
         m_infoPanel.OnFlagUnset();
     
 }
