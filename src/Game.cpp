@@ -30,21 +30,15 @@ namespace
 Game* Game::ms_game = nullptr;
 std::array<bool, sf::Keyboard::KeyCount> Game::ms_keysState;
 
-Game::Game(sf::RenderWindow* _window)
-:
-    m_window(_window)
+Game::Game(sf::RenderWindow& _window)
+    : m_window(_window)
+    , m_menuManager(_window)
 {
 
     std::fill(ms_keysState.begin(), ms_keysState.end(), false);
 
     m_gameView.setViewport(sf::FloatRect(0.f, 0.f, 0.8f, 1.f));
     m_infoView.setViewport(sf::FloatRect(0.8f, 0.f, 0.8f, 1.f));
-
-    loadResources();
-
-    m_infoPanel.OnInit(m_font);
-    // Create a preview
-    m_gameWorld.CreateWorld({35, 35}, 1);
 
     m_wantsToChangeState = true;
 }
@@ -53,7 +47,7 @@ Game::~Game()
 {
 }
 
-bool Game::StartUp(sf::RenderWindow* _window)
+bool Game::StartUp(sf::RenderWindow& _window)
 {
     if (!ms_game)
     {
@@ -74,6 +68,14 @@ bool Game::ShutDown()
     return false;
 }
 
+void Game::Init()
+{
+    m_menuManager.OnInit();
+    m_infoPanel.OnInit();
+    // Create a preview
+    m_gameWorld.CreateWorld({35, 35}, 1);
+}
+
 bool Game::isKeyPressed(sf::Keyboard::Key _key)
 {
     if (!Game::isKeyDown(_key))
@@ -88,15 +90,7 @@ bool Game::isKeyPressed(sf::Keyboard::Key _key)
 
 bool Game::isKeyDown(sf::Keyboard::Key _key)
 {
-    return sf::Keyboard::isKeyPressed(_key) && Game::Get().m_window->hasFocus();
-}
-
-void Game::loadResources()
-{
-    if (!m_font.loadFromFile("res/fonts/times_new_roman.ttf"))
-	{
-		LOG_ERROR("Couldn't load the font");
-	}
+    return sf::Keyboard::isKeyPressed(_key) && Game::Get().m_window.hasFocus();
 }
 
 void Game::initGame()
@@ -148,6 +142,7 @@ void Game::onStateEnter(GameState _newState)
     {
     case GameState::INIT:
         m_infoPanel.OnEnterInit();
+        m_menuManager.Push(MenuType::CREATE_MENU);
         break;
     case GameState::LOBBY:
         m_infoPanel.OnEnterLobby(IsSessionMaster());
@@ -198,6 +193,8 @@ void Game::onStateExit(GameState _oldState)
     switch (_oldState)
     {
     case GameState::INIT:
+        m_menuManager.Pop();
+        break;
     case GameState::GAME:
     case GameState::LOBBY:
         break;
@@ -462,15 +459,18 @@ void Game::Update(float _dt)
                 m_wantsToChangeState = true;
     }
 
+    m_menuManager.Update(_dt);
     m_infoPanel.Update(_dt);
 }
 
-
-void Game::Draw(sf::RenderWindow* _window)
+void Game::Draw(sf::RenderWindow& _window)
 {
-    _window->setView(m_gameView);
-    m_gameWorld.Render(*_window);
+    _window.setView(m_gameView);
+    m_gameWorld.Render(_window);
 
-    _window->setView(m_infoView);
-    m_infoPanel.Render(*_window);
+    _window.setView(m_infoView);
+    m_infoPanel.Render(_window);
+
+    _window.setView(_window.getDefaultView());
+    m_menuManager.Draw(_window);
 }

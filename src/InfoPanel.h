@@ -48,7 +48,7 @@ public:
 
     bool IsInInputMode() const { return m_inputField.GetMode() != InputField::EnterMode::MENU; }
     
-    void OnInit(const sf::Font& _font);
+    void OnInit();
 
     void OnEnterInit();
     void OnEnterLobby(bool _isMaster);

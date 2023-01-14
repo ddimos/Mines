@@ -19,10 +19,12 @@ bool Application::StartUp(sf::RenderWindow* window)
         LOG_ERROR("window is nullptr");
         return false;
     }
+    ResourceManager::StartUp();
     Config::StartUp("gameConfig.conf");
     Network::StartUp(Config::Get().GetConfig("port", DEFAULT_PORT));
-    Game::StartUp(window);
+    Game::StartUp(*window);
 
+    Game::Get().Init();
     return true;
 }
 
@@ -60,7 +62,7 @@ void Application::MainLoop()
         }
 
         m_window->clear(BACKGROUND_COLOR);
-        Game::Get().Draw(m_window);
+        Game::Get().Draw(*m_window);
         m_window->display();
 
         elapsedLoop = throttlingClock.restart();

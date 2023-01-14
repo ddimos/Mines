@@ -1,13 +1,11 @@
 #include "WorldMap.h"
 #include "Log.h"
+#include "Utils.h"
 
 
-WorldMap::WorldMap(/* args */)
+WorldMap::WorldMap()
+    : m_tileset(ResourceManager::getTexture("tileset"))
 {
-    if (!m_tileset.loadFromFile("res/textures/all.png"))
-    {
-		LOG_ERROR("Couldn't load the tileset");
-	}
 }
 
 void WorldMap::OnUncoverCell(const Cell& _cell)

@@ -1,6 +1,7 @@
 #include "InfoPanel.h"
 #include "Game.h"
 #include "Log.h"
+#include "Utils.h"
 #include <string>
 
 namespace
@@ -111,15 +112,15 @@ void InfoPanel::updateBombsLeftText(int _newNumber)
     m_bombsNumText.setString("Bombs Left\n" + std::to_string(_newNumber));
 }
 
-void InfoPanel::OnInit(const sf::Font& _font)
+void InfoPanel::OnInit()
 {
-    m_inputField.OnInit(_font);
-
-    m_welcomeText.setFont(_font);
-    m_text.setFont(_font);
-    m_bombsNumText.setFont(_font);
-    m_enteredAddressText.setFont(_font);
-    m_enteredNameText.setFont(_font);
+    const auto& font = ResourceManager::getFont("poppins_regular");
+    m_inputField.OnInit(font);
+    m_welcomeText.setFont(font);
+    m_text.setFont(font);
+    m_bombsNumText.setFont(font);
+    m_enteredAddressText.setFont(font);
+    m_enteredNameText.setFont(font);
 }
 
 void InfoPanel::OnTextEntered(sf::Uint32 _char)
@@ -189,7 +190,7 @@ void InfoPanel::OnPlayerJoined(const PlayerInfo& _info)
 {
     PlayerText player;
     player.info = _info;
-    player.text.setFont(Game::Get().GetFont());
+    player.text.setFont(ResourceManager::getFont("poppins_regular"));
     player.text.setString(_info.networkPlayerCopy.GetName());
     player.shape.setSize(sf::Vector2f{CELL_SIZE/1.3f, CELL_SIZE/1.3f});
     player.shape.setOutlineColor(sf::Color::White);

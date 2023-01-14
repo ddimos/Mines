@@ -24,6 +24,6 @@ private:
     const sf::Vector2u TILE_SIZE{32, 32};
 
     sf::VertexArray m_vertices;
-    sf::Texture m_tileset;
+    const sf::Texture& m_tileset;
 };
 

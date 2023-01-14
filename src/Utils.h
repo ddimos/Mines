@@ -1,8 +1,10 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include <cmath>
 #include "Constants.h"
+#include <cmath>
 #include <chrono>
+#include <string>
+#include <unordered_map>
 
 inline int getIndex(int _x, int _y)
 {
@@ -56,6 +58,8 @@ inline bool approximatelyEqual(float _a, float _b)
 void provideSeed(unsigned _seed);
 int getRand();
 
+// ---------------------------------------------------------
+
 class Profiler
 {
 public:
@@ -68,3 +72,24 @@ private:
 };
 
 #define PROFILE_POINT(context) Profiler p(context);
+
+// ---------------------------------------------------------
+
+class ResourceManager
+{
+public:
+    static void StartUp();
+
+    static const sf::Texture& getTexture(std::string _name);
+    static const sf::Font& getFont(std::string _name);
+
+private:
+    static void loadTexture(std::string _path, std::string _name);
+    static void loadFont(std::string _path, std::string _name);
+
+    static std::unordered_map<std::string, sf::Texture> ms_textures;
+    static std::unordered_map<std::string, sf::Font> ms_fonts;
+
+    static sf::Texture ms_nullTexture;
+    static sf::Font ms_nullFont;
+};
