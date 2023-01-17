@@ -58,6 +58,8 @@ inline bool approximatelyEqual(float _a, float _b)
 void provideSeed(unsigned _seed);
 int getRand();
 
+float calculateCenterX(float _width);
+
 // ---------------------------------------------------------
 
 class Profiler

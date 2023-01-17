@@ -1,5 +1,6 @@
 #include "Utils.h"
 #include "Log.h"
+#include "Game.h"
 
 
 sf::Vector2f WorldPosition::getWindowPosition() const
@@ -37,6 +38,11 @@ int getRand()
     return rand();
 }
 
+float calculateCenterX(float _width)
+{
+    return Game::Get().GetWindow().getSize().x / 2.f - _width / 2.f;
+}
+
 // ---------------------------------------------------------
 
 Profiler::Profiler(const std::string& _context)
@@ -65,7 +71,7 @@ void ResourceManager::StartUp()
 {
     loadTexture("res/textures/all.png", "tileset");
     loadTexture("res/textures/start_menu_buttons.png", "start_menu_buttons");
-    
+ 
     loadFont("res/fonts/IBMPlexSansThaiLooped-Regular.ttf", "poppins_regular");
     loadFont("res/fonts/IBMPlexSansThaiLooped-Bold.ttf", "poppins_bold");
 }

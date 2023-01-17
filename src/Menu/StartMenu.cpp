@@ -1,6 +1,7 @@
 #include "StartMenu.h"
 #include "Log.h"
 #include "Utils.h"
+#include "Game.h"
 
 namespace
 {
@@ -23,6 +24,7 @@ namespace
 StartMenu::StartMenu()
     : BaseMenu(MenuType::START_MENU)
 {
+    // TODO ? create a menu item for text ?
     m_text.setFont(ResourceManager::getFont("poppins_bold")); 
     m_text.setString("WELCOME!");
     m_text.setCharacterSize(WELCOME_TEXT_SIZE); 
@@ -30,41 +32,31 @@ StartMenu::StartMenu()
     m_text.setPosition(sf::Vector2f(calculateCenterX(m_text.getGlobalBounds().width), WELCOME_TEXT_Y)); 
  
     const auto& texture = ResourceManager::getTexture("start_menu_buttons");
-    m_startGameButton.setTexture(texture);
-    m_startGameButton.setTextureRect(START_BUTTON);
-    m_startGameButton.setPosition(sf::Vector2f(calculateCenterX(m_startGameButton.getGlobalBounds().width), START_BUTTON_Y)); 
-    m_joinGameButton.setTexture(texture);
-    m_joinGameButton.setTextureRect(JOIN_BUTTON);
-    m_joinGameButton.setPosition(sf::Vector2f(calculateCenterX(m_joinGameButton.getGlobalBounds().width), JOIN_BUTTON_Y));
- 
-    m_buttons.emplace_back(Button{m_startGameButton.getGlobalBounds(),
-     [this](bool _isHovered){
-        LOG("Start Game hover " + tstr(_isHovered));
-        if (_isHovered)
-            m_startGameButton.setTextureRect(START_BUTTON_H);
-        else
-            m_startGameButton.setTextureRect(START_BUTTON);
-     },
-     [this](bool _isClicked){
-        LOG("Start Game click " + tstr(_isClicked));
-     }});
-    m_buttons.emplace_back(Button{m_joinGameButton.getGlobalBounds(),
-     [this](bool _isHovered){
-        LOG("Join Game hover " + tstr(_isHovered));
-        if (_isHovered)
-            m_joinGameButton.setTextureRect(JOIN_BUTTON_H);
-        else
-            m_joinGameButton.setTextureRect(JOIN_BUTTON);
-     },
-     [this](bool _isClicked){
-        LOG("Join Game click " + tstr(_isClicked));
-     }});
+
+    m_menuItems.emplace_back(std::make_unique<Button>(
+            sf::Vector2f(MenuItem::CENTER_ALLIGNED, START_BUTTON_Y),
+            texture,
+            START_BUTTON,
+            START_BUTTON_H,
+            [this](){
+                LOG("Start Game click ");
+                Game::Get().OnStartButtonPressed();
+            }
+        ));
+
+    m_menuItems.emplace_back(std::make_unique<Button>(
+            sf::Vector2f(MenuItem::CENTER_ALLIGNED, JOIN_BUTTON_Y),
+            texture,
+            JOIN_BUTTON,
+            JOIN_BUTTON_H,
+            [this](){
+                LOG("Join Game click ");
+                Game::Get().OnJoinButtonPressed();
+            }
+        ));
 }
 
 void StartMenu::onDraw(sf::RenderWindow& _window)
 {
-    
     _window.draw(m_text);
-    _window.draw(m_startGameButton);
-    _window.draw(m_joinGameButton);
 }

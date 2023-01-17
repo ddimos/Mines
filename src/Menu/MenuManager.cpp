@@ -1,7 +1,6 @@
 #include "Menu/MenuManager.h"
 #include "Menu/StartMenu.h"
 #include "Log.h"
-#include <SFML/Window.hpp>
 
 MenuManager::MenuManager(sf::RenderWindow& _window)
     : m_window(_window)
@@ -14,7 +13,7 @@ MenuManager::~MenuManager()
 
 void MenuManager::OnInit()
 {
-    m_menus.insert_or_assign(MenuType::CREATE_MENU, std::make_unique<StartMenu>());
+    m_menus.insert_or_assign(MenuType::START_MENU, std::make_unique<StartMenu>());
 
 }
 
@@ -51,37 +50,8 @@ void MenuManager::Update(float _dt)
 
     if (!m_currentMenu || !m_currentMenu->IsActive())
         return;
-    if (!m_window.hasFocus())
-        return;
 
-    auto& buttons = m_currentMenu->GetButtons();
-    const sf::Vector2f mousePosition = sf::Vector2f(sf::Mouse::getPosition(m_window));
-
-    for (auto& button : buttons)
-    {
-        if (button.GetGlobalBounds().contains(mousePosition))
-        {
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-            {
-                if (!button.IsClicked())
-                    button.OnClick(true);
-            }
-            else
-            {
-                if (button.IsClicked())
-                    button.OnClick(false);
-                if (!button.IsHovered())
-                    button.OnHover(true);
-            }
-        }
-        else
-        {
-            if (button.IsHovered())
-                button.OnHover(false);
-        }
-
-    }
-    
+    m_currentMenu->Update();
 }
 
 void MenuManager::Draw(sf::RenderWindow& _window)
