@@ -1,5 +1,6 @@
 #include "Menu/MenuManager.h"
 #include "Menu/StartMenu.h"
+#include "Menu/CreateMenu.h"
 #include "Log.h"
 
 MenuManager::MenuManager(sf::RenderWindow& _window)
@@ -14,6 +15,7 @@ MenuManager::~MenuManager()
 void MenuManager::OnInit()
 {
     m_menus.insert_or_assign(MenuType::START_MENU, std::make_unique<StartMenu>());
+    m_menus.insert_or_assign(MenuType::CREATE_MENU, std::make_unique<CreateMenu>());
 
 }
 

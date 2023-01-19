@@ -43,7 +43,7 @@ public:
         const sf::IntRect& _textureRectHover,
         ClickCallback _onClickCallback);
     
-private:
+protected:
     sf::FloatRect getBounds() const override;
 
     void onDraw(sf::RenderWindow& _window) override;
@@ -55,6 +55,32 @@ private:
     sf::IntRect m_textureRectDefault = {};
     sf::IntRect m_textureRectHover = {};
     ClickCallback m_onClickCallback = {};
+};
+
+// ---------------------------------------------------------
+
+class ChoosableButton : public Button
+{
+public:
+    using ChooseCallback = std::function<void(ChoosableButton&, bool)>;
+
+    ChoosableButton(sf::Vector2f _position,
+        const sf::Texture& _texture,
+        const sf::IntRect& _textureRectDefault,
+        const sf::IntRect& _textureRectChoose,
+        ChooseCallback _onChooseCallback);
+    
+    void Unchoose();
+
+private:
+    void onHover(bool _isHoverOn) override {(void)_isHoverOn;}
+    void onClick(bool _isButtonPressed) override;
+
+    void onChoose();
+    
+    bool m_isChosen = false;
+    sf::IntRect m_textureRectChoose = {};
+    ChooseCallback m_onChooseCallback = {};
 };
 
 // ---------------------------------------------------------

@@ -101,6 +101,45 @@ void Button::onClick(bool _isButtonPressed)
 
 // ---------------------------------------------------------
 
+ChoosableButton::ChoosableButton(
+        sf::Vector2f _position,
+        const sf::Texture& _texture,
+        const sf::IntRect& _textureRectDefault,
+        const sf::IntRect& _textureRectChoose,
+        ChooseCallback _onChooseCallback)
+    : Button(_position, _texture, _textureRectDefault, _textureRectDefault, {})
+    , m_textureRectChoose(_textureRectChoose)
+    , m_onChooseCallback(_onChooseCallback)
+{
+}
+
+void ChoosableButton::Unchoose()
+{
+    if (!m_isChosen)
+        return;
+    m_isChosen = false;
+    onChoose();
+}
+
+void ChoosableButton::onClick(bool _isButtonPressed)
+{
+    if (_isButtonPressed)
+        return;
+    m_isChosen = !m_isChosen;
+    onChoose();
+}
+
+void ChoosableButton::onChoose()
+{
+    if (m_isChosen)
+        m_sprite.setTextureRect(m_textureRectChoose);
+    else
+        m_sprite.setTextureRect(m_textureRectDefault);
+    m_onChooseCallback(*this, m_isChosen);
+}
+
+// ---------------------------------------------------------
+
 InputField::InputField(
         sf::Vector2f _position,
         const sf::Texture& _texture,
