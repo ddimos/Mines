@@ -3,7 +3,6 @@
 #include <string>
 #include <SFML/Graphics.hpp>
 
-
 class MenuItem
 {
 public:
@@ -15,15 +14,26 @@ public:
     void Draw(sf::RenderWindow& _window);
 
 protected:
-    virtual sf::FloatRect getBounds() const = 0;
-    
     virtual void onUpdate() {}
     virtual void onDraw(sf::RenderWindow& _window) {(void)_window;}
-    virtual void onHover(bool _isHoverOn) {(void)_isHoverOn;}
-    virtual void onClick(bool _isButtonPressed) {(void)_isButtonPressed;}
+};
+
+// ---------------------------------------------------------
+
+class Interactable
+{
+public:
+    virtual ~Interactable() = default;
 
     bool isHovered() const { return m_isHovered; }
     bool isButtonPressed() const { return m_isButtonPressed; }
+
+protected:
+    virtual sf::FloatRect getBounds() const = 0;
+
+    void onUpdate();
+    virtual void onHover(bool _isHoverOn) {(void)_isHoverOn;}
+    virtual void onClick(bool _isButtonPressed) {(void)_isButtonPressed;}
 
 private:
     bool m_isHovered = false;
@@ -32,7 +42,7 @@ private:
 
 // ---------------------------------------------------------
 
-class Button : public MenuItem
+class Button : public MenuItem, public Interactable
 {
 public:
     using ClickCallback = std::function<void()>;
@@ -46,6 +56,7 @@ public:
 protected:
     sf::FloatRect getBounds() const override;
 
+    void onUpdate() override;
     void onDraw(sf::RenderWindow& _window) override;
     void onHover(bool _isHoverOn) override;
     void onClick(bool _isButtonPressed) override;
@@ -58,7 +69,7 @@ protected:
 };
 
 // ---------------------------------------------------------
-
+class SetOfChoosableButtons;
 class ChoosableButton : public Button
 {
 public:
@@ -70,9 +81,11 @@ public:
         const sf::IntRect& _textureRectChoose,
         ChooseCallback _onChooseCallback);
     
-    void Unchoose();
 
 private:
+    friend class SetOfChoosableButtons;
+    void unchoose();
+
     void onHover(bool _isHoverOn) override {(void)_isHoverOn;}
     void onClick(bool _isButtonPressed) override;
 
@@ -85,7 +98,7 @@ private:
 
 // ---------------------------------------------------------
 
-class InputField : public MenuItem
+class InputField : public MenuItem, public Interactable
 {
 public:
     using ValidateEnteredTextCallback = std::function<bool(sf::Uint32)>;
@@ -113,4 +126,29 @@ private:
     bool m_isInInputMode = false;
     ValidateEnteredTextCallback m_onValidateEnteredTextCallback = {};
     FinishEnterTextCallback m_onFinishEnterTextCallback = {};
+};
+
+// ---------------------------------------------------------
+
+class SetOfChoosableButtons : public MenuItem
+{
+public:
+    using ChooseCallback = std::function<void(unsigned, bool)>;
+
+    SetOfChoosableButtons(
+        unsigned _numberOfButtons,
+        sf::Vector2f _positionOfTheFirst,
+        float _distanceBetweenButtons,
+        const sf::Texture& _texture,
+        const sf::Vector2i& _buttonDimension,
+        ChooseCallback _onChooseCallback);
+
+private:
+    void onUpdate() override;
+    void onDraw(sf::RenderWindow& _window) override;
+    void onColorButtonChosen(ChoosableButton& _button, bool _isChosen, unsigned _num);
+
+    std::vector<ChoosableButton> m_buttons;
+    ChoosableButton* m_chosenColorButton = nullptr;
+    ChooseCallback m_onChooseCallback = {};
 };

@@ -10,6 +10,18 @@ namespace
 
 void MenuItem::Update()
 {
+    onUpdate();
+}
+
+void MenuItem::Draw(sf::RenderWindow& _window)
+{
+    onDraw(_window);
+}
+
+// ---------------------------------------------------------
+
+void Interactable::onUpdate()
+{
     const auto& window = Game::Get().GetWindow();
     if (!window.hasFocus())    
         return;
@@ -47,13 +59,6 @@ void MenuItem::Update()
             onHover(m_isHovered);
         }
     }
-
-    onUpdate();
-}
-
-void MenuItem::Draw(sf::RenderWindow& _window)
-{
-    onDraw(_window);
 }
 
 // ---------------------------------------------------------
@@ -78,6 +83,11 @@ Button::Button(
 sf::FloatRect Button::getBounds() const
 {
     return m_sprite.getGlobalBounds();
+}
+
+void Button::onUpdate()
+{
+    Interactable::onUpdate();
 }
 
 void Button::onDraw(sf::RenderWindow& _window)
@@ -113,7 +123,7 @@ ChoosableButton::ChoosableButton(
 {
 }
 
-void ChoosableButton::Unchoose()
+void ChoosableButton::unchoose()
 {
     if (!m_isChosen)
         return;
@@ -176,6 +186,8 @@ void InputField::onUpdate()
     if (!window.hasFocus())    
         return;
 
+    Interactable::onUpdate();
+
     const sf::Vector2f mousePosition = sf::Vector2f(sf::Mouse::getPosition(window));
     if (!getBounds().contains(mousePosition))
     {
@@ -226,4 +238,59 @@ void InputField::onClick(bool _isClicked)
 {
     if (!_isClicked)
         m_isInInputMode = true;
+}
+
+// ---------------------------------------------------------
+
+SetOfChoosableButtons::SetOfChoosableButtons(
+        unsigned _numberOfButtons,
+        sf::Vector2f _positionOfTheFirst,
+        float _distanceBetweenButtons,
+        const sf::Texture& _texture,
+        const sf::Vector2i& _buttonDimension,
+        ChooseCallback _onChooseCallback)
+    : m_onChooseCallback(_onChooseCallback)
+{
+    m_buttons.reserve(_numberOfButtons);
+    for (unsigned num = 0; num < _numberOfButtons; num++)
+        m_buttons.emplace_back(ChoosableButton(
+            sf::Vector2f(
+                _positionOfTheFirst.x 
+                    + num * (_distanceBetweenButtons + _buttonDimension.x),
+                 _positionOfTheFirst.y),
+            _texture,
+            sf::IntRect{
+                (int)num * _buttonDimension.x,
+                0,
+                _buttonDimension.x,
+                _buttonDimension.y},
+            sf::IntRect{
+                (int)num * _buttonDimension.x,
+                _buttonDimension.y,
+                _buttonDimension.x,
+                _buttonDimension.y},
+            [this, num](ChoosableButton& _button, bool _isChosen){
+                onColorButtonChosen(_button, _isChosen, num);
+            }
+        ));
+}
+
+void SetOfChoosableButtons::onUpdate()
+{
+    for(auto& button : m_buttons)
+        button.Update();
+}
+
+void SetOfChoosableButtons::onDraw(sf::RenderWindow& _window)
+{
+    for(auto& button : m_buttons)
+        button.Draw(_window);
+}
+
+void SetOfChoosableButtons::onColorButtonChosen(ChoosableButton& _button, bool _isChosen, unsigned _num)
+{
+    if (m_chosenColorButton)
+        m_chosenColorButton->unchoose();
+    m_onChooseCallback(_num, _isChosen);
+    m_chosenColorButton = (_isChosen) ?  &_button : nullptr;
 }
