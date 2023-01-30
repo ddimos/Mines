@@ -25,6 +25,14 @@ private:
     sf::Sprite m_spriteX;
     sf::Sprite m_spriteMine;
 
-    std::string m_enteredStr;
+    std::string m_enteredName = "";
+    unsigned m_enteredHeight = 0;
+    unsigned m_enteredWidth = 0;
+    unsigned m_enteredBombsCount = 0;
+    unsigned m_chosenColor = 0;
+
+    InputField* m_widthInputField = nullptr;
+    InputField* m_heightInputField = nullptr;
+    InputField* m_bombsCountInputField = nullptr;
 };
 

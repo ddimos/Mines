@@ -156,10 +156,14 @@ InputField::InputField(
         const sf::Font& _font,
         const std::string& _helpText,
         ValidateEnteredTextCallback _onValidateEnteredTextCallback,
-        FinishEnterTextCallback _onFinishEnterTextCallback)
+        FinishEnterTextCallback _onFinishEnterTextCallback,
+        unsigned _maxSize)
     : m_onValidateEnteredTextCallback(_onValidateEnteredTextCallback)
     , m_onFinishEnterTextCallback(_onFinishEnterTextCallback)
+    , m_maxSize(_maxSize)
 {
+    m_enteredStr.reserve(m_maxSize);
+
     m_sprite.setTexture(_texture);
     if (_position.x == CENTER_ALLIGNED) // TODO to fix this
         _position.x = calculateCenterX(m_sprite.getGlobalBounds().width);
@@ -196,7 +200,8 @@ void InputField::onUpdate()
             if (m_isInInputMode)
             {
                 m_isInInputMode = false;
-                m_onFinishEnterTextCallback(m_enteredStr);
+                if (!m_enteredStr.empty())
+                    m_onFinishEnterTextCallback(m_enteredStr);
             }
         }
     }
@@ -207,24 +212,25 @@ void InputField::onUpdate()
     const sf::Uint32 enteredChar = Game::Get().GetEnteredChar();
     if (enteredChar)
     {
-        if (m_onValidateEnteredTextCallback(enteredChar))
+        if (enteredChar == 8) // Backspace
         {
-            if (enteredChar == 8) // Backspace
-            {
-                if (!m_enteredStr.empty())
-                    m_enteredStr.pop_back();
-            }
-            else
-                m_enteredStr += enteredChar;
-
-            m_inputText.setString(m_enteredStr);
+            if (!m_enteredStr.empty())
+                m_enteredStr.pop_back();
         }
+        else if(m_enteredStr.size() < m_maxSize)
+        {
+            m_enteredStr += enteredChar;    // To be able to validate a newly created string
+            if (!m_onValidateEnteredTextCallback(enteredChar, m_enteredStr))    // TODO to pass std::array here to be able to modify it
+                m_enteredStr.pop_back();
+        }
+        m_inputText.setString(m_enteredStr);
     }
     
     if (Game::Get().isKeyPressed(sf::Keyboard::Enter))
     {
         m_isInInputMode = false;
-        m_onFinishEnterTextCallback(m_enteredStr);
+        if (!m_enteredStr.empty())
+            m_onFinishEnterTextCallback(m_enteredStr);
     }
 }
 
@@ -238,6 +244,14 @@ void InputField::onClick(bool _isClicked)
 {
     if (!_isClicked)
         m_isInInputMode = true;
+}
+
+void InputField::Fill(const std::string& _text)
+{
+    m_enteredStr = (_text.size() < m_maxSize) 
+                 ? _text : _text.substr(0, m_maxSize);
+ 
+    m_inputText.setString(m_enteredStr);
 }
 
 // ---------------------------------------------------------
@@ -270,7 +284,7 @@ SetOfChoosableButtons::SetOfChoosableButtons(
                 _buttonDimension.x,
                 _buttonDimension.y},
             [this, num](ChoosableButton& _button, bool _isChosen){
-                onColorButtonChosen(_button, _isChosen, num);
+                onButtonChosen(_button, _isChosen, num + 1);
             }
         ));
 }
@@ -287,10 +301,10 @@ void SetOfChoosableButtons::onDraw(sf::RenderWindow& _window)
         button.Draw(_window);
 }
 
-void SetOfChoosableButtons::onColorButtonChosen(ChoosableButton& _button, bool _isChosen, unsigned _num)
+void SetOfChoosableButtons::onButtonChosen(ChoosableButton& _button, bool _isChosen, unsigned _num)
 {
-    if (m_chosenColorButton)
-        m_chosenColorButton->unchoose();
+    if (m_chosenButton)
+        m_chosenButton->unchoose();
     m_onChooseCallback(_num, _isChosen);
-    m_chosenColorButton = (_isChosen) ?  &_button : nullptr;
+    m_chosenButton = (_isChosen) ?  &_button : nullptr;
 }

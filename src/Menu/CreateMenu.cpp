@@ -2,11 +2,10 @@
 #include "Log.h"
 #include "Utils.h"
 #include "Game.h"
+#include "Config.h"
 
 namespace
 {
-    constexpr int TEXT_SIZE = 24;   // TODO Can be global
-
     constexpr int COLUMN_1 = 100;   // TODO Unite with Join Menu. Can be global
     constexpr int COLUMN_2 = 550;
     constexpr int LINE_1 = 150;
@@ -33,6 +32,17 @@ namespace
     constexpr int X_SPRITE_HEIGHT = 12;
     constexpr int MINE_SPRITE_SIZE = 28;
 
+    bool validateNumber(sf::Uint32 _enteredChar, const std::string& _enteredText, unsigned _maxValue)
+    {
+        if (_enteredChar >= 48 && _enteredChar <= 57) // Only numbers
+        {
+            const unsigned enteredValue = std::stoi(_enteredText);
+            if (enteredValue == 0 && _enteredChar == 48)
+                return false;
+            return enteredValue <= _maxValue;
+        }
+        return false;
+    }
 }
 
 CreateMenu::CreateMenu()
@@ -41,22 +51,22 @@ CreateMenu::CreateMenu()
     const auto& font = ResourceManager::getFont("poppins_regular");
     m_chooseFieldSizeText.setFont(font); 
     m_chooseFieldSizeText.setString("Choose field size");
-    m_chooseFieldSizeText.setCharacterSize(TEXT_SIZE); 
+    m_chooseFieldSizeText.setCharacterSize(DEFAULT_TEXT_SIZE); 
     m_chooseFieldSizeText.setFillColor(sf::Color::White);
     m_chooseFieldSizeText.setPosition(sf::Vector2f(COLUMN_1, LINE_1)); 
     m_enterFieldSizeText.setFont(font);
     m_enterFieldSizeText.setString("or make your own");
-    m_enterFieldSizeText.setCharacterSize(TEXT_SIZE); 
+    m_enterFieldSizeText.setCharacterSize(DEFAULT_TEXT_SIZE); 
     m_enterFieldSizeText.setFillColor(sf::Color::White);
     m_enterFieldSizeText.setPosition(sf::Vector2f(COLUMN_2, LINE_1));
     m_enterNameText.setFont(font);
     m_enterNameText.setString("Enter your name");
-    m_enterNameText.setCharacterSize(TEXT_SIZE); 
+    m_enterNameText.setCharacterSize(DEFAULT_TEXT_SIZE); 
     m_enterNameText.setFillColor(sf::Color::White);
     m_enterNameText.setPosition(sf::Vector2f(COLUMN_1, LINE_3));
     m_chooseColorText.setFont(font);
     m_chooseColorText.setString("Choose your color");
-    m_chooseColorText.setCharacterSize(TEXT_SIZE); 
+    m_chooseColorText.setCharacterSize(DEFAULT_TEXT_SIZE); 
     m_chooseColorText.setFillColor(sf::Color::White);
     m_chooseColorText.setPosition(sf::Vector2f(COLUMN_2, LINE_3));
 
@@ -70,7 +80,7 @@ CreateMenu::CreateMenu()
             CHOOSE_FIELD_BUTTON_HEIGHT},
         [this](unsigned _buttonNum, bool _isChosen){
             LOG("CHOOSE SIZE " + tstr(_buttonNum) + " - " + tstr(_isChosen));
-            onColorButtonChosen(_buttonNum, _isChosen);
+            onFieldSizeButtonChosen(_buttonNum, _isChosen);
         }
     ));
 
@@ -93,79 +103,81 @@ CreateMenu::CreateMenu()
         ResourceManager::getTexture("field1"),
         ResourceManager::getFont("poppins_regular"),
         "help text",
-        [](sf::Uint32 _char){
-            std::string a;
-            a+= _char;
-            LOG("Input " + a);
+        [](sf::Uint32 _char, const std::string& _enteredText){
+            (void)_char;
+            (void)_enteredText;
             return true;
         },
         [this](const std::string& _enteredText){
             LOG("Input finish " + _enteredText);
-            m_enteredStr = _enteredText;
+            m_enteredName = _enteredText;
         }
     ));
 
+    const unsigned maxWorldWidth = Config::Get().GetConfig("maxWorldWidth", DEFAULT_MAX_WORLD_WIDTH);
     m_menuItems.emplace_back(std::make_unique<InputField>(
         sf::Vector2f(COLUMN_2, LINE_2),
         ResourceManager::getTexture("field2"),
         ResourceManager::getFont("poppins_regular"),
         "Width",
-        [](sf::Uint32 _char){
-            std::string a;
-            a+= _char;
-            LOG("Input " + a);
-            return true;
+        [maxWorldWidth](sf::Uint32 _char, const std::string& _enteredText){
+            return validateNumber(_char, _enteredText, maxWorldWidth);
         },
         [this](const std::string& _enteredText){
             LOG("Input finish " + _enteredText);
-            m_enteredStr = _enteredText;
+            m_enteredWidth = std::stoi(_enteredText);
         }
     ));
+    m_widthInputField = static_cast<InputField*>(m_menuItems.back().get());
 
+    const unsigned maxWorldHeight = Config::Get().GetConfig("maxWorldHeight", DEFAULT_MAX_WORLD_HEIGHT);
     m_menuItems.emplace_back(std::make_unique<InputField>(
         sf::Vector2f(COLUMN_2 + DISTANCE_BETWEEN_INPUT_FIELDS, LINE_2),
         ResourceManager::getTexture("field2"),
         ResourceManager::getFont("poppins_regular"),
         "Height",
-        [](sf::Uint32 _char){
-            std::string a;
-            a+= _char;
-            LOG("Input " + a);
-            return true;
+        [maxWorldHeight](sf::Uint32 _char, const std::string& _enteredText){
+            return validateNumber(_char, _enteredText, maxWorldHeight);
         },
         [this](const std::string& _enteredText){
             LOG("Input finish " + _enteredText);
-            m_enteredStr = _enteredText;
+            m_enteredHeight = std::stoi(_enteredText);
         }
     ));
+    m_heightInputField = static_cast<InputField*>(m_menuItems.back().get());
 
+    const unsigned maxWorldBombsCount = Config::Get().GetConfig("maxWorldBombsCount", DEFAULT_MAX_WORLD_BOMBS_COUNT);
     m_menuItems.emplace_back(std::make_unique<InputField>(
         sf::Vector2f(COLUMN_2 + 2 * DISTANCE_BETWEEN_INPUT_FIELDS + MINE_SPRITE_SIZE, LINE_2),
         ResourceManager::getTexture("field2"),
         ResourceManager::getFont("poppins_regular"),
         "333",
-        [](sf::Uint32 _char){
-            std::string a;
-            a+= _char;
-            LOG("Input " + a);
-            return true;
+        [maxWorldBombsCount](sf::Uint32 _char, const std::string& _enteredText){
+            return validateNumber(_char, _enteredText, maxWorldBombsCount);
         },
         [this](const std::string& _enteredText){
             LOG("Input finish " + _enteredText);
-            m_enteredStr = _enteredText;
+            m_enteredBombsCount = std::stoi(_enteredText);
         }
     ));
+    m_bombsCountInputField = static_cast<InputField*>(m_menuItems.back().get());
 
     m_menuItems.emplace_back(std::make_unique<Button>(
-            sf::Vector2f(COLUMN_1, LINE_5),
-            ResourceManager::getTexture("create_menu_start_button"),
-            sf::IntRect{0,                  0, START_BUTTON_WIDTH, START_BUTTON_HEIGHT},
-            sf::IntRect{START_BUTTON_WIDTH, 0, START_BUTTON_WIDTH, START_BUTTON_HEIGHT},
-            [this](){
-                LOG("Start Game click ");
-            //    Game::Get().OnCreateButtonPressed();
-            }
-        ));
+        sf::Vector2f(COLUMN_1, LINE_5),
+        ResourceManager::getTexture("create_menu_start_button"),
+        sf::IntRect{0,                  0, START_BUTTON_WIDTH, START_BUTTON_HEIGHT},
+        sf::IntRect{START_BUTTON_WIDTH, 0, START_BUTTON_WIDTH, START_BUTTON_HEIGHT},
+        [this](){
+            LOG("Start Game click ");
+            MenuInputs inputs;
+            inputs.playerName = m_enteredName;
+            inputs.worldConfig.bombsCount = m_enteredBombsCount;
+            inputs.worldConfig.worldSize.x = m_enteredWidth;
+            inputs.worldConfig.worldSize.y = m_enteredHeight;
+            inputs.playerColorOption = m_chosenColor;
+            Game::Get().OnCreateMenuButtonPressed(inputs);
+        }
+    ));
 
     const auto& elementsTexture = ResourceManager::getTexture("create_menu_elements");
     m_spriteX.setTexture(elementsTexture);
@@ -189,12 +201,26 @@ void CreateMenu::onDraw(sf::RenderWindow& _window)
 
 void CreateMenu::onFieldSizeButtonChosen(unsigned _buttonNum, bool _isChosen)
 {
-    (void)_buttonNum;
-    (void)_isChosen;
+    WorldConfig worldConfig;
+    if (_isChosen)
+    {
+        if (_buttonNum == 1)
+            worldConfig = WorldConfig::GetSmallWorld();
+        else if (_buttonNum == 2)
+            worldConfig = WorldConfig::GetMediumWorld();
+        else if (_buttonNum == 3)
+            worldConfig = WorldConfig::GetLargeWorld();
+    }
+    
+    m_widthInputField->Fill(std::to_string(worldConfig.worldSize.x));
+    m_heightInputField->Fill(std::to_string(worldConfig.worldSize.y));
+    m_bombsCountInputField->Fill(std::to_string(worldConfig.bombsCount));
 }
 
 void CreateMenu::onColorButtonChosen(unsigned _buttonNum, bool _isChosen)
 {
-    (void)_buttonNum;
-    (void)_isChosen;
+    if (_isChosen)
+        m_chosenColor = _buttonNum;
+    else
+        m_chosenColor = 0;
 }

@@ -2,6 +2,7 @@
 #include <functional>
 #include <string>
 #include <SFML/Graphics.hpp>
+#include "Constants.h"
 
 class MenuItem
 {
@@ -101,17 +102,20 @@ private:
 class InputField : public MenuItem, public Interactable
 {
 public:
-    using ValidateEnteredTextCallback = std::function<bool(sf::Uint32)>;
+    using ValidateEnteredTextCallback = std::function<bool(sf::Uint32, const std::string&)>;
     using FinishEnterTextCallback = std::function<void(const std::string&)>;
     
     InputField(
         sf::Vector2f _position,
         const sf::Texture& _texture,
         const sf::Font& _font,
-        const std::string& _helpText,
+        const std::string& _helpText,   // TODO to pass a default value
         ValidateEnteredTextCallback _onValidateEnteredTextCallback,
-        FinishEnterTextCallback _onFinishEnterTextCallback);
+        FinishEnterTextCallback _onFinishEnterTextCallback,
+        unsigned _maxSize = DEFAULT_MAX_INPUT_FIELD_SIZE);
 
+    void Fill(const std::string& _text);
+    
 private:
     sf::FloatRect getBounds() const override;
 
@@ -126,6 +130,8 @@ private:
     bool m_isInInputMode = false;
     ValidateEnteredTextCallback m_onValidateEnteredTextCallback = {};
     FinishEnterTextCallback m_onFinishEnterTextCallback = {};
+
+    const unsigned m_maxSize = DEFAULT_MAX_INPUT_FIELD_SIZE;
 };
 
 // ---------------------------------------------------------
@@ -146,9 +152,9 @@ public:
 private:
     void onUpdate() override;
     void onDraw(sf::RenderWindow& _window) override;
-    void onColorButtonChosen(ChoosableButton& _button, bool _isChosen, unsigned _num);
+    void onButtonChosen(ChoosableButton& _button, bool _isChosen, unsigned _num);
 
     std::vector<ChoosableButton> m_buttons;
-    ChoosableButton* m_chosenColorButton = nullptr;
+    ChoosableButton* m_chosenButton = nullptr;
     ChooseCallback m_onChooseCallback = {};
 };

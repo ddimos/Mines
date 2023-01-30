@@ -16,5 +16,7 @@ private:
     sf::Text m_enterNameText;
     sf::Text m_chooseColorText;
 
-    std::string m_enteredStr;
+    std::string m_enteredAddress = "";
+    std::string m_enteredName = "";
+    unsigned m_chosenColor = 0;
 };

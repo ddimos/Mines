@@ -14,6 +14,10 @@ namespace
         {
         case GameState::INIT:
             return "INIT";
+        case GameState::CREATE:
+            return "CREATE";
+        case GameState::JOIN:
+            return "JOIN";
         case GameState::LOBBY:
             return "LOBBY";
         case GameState::GAME:
@@ -142,9 +146,16 @@ void Game::onStateEnter(GameState _newState)
     {
     case GameState::INIT:
         m_infoPanel.OnEnterInit();
+        m_menuManager.Push(MenuType::START_MENU);
+        break;
+    case GameState::CREATE:
         m_menuManager.Push(MenuType::CREATE_MENU);
         break;
+    case GameState::JOIN:
+        m_menuManager.Push(MenuType::JOIN_MENU);
+        break;
     case GameState::LOBBY:
+        m_menuManager.Push(MenuType::LOBBY_MENU);
         m_infoPanel.OnEnterLobby(IsSessionMaster());
         break;
     case GameState::GAME:
@@ -190,13 +201,33 @@ void Game::onStateEnter(GameState _newState)
 
 void Game::onStateExit(GameState _oldState)
 {
+        m_menuManager.Pop();    // Do I need Pop
     switch (_oldState)
     {
     case GameState::INIT:
-        m_menuManager.Pop();
         break;
-    case GameState::GAME:
+    case GameState::CREATE:
+    {
+        Network::Get().CreateAndJoinSession(m_menuInputs.playerName);   // TODO to pass a struct with a color
+        break;
+    }
+    case GameState::JOIN:
+    {
+        size_t index = m_menuInputs.addressToConnect.find(":");
+        if (index == std::string::npos)
+        {
+            LOG_ERROR("No entered address.");
+            break;
+        }
+        NetworkAddress address;
+        address.address = sf::IpAddress(m_menuInputs.addressToConnect.substr(0, index));
+        address.port = std::stoi(m_menuInputs.addressToConnect.substr(index+1));
+
+        Network::Get().JoinSession(address, m_menuInputs.playerName);
+        break;
+    }
     case GameState::LOBBY:
+    case GameState::GAME:
         break;
     case GameState::FINISH:
         resetGame();
@@ -220,6 +251,10 @@ void Game::updateState()
         newState = GameState::INIT;
         break;
     case GameState::INIT:
+        newState = m_isAssumedToBeAHost ? GameState::CREATE : GameState::JOIN;
+        break;
+    case GameState::CREATE:
+    case GameState::JOIN:
         newState = GameState::LOBBY;
         break;
     case GameState::LOBBY:
@@ -261,11 +296,11 @@ void Game::receiveNetworkMessages()
             m_players.push_back(playerInfo);
             m_infoPanel.OnPlayerJoined(playerInfo);
             
-            if (event.player.IsLocal())
-            {
-                m_localPlayerInfo = playerInfo;
-                m_wantsToChangeState = true;
-            }
+            // if (event.player.IsLocal())
+            // {
+            //     m_localPlayerInfo = playerInfo;
+            //     m_wantsToChangeState = true;
+            // }
             break;
         }
         case NetworkEvent::Type::ON_PLAYER_LEAVE:
@@ -362,26 +397,68 @@ void Game::OnGameEnded(bool _isVictory)
     m_isGameEnded = true;
 }
 
-void Game::OnStartButtonPressed()
+void Game::OnStartMenuStartButtonPressed()
 {
-    std::string enteredText = m_infoPanel.GetEnteredAddress();
-    size_t index = enteredText.find(":");
-    if (index == std::string::npos)
-    {
-        Network::Get().CreateAndJoinSession(m_infoPanel.GetEnteredName());
-        LOG("No entered text. Assume to be a master");
+    if (m_currentState != GameState::INIT)
         return;
-    }
 
-    NetworkAddress address;
-    address.address = sf::IpAddress(enteredText.substr(0, index));
-    address.port = std::stoi(enteredText.substr(index+1));
+    m_wantsToChangeState = true;
+    m_isAssumedToBeAHost = true;
 
-    Network::Get().JoinSession(address, m_infoPanel.GetEnteredName());
+// Call this code from onLeaveInitGameState or onEnterLobbyState
+    // std::string enteredText = m_infoPanel.GetEnteredAddress();
+    // size_t index = enteredText.find(":");
+    // if (index == std::string::npos)
+    // {
+    //     Network::Get().CreateAndJoinSession(m_infoPanel.GetEnteredName());
+    //     LOG("No entered text. Assume to be a master");
+    //     return;
+    // }
+
+    // NetworkAddress address;
+    // address.address = sf::IpAddress(enteredText.substr(0, index));
+    // address.port = std::stoi(enteredText.substr(index+1));
+
+    // Network::Get().JoinSession(address, m_infoPanel.GetEnteredName());
 }
+
+void Game::OnStartMenuJoinButtonPressed()
+{
+    if (m_currentState != GameState::INIT)
+        return;
+
+    m_wantsToChangeState = true;
+    m_isAssumedToBeAHost = false;    
+}
+
+void Game::OnCreateMenuButtonPressed(const MenuInputs& _input)
+{
+    if (m_currentState != GameState::CREATE)
+        return;
+    m_menuInputs = _input;
+    m_wantsToChangeState = true;
+}
+
+void Game::OnJoinMenuButtonPressed(const MenuInputs& _input)
+{
+    if (m_currentState != GameState::JOIN)
+        return;
+    m_menuInputs = _input;
+    m_wantsToChangeState = true;
+}
+
+void Game::OnLobbyMenuButtonPressed()
+{
+    if (m_currentState != GameState::LOBBY)
+        return;
+
+    m_wantsToChangeState = true;
+}
+
 
 void Game::OnTextEntered(sf::Uint32 _char)
 {
+    m_enteredChar = _char;
     m_infoPanel.OnTextEntered(_char);
 }
 
@@ -411,12 +488,12 @@ void Game::Update(float _dt)
 
     if (m_currentState == GameState::INIT)
     {
-        if (isKeyPressed(sf::Keyboard::B) && !m_infoPanel.IsInInputMode())
-        {
-            OnStartButtonPressed();
-            if (IsSessionMaster())
-                m_wantsToChangeState = true;            
-        }
+        // if (isKeyPressed(sf::Keyboard::B) && !m_infoPanel.IsInInputMode())
+        // {
+        //     OnStartButtonPressed();
+        //     if (IsSessionMaster())
+        //         m_wantsToChangeState = true;            
+        // }
     }
     else if (m_currentState == GameState::LOBBY)
     {
@@ -461,16 +538,18 @@ void Game::Update(float _dt)
 
     m_menuManager.Update(_dt);
     m_infoPanel.Update(_dt);
+
+    m_enteredChar = 0;
 }
 
 void Game::Draw(sf::RenderWindow& _window)
 {
-    _window.setView(m_gameView);
+  //  _window.setView(m_gameView);
     m_gameWorld.Render(_window);
 
-    _window.setView(m_infoView);
-    m_infoPanel.Render(_window);
+   // _window.setView(m_infoView);
+   // m_infoPanel.Render(_window);
 
-    _window.setView(_window.getDefaultView());
+  //  _window.setView(_window.getDefaultView());
     m_menuManager.Draw(_window);
 }

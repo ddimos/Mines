@@ -8,8 +8,10 @@
 
 inline int getIndex(int _x, int _y)
 {
-    return _x + _y * CELL_COUNT;
+    return _x + _y * CELL_COUNT;    // outdated
 }
+
+// ---------------------------------------------------------
 
 inline sf::Vector2f getWindowPosition(int _x, int _y)
 {
@@ -17,6 +19,8 @@ inline sf::Vector2f getWindowPosition(int _x, int _y)
         _x * (CELL_SIZE + OFFSET_BETWEEN_CELLS),
         _y * (CELL_SIZE + OFFSET_BETWEEN_CELLS));
 }
+
+// ---------------------------------------------------------
 
 struct WorldPosition
 {
@@ -50,13 +54,19 @@ inline WorldPosition operator-(const WorldPosition& _lhs, const WorldPosition& _
     return WorldPosition{_lhs.x - _rhs.x, _lhs.y - _rhs.y};
 }
 
+// ---------------------------------------------------------
+
 inline bool approximatelyEqual(float _a, float _b)
 {
     return fabs(_a - _b) <= std::max(fabs(_a), fabs(_b)) * EPSILON;
 }
 
+// ---------------------------------------------------------
+
 void provideSeed(unsigned _seed);
 int getRand();
+
+// ---------------------------------------------------------
 
 float calculateCenterX(float _width);
 
@@ -94,4 +104,16 @@ private:
 
     static sf::Texture ms_nullTexture;
     static sf::Font ms_nullFont;
+};
+
+// ---------------------------------------------------------
+
+struct WorldConfig
+{
+    static WorldConfig GetSmallWorld() { return WorldConfig{{10, 10}, 10};}
+    static WorldConfig GetMediumWorld() { return WorldConfig{{25, 25}, 30};}
+    static WorldConfig GetLargeWorld() { return WorldConfig{{50, 50}, 100};}
+
+    WorldPosition worldSize = {};
+    unsigned bombsCount = 0;
 };

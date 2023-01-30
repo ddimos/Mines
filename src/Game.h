@@ -17,10 +17,21 @@ enum class GameState
 {
     None,
     INIT,
+    CREATE,
+    JOIN,
     LOBBY,
     GAME,
     FINISH
 };
+
+struct MenuInputs
+{
+    std::string addressToConnect = "";
+    WorldConfig worldConfig = {};// WorldConfigs::GetSmallWorld();
+    unsigned playerColorOption = 0;
+    std::string playerName = "";
+};
+
 
 class Game
 {
@@ -41,9 +52,16 @@ public:
     void OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char);
     void OnGameEnded(bool _isVictory);
 
-    void OnStartButtonPressed();
+    void OnStartMenuStartButtonPressed();   // not really happy abour the names
+    void OnStartMenuJoinButtonPressed();
+    void OnCreateMenuButtonPressed(const MenuInputs& _input);
+    void OnJoinMenuButtonPressed(const MenuInputs& _input);
+    void OnLobbyMenuButtonPressed();
+    // void OnStartButtonPressed();
+    // void OnJoinButtonPressed();
 
     void OnTextEntered(sf::Uint32 _char);
+    sf::Uint32 GetEnteredChar() const { return m_enteredChar; }
 
     const sf::RenderWindow& GetWindow() const { return m_window; } 
     const GameWorld& GetGameWorld() const { return m_gameWorld; }
@@ -73,6 +91,8 @@ private:
     sf::View m_gameView;
     sf::View m_infoView;
 
+    sf::Uint32 m_enteredChar = 0;
+
     bool m_isGameEnded = false;
     bool m_isVictory = false;
     unsigned m_seed = 0;
@@ -82,11 +102,13 @@ private:
     PlayerInfo m_localPlayerInfo;
     std::vector<PlayerInfo> m_players;
 
+    bool m_isAssumedToBeAHost = false;
     // State machine
     GameState m_currentState = GameState::None;
     bool m_wantsToChangeState = false;
 
     MenuManager m_menuManager;
+    MenuInputs m_menuInputs;
     
 public:
     // Keybord

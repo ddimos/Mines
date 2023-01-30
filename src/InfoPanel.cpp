@@ -9,77 +9,77 @@ namespace
     const unsigned CHARACTER_SIZE_M = 25;
     const unsigned CHARACTER_SIZE_S = 20;
 }
-InputField::InputField()
-{
-    m_shape.setSize(sf::Vector2f(220.f, 80.f));
-    m_shape.setPosition(sf::Vector2f(20.f, 400.f));
-    m_shape.setFillColor(sf::Color::White);
+// InputField::InputField()
+// {
+//     m_shape.setSize(sf::Vector2f(220.f, 80.f));
+//     m_shape.setPosition(sf::Vector2f(20.f, 400.f));
+//     m_shape.setFillColor(sf::Color::White);
 
-    m_helpText.setPosition(sf::Vector2f{25.f, 400.f});
-    m_helpText.setFillColor(sf::Color::Black);
-    m_helpText.setCharacterSize(CHARACTER_SIZE_S);
+//     m_helpText.setPosition(sf::Vector2f{25.f, 400.f});
+//     m_helpText.setFillColor(sf::Color::Black);
+//     m_helpText.setCharacterSize(CHARACTER_SIZE_S);
 
-    m_enteredText.setPosition(sf::Vector2f{25.f, 445.f});
-    m_enteredText.setFillColor(sf::Color::Black);
-    m_enteredText.setCharacterSize(CHARACTER_SIZE_M);
-}
+//     m_enteredText.setPosition(sf::Vector2f{25.f, 445.f});
+//     m_enteredText.setFillColor(sf::Color::Black);
+//     m_enteredText.setCharacterSize(CHARACTER_SIZE_M);
+// }
 
-void InputField::OnInit(const sf::Font& _font)
-{
-    m_enteredText.setFont(_font);
-    m_helpText.setFont(_font);
-}
+// void InputField::OnInit(const sf::Font& _font)
+// {
+//     m_enteredText.setFont(_font);
+//     m_helpText.setFont(_font);
+// }
 
-void InputField::OnTextEntered(sf::Uint32 _char)
-{
-    if (m_enterMode == EnterMode::MENU)
-        return;
+// void InputField::OnTextEntered(sf::Uint32 _char)
+// {
+//     if (m_enterMode == EnterMode::MENU)
+//         return;
 
-    if (_char == 8) // Backspace
-    {
-        if (!m_enteredStr.empty())
-            m_enteredStr.pop_back();
-    }
-    else if (m_enterMode == EnterMode::ENTER_ADDRESS)
-    {
-        if ((_char >= 46 && _char <= 58)) // Only numbers, a colon, a dot
-            m_enteredStr += _char;
+//     if (_char == 8) // Backspace
+//     {
+//         if (!m_enteredStr.empty())
+//             m_enteredStr.pop_back();
+//     }
+//     else if (m_enterMode == EnterMode::ENTER_ADDRESS)
+//     {
+//         if ((_char >= 46 && _char <= 58)) // Only numbers, a colon, a dot
+//             m_enteredStr += _char;
         
-    }
-    else if (m_enterMode == EnterMode::ENTER_NAME)
-        m_enteredStr += _char;
+//     }
+//     else if (m_enterMode == EnterMode::ENTER_NAME)
+//         m_enteredStr += _char;
     
-    m_enteredText.setString(m_enteredStr);
-}
+//     m_enteredText.setString(m_enteredStr);
+// }
 
-void InputField::SetMode(EnterMode _mode)
-{
-    m_enterMode = _mode;
-    if (m_enterMode == EnterMode::ENTER_ADDRESS)
-        m_helpText.setString("Enter the address\nin the format: 0.0.0.0:0");
-    else if (m_enterMode == EnterMode::ENTER_NAME)
-        m_helpText.setString("Enter your name");  
+// void InputField::SetMode(EnterMode _mode)
+// {
+//     m_enterMode = _mode;
+//     if (m_enterMode == EnterMode::ENTER_ADDRESS)
+//         m_helpText.setString("Enter the address\nin the format: 0.0.0.0:0");
+//     else if (m_enterMode == EnterMode::ENTER_NAME)
+//         m_helpText.setString("Enter your name");  
     
-    m_enteredStr.clear();
-    m_enteredText.setString(""); 
-}
+//     m_enteredStr.clear();
+//     m_enteredText.setString(""); 
+// }
 
-void InputField::Update()
-{
-    if (m_enterMode == EnterMode::MENU)
-        return;
+// void InputField::Update()
+// {
+//     if (m_enterMode == EnterMode::MENU)
+//         return;
 
-}
+// }
 
-void InputField::Render(sf::RenderWindow& _window)
-{
-    if (m_enterMode == EnterMode::MENU)
-        return;
+// void InputField::Render(sf::RenderWindow& _window)
+// {
+//     if (m_enterMode == EnterMode::MENU)
+//         return;
 
-    _window.draw(m_shape);
-    _window.draw(m_enteredText);
-    _window.draw(m_helpText);
-}
+//     _window.draw(m_shape);
+//     _window.draw(m_enteredText);
+//     _window.draw(m_helpText);
+// }
 
 InfoPanel::InfoPanel()
 {
@@ -115,7 +115,7 @@ void InfoPanel::updateBombsLeftText(int _newNumber)
 void InfoPanel::OnInit()
 {
     const auto& font = ResourceManager::getFont("poppins_regular");
-    m_inputField.OnInit(font);
+ //   m_inputField.OnInit(font);
     m_welcomeText.setFont(font);
     m_text.setFont(font);
     m_bombsNumText.setFont(font);
@@ -127,7 +127,7 @@ void InfoPanel::OnTextEntered(sf::Uint32 _char)
 {
     if (Game::Get().GetState() == GameState::INIT)
     {
-        m_inputField.OnTextEntered(_char);
+   //     m_inputField.OnTextEntered(_char);
     }
 }
 
@@ -150,7 +150,7 @@ void InfoPanel::OnEnterInit()
     "Enter the address - Q\n"
     "Enter the name - W\n");
 
-    m_inputField.SetMode(InputField::EnterMode::MENU);
+  //  m_inputField.SetMode(InputField::EnterMode::MENU);
 }
 
 void InfoPanel::OnEnterLobby(bool _isMaster)
@@ -227,37 +227,37 @@ void InfoPanel::Update(float _dt)
 {
     (void)_dt;
 
-    if (Game::Get().GetState() == GameState::INIT)
-    {
-        if (m_inputField.GetMode() == InputField::EnterMode::MENU)
-        {
-            if (Game::isKeyPressed(sf::Keyboard::Q))
-                m_inputField.SetMode(InputField::EnterMode::ENTER_ADDRESS);
+    // if (Game::Get().GetState() == GameState::INIT)
+    // {
+    //     if (m_inputField.GetMode() == InputField::EnterMode::MENU)
+    //     {
+    //         if (Game::isKeyPressed(sf::Keyboard::Q))
+    //             m_inputField.SetMode(InputField::EnterMode::ENTER_ADDRESS);
             
-            if (Game::isKeyPressed(sf::Keyboard::W))
-                m_inputField.SetMode(InputField::EnterMode::ENTER_NAME);
-        }
-        else
-        {
-            if (Game::isKeyPressed(sf::Keyboard::Enter))
-            {
-                if (m_inputField.GetMode() == InputField::EnterMode::ENTER_ADDRESS)
-                {
-                    m_enteredAddress = m_inputField.GetEnteredString();
-                    m_enteredAddressText.setString("Connect:\n" + m_enteredAddress);
-                }
-                else if (m_inputField.GetMode() == InputField::EnterMode::ENTER_NAME)
-                {
-                    m_enteredName = m_inputField.GetEnteredString();
-                    m_enteredNameText.setString("Name:\n" + m_enteredName);
+    //         if (Game::isKeyPressed(sf::Keyboard::W))
+    //             m_inputField.SetMode(InputField::EnterMode::ENTER_NAME);
+    //     }
+    //     else
+    //     {
+    //         if (Game::isKeyPressed(sf::Keyboard::Enter))
+    //         {
+    //             if (m_inputField.GetMode() == InputField::EnterMode::ENTER_ADDRESS)
+    //             {
+    //                 m_enteredAddress = m_inputField.GetEnteredString();
+    //                 m_enteredAddressText.setString("Connect:\n" + m_enteredAddress);
+    //             }
+    //             else if (m_inputField.GetMode() == InputField::EnterMode::ENTER_NAME)
+    //             {
+    //                 m_enteredName = m_inputField.GetEnteredString();
+    //                 m_enteredNameText.setString("Name:\n" + m_enteredName);
 
-                }
-                m_inputField.SetMode(InputField::EnterMode::MENU);            
-            }
-        }
-    }
+    //             }
+    //             m_inputField.SetMode(InputField::EnterMode::MENU);            
+    //         }
+    //     }
+    // }
 
-    m_inputField.Update();
+    // m_inputField.Update();
 }
 
 void InfoPanel::Render(sf::RenderWindow& _window)
@@ -275,6 +275,6 @@ void InfoPanel::Render(sf::RenderWindow& _window)
         _window.draw(player.text);
     }
 
-    m_inputField.Render(_window);    
+//    m_inputField.Render(_window);    
 }
     

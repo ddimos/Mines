@@ -11,7 +11,7 @@ DEPS 		:= $(OBJS:.o=.d)
 INC_DIRS 	:= $(shell find $(SRC_DIR) -type d)
 INC_FLAGS 	:= $(addprefix -I,$(INC_DIRS))
 
-CXX_FLAGS 	:= $(INC_FLAGS) -Wall -Wextra -std=c++17 -ggdb -MMD -MP -O3
+CXX_FLAGS 	:= $(INC_FLAGS) -Wall -Wextra -std=c++17 -ggdb -MMD -MP #-O3
 LIBRARIES	:= -lsfml-graphics -lsfml-window -lsfml-system -lsfml-network
 
 

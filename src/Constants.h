@@ -9,6 +9,11 @@ const int CELL_COUNT = 50;
 const int CAMERA_OFFSET = 2;
 const int BOMBS_COUNT = 80;
 
+constexpr unsigned DEFAULT_MAX_WORLD_WIDTH = 99;
+constexpr unsigned DEFAULT_MAX_WORLD_HEIGHT = 99;
+constexpr unsigned DEFAULT_MAX_WORLD_BOMBS_COUNT = 99;
+constexpr unsigned DEFAULT_MAX_INPUT_FIELD_SIZE = 32;
+
 const float EPSILON = 0.0001f; 
 
 const int InfiniteRadius = -1;
@@ -17,3 +22,6 @@ const sf::Color BACKGROUND_COLOR(26, 25, 46);
 
 // Network
 const unsigned short DEFAULT_PORT = 20087;
+
+// Menu
+constexpr int DEFAULT_TEXT_SIZE = 24; 

@@ -40,7 +40,7 @@ StartMenu::StartMenu()
             START_BUTTON_H,
             [this](){
                 LOG("Start Game click ");
-                Game::Get().OnStartButtonPressed();
+                Game::Get().OnStartMenuStartButtonPressed();
             }
         ));
 
@@ -51,7 +51,7 @@ StartMenu::StartMenu()
             JOIN_BUTTON_H,
             [this](){
                 LOG("Join Game click ");
-                Game::Get().OnJoinButtonPressed();
+                Game::Get().OnStartMenuJoinButtonPressed();
             }
         ));
 }
