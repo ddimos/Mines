@@ -1,19 +1,16 @@
 #pragma once
+
 #include "BaseMenu.h"
 
-class LobbyMenu : public BaseMenu
+class FinishMenu : public BaseMenu
 {
 public:
-    LobbyMenu();
-    ~LobbyMenu() = default;
+    FinishMenu();
 
 private:
     void onDraw(sf::RenderWindow& _window) override;
     void onActivate() override;
 
-    bool m_isFirstActivation = true;
-
-    sf::Text m_waitingText;
+    sf::Text m_mainText;
     sf::Text m_descriptionText;
 };
-

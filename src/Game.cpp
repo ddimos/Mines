@@ -2,6 +2,7 @@
 #include "Utils.h"
 #include "Config.h"
 #include "Log.h"
+#include "GameListener.h"
 #include "Network/Network.h"
 #include "Network/NetworkPlayer.h"
 #include "NetworkMessageType.h"
@@ -120,7 +121,7 @@ void Game::spawnCharacters()
         charInfo.playerId = playerInfo.networkPlayerCopy.GetPlayerId();
         playerInfo.charInfoCopy = charInfo;
         m_gameWorld.SpawnCharacter(true, playerInfo.networkPlayerCopy.IsLocal(), id, charInfo);   
-        m_infoPanel.OnCharachterSpawned(playerInfo);
+//        m_infoPanel.OnCharachterSpawned(playerInfo);
     }
 
     NetworkMessage message(true);
@@ -145,7 +146,6 @@ void Game::onStateEnter(GameState _newState)
     switch (_newState)
     {
     case GameState::INIT:
-        m_infoPanel.OnEnterInit();
         m_menuManager.Push(MenuType::START_MENU);
         break;
     case GameState::CREATE:
@@ -156,7 +156,6 @@ void Game::onStateEnter(GameState _newState)
         break;
     case GameState::LOBBY:
         m_menuManager.Push(MenuType::LOBBY_MENU);
-        m_infoPanel.OnEnterLobby(IsSessionMaster());
         break;
     case GameState::GAME:
         initGame();
@@ -182,15 +181,16 @@ void Game::onStateEnter(GameState _newState)
                 m_gameWorld.SpawnCharacter(false, m_localPlayerInfo.networkPlayerCopy.GetPlayerId() == playerId, characterId, charInfo);
                 auto* playerInfo = GetPlayerInfo(playerId);
                 playerInfo->charInfoCopy = charInfo;
-                m_infoPanel.OnCharachterSpawned(*playerInfo);
+//                m_infoPanel.OnCharachterSpawned(*playerInfo);
             }
             m_messageWithPlayers = {};
         }
         
-        m_infoPanel.OnGameStart(BOMBS_COUNT);
+//        m_infoPanel.OnGameStart(BOMBS_COUNT);
         break;
     case GameState::FINISH:
-        m_infoPanel.OnGameFinish(m_isVictory);
+//        m_infoPanel.OnGameFinish(m_isVictory);
+        m_menuManager.Push(MenuType::FINISH_MENU);
         break;
     case GameState::None:
         break;
@@ -294,8 +294,10 @@ void Game::receiveNetworkMessages()
             PlayerInfo playerInfo;  // Do I even need this playerInfo??
             playerInfo.networkPlayerCopy = event.player;
             m_players.push_back(playerInfo);
-            m_infoPanel.OnPlayerJoined(playerInfo);
-            
+            notifyGameListeners([playerInfo](GameListener* _list) {
+                _list->onPlayerJoined(playerInfo);
+            });
+
             // if (event.player.IsLocal())
             // {
             //     m_localPlayerInfo = playerInfo;
@@ -309,8 +311,9 @@ void Game::receiveNetworkMessages()
 
             auto it = std::find_if(m_players.begin(), m_players.end(),
             [&event](const PlayerInfo& _p){ return _p.networkPlayerCopy.GetPlayerId() == event.player.GetPlayerId(); });
-            m_infoPanel.OnPlayerLeft(*it);
-            
+            notifyGameListeners([it](GameListener* _list) {
+                _list->onPlayerLeft(*it);
+            });
             // TODO when the host leaves return to the main menu
             // TODO session leave/join events
             m_players.erase(it, m_players.end());
@@ -384,10 +387,10 @@ void Game::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 {
     m_gameWorld.OnCharacterToggleFlagCell(_pos, _char);
 
-    if (m_gameWorld.getCell(_pos).GetState() == Cell::State::FLAGGED)
-        m_infoPanel.OnFlagSet();
-    else if (m_gameWorld.getCell(_pos).GetState() == Cell::State::COVERED)
-        m_infoPanel.OnFlagUnset();
+    // if (m_gameWorld.getCell(_pos).GetState() == Cell::State::FLAGGED)
+    //     m_infoPanel.OnFlagSet();
+    // else if (m_gameWorld.getCell(_pos).GetState() == Cell::State::COVERED)
+    //     m_infoPanel.OnFlagUnset();
     
 }
 
@@ -455,11 +458,51 @@ void Game::OnLobbyMenuButtonPressed()
     m_wantsToChangeState = true;
 }
 
+void Game::OnFinishMenuStartAgainButtonPressed()
+{
+    if (m_currentState != GameState::FINISH)
+        return;
+
+}
+
+void Game::OnFinishMenuBackToMenuButtonPressed()
+{
+    if (m_currentState != GameState::FINISH)
+        return;
+
+}
+
+
+void Game::RegisterGameListener(GameListener* _listener)
+{
+    if (std::find_if(m_gameListeners.begin(), m_gameListeners.end(),
+            [_listener](GameListener* _list){ return _list == _listener; })
+        != m_gameListeners.end())
+    {
+        LOG_ERROR("Double registration of a game listener");
+        return;
+    }
+    m_gameListeners.push_back(_listener);
+}
+
+void Game::UnregisterGameListener(GameListener* _listener)
+{
+    m_gameListeners.erase(
+        std::remove_if(m_gameListeners.begin(), m_gameListeners.end(),
+            [_listener](GameListener* _list){ return _list == _listener; }),
+        m_gameListeners.end());
+}
+
+void Game::notifyGameListeners(std::function<void(GameListener*)> _callback)
+{
+    for(auto listener : m_gameListeners)
+        _callback(listener);
+}
 
 void Game::OnTextEntered(sf::Uint32 _char)
 {
     m_enteredChar = _char;
-    m_infoPanel.OnTextEntered(_char);
+//    m_infoPanel.OnTextEntered(_char);
 }
 
 PlayerInfo* Game::GetPlayerInfo(PlayerID _playerId)
@@ -544,12 +587,12 @@ void Game::Update(float _dt)
 
 void Game::Draw(sf::RenderWindow& _window)
 {
-  //  _window.setView(m_gameView);
+    _window.setView(m_gameView);
     m_gameWorld.Render(_window);
+    
+    _window.setView(m_infoView);
+    m_infoPanel.Draw(_window);
 
-   // _window.setView(m_infoView);
-   // m_infoPanel.Render(_window);
-
-  //  _window.setView(_window.getDefaultView());
+    _window.setView(_window.getDefaultView());
     m_menuManager.Draw(_window);
 }

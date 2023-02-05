@@ -61,7 +61,7 @@ Profiler::~Profiler()
 }
 
 // ---------------------------------------------------------
-
+// TODO move to a separete files
 std::unordered_map<std::string, sf::Texture> ResourceManager::ms_textures;
 std::unordered_map<std::string, sf::Font> ResourceManager::ms_fonts;
 sf::Texture ResourceManager::ms_nullTexture;
@@ -78,6 +78,7 @@ void ResourceManager::StartUp()
     loadTexture("res/textures/field1.png", "field1");
     loadTexture("res/textures/field2.png", "field2");
     loadTexture("res/textures/create_menu_elements.png", "create_menu_elements");
+    loadTexture("res/textures/helpers.png", "helpers");
  
     loadFont("res/fonts/IBMPlexSansThaiLooped-Regular.ttf", "poppins_regular");
     loadFont("res/fonts/IBMPlexSansThaiLooped-Bold.ttf", "poppins_bold");

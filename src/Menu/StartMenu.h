@@ -8,8 +8,8 @@ public:
     ~StartMenu() = default;
 
 private:
-    void onActive() override {}
-    void onDeactive() override {}
+    void onActivate() override {}
+    void onDeactivate() override {}
     void onDraw(sf::RenderWindow& _window) override;
 
     sf::Text m_text;

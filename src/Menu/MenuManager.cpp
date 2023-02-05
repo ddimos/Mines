@@ -3,6 +3,7 @@
 #include "Menu/CreateMenu.h"
 #include "Menu/JoinMenu.h"
 #include "Menu/LobbyMenu.h"
+#include "Menu/FinishMenu.h"
 #include "Log.h"
 
 MenuManager::MenuManager(sf::RenderWindow& _window)
@@ -20,7 +21,7 @@ void MenuManager::OnInit()
     m_menus.insert_or_assign(MenuType::CREATE_MENU, std::make_unique<CreateMenu>());
     m_menus.insert_or_assign(MenuType::JOIN_MENU, std::make_unique<JoinMenu>());
     m_menus.insert_or_assign(MenuType::LOBBY_MENU, std::make_unique<LobbyMenu>());
-
+    m_menus.insert_or_assign(MenuType::FINISH_MENU, std::make_unique<FinishMenu>());
 }
 
 void MenuManager::Push(MenuType _menuType)

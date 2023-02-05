@@ -35,8 +35,8 @@ public:
     bool IsActive() const { return m_isActive; }
 
 protected:
-    virtual void onActive() {}
-    virtual void onDeactive() {}
+    virtual void onActivate() {}
+    virtual void onDeactivate() {}
     virtual void onUpdate() {}
     virtual void onDraw(sf::RenderWindow& _window) {(void)_window;}
 

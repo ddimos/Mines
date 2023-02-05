@@ -32,6 +32,7 @@ struct MenuInputs
     std::string playerName = "";
 };
 
+class GameListener;
 
 class Game
 {
@@ -57,6 +58,8 @@ public:
     void OnCreateMenuButtonPressed(const MenuInputs& _input);
     void OnJoinMenuButtonPressed(const MenuInputs& _input);
     void OnLobbyMenuButtonPressed();
+    void OnFinishMenuStartAgainButtonPressed();
+    void OnFinishMenuBackToMenuButtonPressed();
     // void OnStartButtonPressed();
     // void OnJoinButtonPressed();
 
@@ -68,8 +71,13 @@ public:
     GameState GetState() const { return m_currentState; }
 
     PlayerInfo* GetPlayerInfo(PlayerID _playerId);
+    const std::vector<PlayerInfo>& GetPlayers() const { return m_players; }
 
     bool IsSessionMaster() const;
+    bool IsVictory() const { return m_isVictory; }
+
+    void RegisterGameListener(GameListener* _listener);
+    void UnregisterGameListener(GameListener* _listener);
 
 private:
 
@@ -82,6 +90,7 @@ private:
     void updateState();
     void receiveNetworkMessages();
     void sendCreateGameMessage();
+    void notifyGameListeners(std::function<void(GameListener*)> _callback);
 
     static Game* ms_game;
     sf::RenderWindow& m_window;
@@ -109,6 +118,8 @@ private:
 
     MenuManager m_menuManager;
     MenuInputs m_menuInputs;
+
+    std::vector<GameListener*> m_gameListeners;
     
 public:
     // Keybord

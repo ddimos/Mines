@@ -5,9 +5,9 @@ const float CELL_SIZE = 25.f;
 const float OFFSET_BETWEEN_CELLS = 3.f;
 const sf::Vector2u WINDOWS_SIZE = { 1000, 800 };
 
-const int CELL_COUNT = 50;
+const int CELL_COUNT = 15;
 const int CAMERA_OFFSET = 2;
-const int BOMBS_COUNT = 80;
+const int BOMBS_COUNT = 10;
 
 constexpr unsigned DEFAULT_MAX_WORLD_WIDTH = 99;
 constexpr unsigned DEFAULT_MAX_WORLD_HEIGHT = 99;

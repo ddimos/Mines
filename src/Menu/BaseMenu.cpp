@@ -10,13 +10,13 @@ BaseMenu::BaseMenu(MenuType _type)
 void BaseMenu::Activate()
 {
     m_isActive = true;
-    onActive();
+    onActivate();
 }
 
 void BaseMenu::Deactivate() 
 {
     m_isActive = false;
-    onDeactive();
+    onDeactivate();
 }
 
 void BaseMenu::Update()
