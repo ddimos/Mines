@@ -1,7 +1,7 @@
 #include "Camera.h"
 #include "Game.h"
-#include "Log.h"
-#include "Utils.h"
+#include "Utils/Log.h"
+#include "Utils/Utils.h"
 #include "Character.h"
 #include <algorithm>
 

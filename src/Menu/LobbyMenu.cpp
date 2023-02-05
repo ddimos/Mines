@@ -1,6 +1,6 @@
 #include "LobbyMenu.h"
-#include "Utils.h"
-#include "Log.h"
+#include "Utils/ResourceManager.h"
+#include "Utils/Log.h"
 #include "Game.h"
 
 LobbyMenu::LobbyMenu()

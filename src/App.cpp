@@ -1,8 +1,9 @@
 #include "App.h"
-#include "Log.h"
+#include "Utils/Log.h"
 #include "Constants.h"
-#include "Config.h"
+#include "Utils/Config.h"
 #include "Game.h"
+#include "Utils/ResourceManager.h"
 #include "Network/Network.h"
 
 #include <SFML/Graphics.hpp>

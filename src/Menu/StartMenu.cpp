@@ -1,6 +1,6 @@
 #include "StartMenu.h"
-#include "Log.h"
-#include "Utils.h"
+#include "Utils/Log.h"
+#include "Utils/ResourceManager.h"
 #include "Game.h"
 
 namespace

@@ -4,7 +4,7 @@
 #include "Menu/JoinMenu.h"
 #include "Menu/LobbyMenu.h"
 #include "Menu/FinishMenu.h"
-#include "Log.h"
+#include "Utils/Log.h"
 
 MenuManager::MenuManager(sf::RenderWindow& _window)
     : m_window(_window)

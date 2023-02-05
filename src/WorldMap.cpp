@@ -1,7 +1,7 @@
 #include "WorldMap.h"
-#include "Log.h"
-#include "Utils.h"
-
+#include "Utils/Log.h"
+#include "Utils/Utils.h"
+#include "Utils/ResourceManager.h"
 
 WorldMap::WorldMap()
     : m_tileset(ResourceManager::getTexture("tileset"))

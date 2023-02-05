@@ -1,8 +1,8 @@
 #include "CreateMenu.h"
-#include "Log.h"
-#include "Utils.h"
+#include "Utils/Log.h"
+#include "Utils/ResourceManager.h"
 #include "Game.h"
-#include "Config.h"
+#include "Utils/Config.h"
 
 namespace
 {

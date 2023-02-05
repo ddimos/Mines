@@ -1,7 +1,7 @@
 #include "JoinMenu.h"
-#include "Log.h"
-#include "Utils.h"
+#include "Utils/Log.h"
 #include "Game.h"
+#include "Utils/ResourceManager.h"
 
 namespace
 {
