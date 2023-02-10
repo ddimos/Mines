@@ -5,12 +5,6 @@
 #include <chrono>
 #include <string>
 
-inline int getIndex(int _x, int _y)
-{
-    return _x + _y * CELL_COUNT;    // outdated
-}
-
-// ---------------------------------------------------------
 
 inline sf::Vector2f getWindowPosition(int _x, int _y)
 {
@@ -39,14 +33,6 @@ inline bool operator==(const WorldPosition& _lhs, const WorldPosition& _rhs)
 inline bool operator!=(const WorldPosition& _lhs, const WorldPosition& _rhs)
 {
     return !(_lhs == _rhs);
-}
-inline bool operator>(const WorldPosition& _lhs, const WorldPosition& _rhs)
-{
-    return getIndex(_lhs.x, _lhs.y) > getIndex(_rhs.x, _rhs.y);
-}
-inline bool operator<(const WorldPosition& _lhs, const WorldPosition& _rhs)
-{
-    return getIndex(_lhs.x, _lhs.y) < getIndex(_rhs.x, _rhs.y);
 }
 inline WorldPosition operator-(const WorldPosition& _lhs, const WorldPosition& _rhs)
 {
@@ -93,6 +79,8 @@ struct WorldConfig
     static WorldConfig GetMediumWorld() { return WorldConfig{{25, 25}, 30};}
     static WorldConfig GetLargeWorld() { return WorldConfig{{50, 50}, 100};}
 
+    bool IsValid() const { return worldSize.x != 0 && worldSize.y != 0; }
+    
     WorldPosition worldSize = {};
     unsigned bombsCount = 0;
 };

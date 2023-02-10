@@ -7,15 +7,12 @@ class InfoPanel : public GameListener
 {
 public:
     InfoPanel();
-    ~InfoPanel();
+    ~InfoPanel() = default;
 
     void Update(float _dt);
     void Draw(sf::RenderWindow& _window);
 
     void OnInit();
-
-   // void OnGameStart(int _bombsNum);
-   // void OnGameFinish(bool _isVictory);
 
    /*?*/ void OnCharachterSpawned(const PlayerInfo& _info);
 
@@ -26,6 +23,7 @@ public:
 private:
     void onPlayerJoined(const PlayerInfo& _info) override;
     void onPlayerLeft(const PlayerInfo& _info) override;
+    void onGameStart(const WorldConfig& _worldConfig) override;
 
     void updateBombsLeftText(int _newNumber);
     

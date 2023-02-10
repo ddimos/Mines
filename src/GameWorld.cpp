@@ -5,15 +5,15 @@
 
 #include <functional>
 
-void GameWorld::CreateWorld(WorldPosition _worldSize, size_t _bombsNumber)
+void GameWorld::CreateWorld(WorldConfig _worldConfig)
 {
-    m_worldSize = _worldSize;
+    m_worldConfig = _worldConfig;
     m_cells.clear();
-    createCells(_worldSize);
-    generateBombs(_bombsNumber);
-    m_camera.OnInit(_worldSize);
-    m_characters.reserve(5);
-    m_worldMap.CreateMap(_worldSize);
+    createCells(m_worldConfig.worldSize);
+    generateBombs(m_worldConfig.bombsCount);
+    m_camera.OnInit(m_worldConfig.worldSize);
+    m_characters.reserve(MAX_PLAYER_COUNT);
+    m_worldMap.CreateMap(m_worldConfig.worldSize);
 }
 
 void GameWorld::DestroyWorld()
@@ -56,7 +56,7 @@ void GameWorld::Render(sf::RenderWindow& _window)
 
 Cell& GameWorld::getCell(int _x, int _y)
 {
-    int index = getIndex(_x, _y);
+    int index = getCellIndex(_x, _y);
     // TODO: Check limits
     return m_cells[index];
 }
@@ -75,7 +75,7 @@ void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
 
     if (getCell(_pos).m_type == Cell::ValueType::BOMB)
     {
-        Game::Get().OnGameEnded(false);
+        Game::Get().OnGameEnded(false, _char.GetInfo().playerId);
         return;
     }
 
@@ -113,15 +113,15 @@ void GameWorld::createCells(WorldPosition _worldSize)
 		for (int x = 0; x < _worldSize.x; x++)
 			m_cells.push_back({WorldPosition{x, y}});
 
-    m_cellsLeftToUncover = _worldSize.x * _worldSize.y - BOMBS_COUNT;
+    m_cellsLeftToUncover = _worldSize.x * _worldSize.y - m_worldConfig.bombsCount;
 }
 
 void GameWorld::generateBombs(size_t _bombsNumber)
 {
     while (_bombsNumber)
 	{
-		const int X = getRand() % m_worldSize.x;
-		const int Y = getRand() % m_worldSize.y;
+		const int X = getRand() % m_worldConfig.worldSize.x;
+		const int Y = getRand() % m_worldConfig.worldSize.y;
 
 		if(getCell(X, Y).m_type == Cell::ValueType::BOMB)
 			continue;
@@ -131,7 +131,7 @@ void GameWorld::generateBombs(size_t _bombsNumber)
 		for (int i = -1; i <= 1; i++)
 		{
 			const int y = Y + i;
-			if (y < 0 || y >= m_worldSize.y)
+			if (y < 0 || y >= m_worldConfig.worldSize.y)
 				continue;
 
 			for (int j = -1; j <= 1; j++)
@@ -140,7 +140,7 @@ void GameWorld::generateBombs(size_t _bombsNumber)
 					continue;
 
 				const int x = X + j;
-				if (x < 0 || x >= m_worldSize.x)
+				if (x < 0 || x >= m_worldConfig.worldSize.x)
 					continue;
 
 				if (getCell(x, y).m_type == Cell::ValueType::BOMB)
@@ -187,7 +187,7 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
                         cellsToUncover.push_back(left);
                 
                 WorldPosition right {_posToCheckNum.x + 1, _posToCheckNum.y};
-                if (right.x < m_worldSize.x)
+                if (right.x < m_worldConfig.worldSize.x)
                     if (getCell(right).IsNumber() && !isInArrayToUncover(right))
                         cellsToUncover.push_back(right);
             }
@@ -199,7 +199,7 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
             checkAxis(leftX);
 
         WorldPosition rightX {_posToCheck.x + 1, _posToCheck.y};
-        if (rightX.x < m_worldSize.x)
+        if (rightX.x < m_worldConfig.worldSize.x)
             checkAxis(rightX);
 
         WorldPosition upY {_posToCheck.x, _posToCheck.y - 1};
@@ -209,7 +209,7 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
             checkNumber(upY);
         }
         WorldPosition downY {_posToCheck.x, _posToCheck.y + 1};
-        if	(downY.y < m_worldSize.y)
+        if	(downY.y < m_worldConfig.worldSize.y)
         {
             checkAxis(downY);
             checkNumber(downY);
@@ -222,17 +222,14 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
         onUncoverCell(pos);
 }
 
+int GameWorld::getCellIndex(int _x, int _y)
+{
+    return _x + _y * (m_worldConfig.worldSize.x);
+}
+
 unsigned GameWorld::GenerateId()
 {
     return m_characters.size() + 1; // TODO: a real bad way to generate ids
-}
-
-sf::Color GameWorld::GenerateColor()
-{
-    const int red = getRand() % 255;
-    const int green = getRand() % 255;
-    const int blue = getRand() % 255;
-    return sf::Color(red, green, blue);
 }
 
 void GameWorld::OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message)

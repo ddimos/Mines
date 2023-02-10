@@ -252,6 +252,10 @@ void InputField::Fill(const std::string& _text)
                  ? _text : _text.substr(0, m_maxSize);
  
     m_inputText.setString(m_enteredStr);
+
+    m_isInInputMode = false;
+    if (!m_enteredStr.empty())
+        m_onFinishEnterTextCallback(m_enteredStr);
 }
 
 // ---------------------------------------------------------

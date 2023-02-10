@@ -20,6 +20,7 @@ void WorldMap::OnToggleFlag(const Cell& _cell)
 
 void WorldMap::CreateMap(WorldPosition _worldSize)
 {
+    m_worldSize = _worldSize;
     m_vertices.setPrimitiveType(sf::Quads);
     m_vertices.resize(_worldSize.x * _worldSize.y * 4);
 
@@ -67,14 +68,18 @@ void WorldMap::assignNewTexture(sf::Vertex* _quad, sf::Vector2i _tilePos)
     _quad[1].texCoords = sf::Vector2f((_tilePos.x + 1) * TILE_SIZE.x,  _tilePos.y      * TILE_SIZE.y);
     _quad[2].texCoords = sf::Vector2f((_tilePos.x + 1) * TILE_SIZE.x, (_tilePos.y + 1) * TILE_SIZE.y);
     _quad[3].texCoords = sf::Vector2f( _tilePos.x      * TILE_SIZE.x, (_tilePos.y + 1) * TILE_SIZE.y);
-
 }
 
 void WorldMap::setNewTextureToCell(const Cell& _cell)
 {
-    int index = getIndex(_cell.GetPosition().x, _cell.GetPosition().y);
+    int index = getCellIndex(_cell);
     sf::Vertex* quad = &m_vertices[index * 4];
     assignNewTexture(quad, getTilePosition(getTileNumber(_cell)));
+}
+
+int WorldMap::getCellIndex(const Cell& _cell)
+{
+    return _cell.GetPosition().x + _cell.GetPosition().y * (m_worldSize.x);
 }
 
 void WorldMap::draw(sf::RenderTarget& _target, sf::RenderStates _states) const

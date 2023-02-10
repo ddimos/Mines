@@ -78,7 +78,7 @@ void Game::Init()
     m_menuManager.OnInit();
     m_infoPanel.OnInit();
     // Create a preview
-    m_gameWorld.CreateWorld({35, 35}, 1);
+     m_gameWorld.CreateWorld({{35, 35}, 1});
 }
 
 bool Game::isKeyPressed(sf::Keyboard::Key _key)
@@ -102,37 +102,50 @@ void Game::initGame()
 {
     if (IsSessionMaster())
         m_seed = time(NULL);
-    WorldPosition worldSize = {CELL_COUNT, CELL_COUNT};
-    LOG("Create a game world. Seed: " + tstr(m_seed) + " X: " + tstr(worldSize.x) + " Y: " + tstr(worldSize.y) + " Bombs: " + tstr(BOMBS_COUNT));
-    provideSeed(m_seed);
-    m_gameWorld.CreateWorld(worldSize, BOMBS_COUNT);
+
+    LOG("Create a game world. Seed: " + tstr(m_seed) + " X: " + tstr(m_worldConfig.worldSize.x)
+                                                     + " Y: " + tstr(m_worldConfig.worldSize.y)
+                                                     + " Bombs: " + tstr(m_worldConfig.bombsCount));
+    provideSeed(m_seed);    
+    m_gameWorld.CreateWorld(m_worldConfig);
 }
 
 void Game::spawnCharacters()
 {
-    if (!IsSessionMaster())
-        return;
-
-    for (PlayerInfo& playerInfo : m_players)
+    if (IsSessionMaster())
     {
-        CharacterInfo charInfo;
-        charInfo.color = m_gameWorld.GenerateColor();
-        unsigned id = m_gameWorld.GenerateId();      // Maybe I can use a player id
-        charInfo.playerId = playerInfo.networkPlayerCopy.GetPlayerId();
-        playerInfo.charInfoCopy = charInfo;
-        m_gameWorld.SpawnCharacter(true, playerInfo.networkPlayerCopy.IsLocal(), id, charInfo);   
-//        m_infoPanel.OnCharachterSpawned(playerInfo);
+        for (PlayerInfo& playerInfo : m_players)
+        {
+            CharacterInfo charInfo;
+        //   charInfo.color = m_gameWorld.GenerateColor();
+            unsigned id = m_gameWorld.GenerateId();      // Maybe I can use a player id
+            charInfo.playerId = playerInfo.networkPlayerCopy.GetPlayerId();
+            playerInfo.charInfoCopy = charInfo;
+            m_gameWorld.SpawnCharacter(true, playerInfo.networkPlayerCopy.IsLocal(), id, charInfo);   
+    //        m_infoPanel.OnCharachterSpawned(playerInfo);
+        }
     }
-
-    NetworkMessage message(true);
-    message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_CHARACTER));
-    for(const Character& ch : m_gameWorld.GetCharacters())
+    else
     {
-        message.Write(ch.GetInfo().playerId);
-        message.Write(ch.GetId());
-        message.Write(ch.GetInfo().color.toInteger());
+        while (!m_messageWithPlayers.IsEnd())
+        {
+            PlayerID playerId;
+            m_messageWithPlayers.Read(playerId);
+            unsigned characterId;
+            m_messageWithPlayers.Read(characterId);
+            sf::Uint32 color;
+            m_messageWithPlayers.Read(color);
+            
+            CharacterInfo charInfo;
+            charInfo.color = sf::Color(color);
+            charInfo.playerId = playerId;
+            m_gameWorld.SpawnCharacter(false, m_localPlayerInfo.networkPlayerCopy.GetPlayerId() == playerId, characterId, charInfo);
+            auto* playerInfo = GetPlayerInfo(playerId);
+            playerInfo->charInfoCopy = charInfo;
+//                m_infoPanel.OnCharachterSpawned(*playerInfo);
+        }
+        m_messageWithPlayers = {};
     }
-    Network::Get().Send(message);
 }
 
 void Game::resetGame()
@@ -156,40 +169,20 @@ void Game::onStateEnter(GameState _newState)
         break;
     case GameState::LOBBY:
         m_menuManager.Push(MenuType::LOBBY_MENU);
+        if (!m_messageWithPlayers.IsEnd())  // It means that we were in the Finish state when the host started a new game
+            m_wantsToChangeState = true;
         break;
     case GameState::GAME:
         initGame();
+        spawnCharacters();
         if (IsSessionMaster())
-        {
             sendCreateGameMessage();
-            spawnCharacters();
-        }
-        else
-        {
-            while (!m_messageWithPlayers.IsEnd())
-            {
-                PlayerID playerId;
-                m_messageWithPlayers.Read(playerId);
-                unsigned characterId;
-                m_messageWithPlayers.Read(characterId);
-                sf::Uint32 color;
-                m_messageWithPlayers.Read(color);
-                
-                CharacterInfo charInfo;
-                charInfo.color = sf::Color(color);
-                charInfo.playerId = playerId;
-                m_gameWorld.SpawnCharacter(false, m_localPlayerInfo.networkPlayerCopy.GetPlayerId() == playerId, characterId, charInfo);
-                auto* playerInfo = GetPlayerInfo(playerId);
-                playerInfo->charInfoCopy = charInfo;
-//                m_infoPanel.OnCharachterSpawned(*playerInfo);
-            }
-            m_messageWithPlayers = {};
-        }
         
-//        m_infoPanel.OnGameStart(BOMBS_COUNT);
+        notifyGameListeners([this](GameListener* _list) {
+                _list->onGameStart(m_worldConfig);
+            });
         break;
     case GameState::FINISH:
-//        m_infoPanel.OnGameFinish(m_isVictory);
         m_menuManager.Push(MenuType::FINISH_MENU);
         break;
     case GameState::None:
@@ -212,20 +205,6 @@ void Game::onStateExit(GameState _oldState)
         break;
     }
     case GameState::JOIN:
-    {
-        size_t index = m_menuInputs.addressToConnect.find(":");
-        if (index == std::string::npos)
-        {
-            LOG_ERROR("No entered address.");
-            break;
-        }
-        NetworkAddress address;
-        address.address = sf::IpAddress(m_menuInputs.addressToConnect.substr(0, index));
-        address.port = std::stoi(m_menuInputs.addressToConnect.substr(index+1));
-
-        Network::Get().JoinSession(address, m_menuInputs.playerName);
-        break;
-    }
     case GameState::LOBBY:
     case GameState::GAME:
         break;
@@ -264,8 +243,8 @@ void Game::updateState()
         newState = GameState::FINISH;
         break;
     case GameState::FINISH:
-        newState = GameState::GAME;
-        // TODO make an exit to main menu
+        newState = m_wantsToReturnToMenu ? GameState::INIT : GameState::LOBBY;
+        // TODO to make a proper clean
         break;
     default:
         break;
@@ -298,11 +277,12 @@ void Game::receiveNetworkMessages()
                 _list->onPlayerJoined(playerInfo);
             });
 
-            // if (event.player.IsLocal())
-            // {
-            //     m_localPlayerInfo = playerInfo;
-            //     m_wantsToChangeState = true;
-            // }
+            if (event.player.IsLocal())
+            {
+                m_localPlayerInfo = playerInfo;
+                if (!IsSessionMaster() && m_isJoiningOrJoined && m_currentState == GameState::JOIN)
+                    m_wantsToChangeState = true;
+            }
             break;
         }
         case NetworkEvent::Type::ON_PLAYER_LEAVE:
@@ -335,6 +315,9 @@ void Game::receiveNetworkMessages()
                 }
                 
                 event.message.Read(m_seed);
+                event.message.Read(m_worldConfig.worldSize.x);
+                event.message.Read(m_worldConfig.worldSize.y);
+                event.message.Read(m_worldConfig.bombsCount);
             }
             else if (type == NetworkMessageType::CREATE_CHARACTER)
             {
@@ -372,9 +355,23 @@ void Game::receiveNetworkMessages()
 
 void Game::sendCreateGameMessage() // TODO  join in progress
 {
+    {
+        NetworkMessage message(true);
+        message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
+        message.Write(static_cast<sf::Uint32>(m_seed));
+        message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.x));
+        message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.y));
+        message.Write(static_cast<sf::Uint32>(m_worldConfig.bombsCount));
+        Network::Get().Send(message);
+    }
     NetworkMessage message(true);
-    message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
-    message.Write(static_cast<sf::Uint32>(m_seed));
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_CHARACTER));
+    for(const Character& ch : m_gameWorld.GetCharacters())
+    {
+        message.Write(ch.GetInfo().playerId);
+        message.Write(ch.GetId());
+        message.Write(ch.GetInfo().color.toInteger());
+    }
     Network::Get().Send(message);
 }
 
@@ -394,9 +391,12 @@ void Game::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
     
 }
 
-void Game::OnGameEnded(bool _isVictory)
+void Game::OnGameEnded(bool _isVictory, PlayerID _loserId)
 {
-    m_isVictory = _isVictory;
+    m_gameResult.isVictory = _isVictory;
+    if (_loserId != PlayerIdInvalid; auto* playerInfo = GetPlayerInfo(_loserId))
+        m_gameResult.loserName = playerInfo->networkPlayerCopy.GetName();
+
     m_isGameEnded = true;
 }
 
@@ -407,22 +407,6 @@ void Game::OnStartMenuStartButtonPressed()
 
     m_wantsToChangeState = true;
     m_isAssumedToBeAHost = true;
-
-// Call this code from onLeaveInitGameState or onEnterLobbyState
-    // std::string enteredText = m_infoPanel.GetEnteredAddress();
-    // size_t index = enteredText.find(":");
-    // if (index == std::string::npos)
-    // {
-    //     Network::Get().CreateAndJoinSession(m_infoPanel.GetEnteredName());
-    //     LOG("No entered text. Assume to be a master");
-    //     return;
-    // }
-
-    // NetworkAddress address;
-    // address.address = sf::IpAddress(enteredText.substr(0, index));
-    // address.port = std::stoi(enteredText.substr(index+1));
-
-    // Network::Get().JoinSession(address, m_infoPanel.GetEnteredName());
 }
 
 void Game::OnStartMenuJoinButtonPressed()
@@ -438,16 +422,31 @@ void Game::OnCreateMenuButtonPressed(const MenuInputs& _input)
 {
     if (m_currentState != GameState::CREATE)
         return;
+
     m_menuInputs = _input;
+    m_worldConfig = _input.worldConfig.IsValid() ? _input.worldConfig : WorldConfig::GetSmallWorld();
     m_wantsToChangeState = true;
 }
 
 void Game::OnJoinMenuButtonPressed(const MenuInputs& _input)
 {
-    if (m_currentState != GameState::JOIN)
+    if (m_currentState != GameState::JOIN || m_isJoiningOrJoined)
         return;
+
     m_menuInputs = _input;
-    m_wantsToChangeState = true;
+
+    size_t index = m_menuInputs.addressToConnect.find(":");
+    if (index == std::string::npos)
+    {
+        LOG_ERROR("No entered address.");
+        return;
+    }
+    NetworkAddress address;
+    address.address = sf::IpAddress(m_menuInputs.addressToConnect.substr(0, index));
+    address.port = std::stoi(m_menuInputs.addressToConnect.substr(index+1));
+
+    Network::Get().JoinSession(address, m_menuInputs.playerName);
+    m_isJoiningOrJoined = true;
 }
 
 void Game::OnLobbyMenuButtonPressed()
@@ -463,6 +462,7 @@ void Game::OnFinishMenuStartAgainButtonPressed()
     if (m_currentState != GameState::FINISH)
         return;
 
+    m_wantsToChangeState = true;
 }
 
 void Game::OnFinishMenuBackToMenuButtonPressed()
@@ -470,6 +470,8 @@ void Game::OnFinishMenuBackToMenuButtonPressed()
     if (m_currentState != GameState::FINISH)
         return;
 
+    m_wantsToChangeState = true;
+    m_wantsToReturnToMenu = true;
 }
 
 
@@ -531,20 +533,9 @@ void Game::Update(float _dt)
 
     if (m_currentState == GameState::INIT)
     {
-        // if (isKeyPressed(sf::Keyboard::B) && !m_infoPanel.IsInInputMode())
-        // {
-        //     OnStartButtonPressed();
-        //     if (IsSessionMaster())
-        //         m_wantsToChangeState = true;            
-        // }
     }
     else if (m_currentState == GameState::LOBBY)
     {
-        if (isKeyPressed(sf::Keyboard::B))
-        {
-            if (IsSessionMaster())
-                m_wantsToChangeState = true;            
-        }
 // #if DEBUG
         if (isKeyPressed(sf::Keyboard::S))
         {
@@ -574,9 +565,6 @@ void Game::Update(float _dt)
     }
     else if (m_currentState == GameState::FINISH)
     {
-        if (isKeyPressed(sf::Keyboard::R))
-            if (IsSessionMaster())
-                m_wantsToChangeState = true;
     }
 
     m_menuManager.Update(_dt);

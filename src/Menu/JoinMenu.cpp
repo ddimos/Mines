@@ -47,6 +47,11 @@ JoinMenu::JoinMenu()
     m_chooseColorText.setCharacterSize(DEFAULT_TEXT_SIZE); 
     m_chooseColorText.setFillColor(sf::Color::White);
     m_chooseColorText.setPosition(sf::Vector2f(COLUMN_2, LINE_3));
+    m_joiningText.setFont(font);
+    m_joiningText.setString("Joining....");
+    m_joiningText.setCharacterSize(DEFAULT_TEXT_SIZE); 
+    m_joiningText.setFillColor(sf::Color::White);
+    m_joiningText.setPosition(sf::Vector2f(350, LINE_5));
 
     m_menuItems.emplace_back(std::make_unique<SetOfChoosableButtons>(
         8,
@@ -104,8 +109,14 @@ JoinMenu::JoinMenu()
                 inputs.playerName = m_enteredName;
                 inputs.playerColorOption = m_chosenColor;
                 Game::Get().OnJoinMenuButtonPressed(inputs);
+                m_isJoining = true;
             }
         ));
+}
+
+void JoinMenu::onActivate()
+{
+    m_isJoining = false;
 }
 
 void JoinMenu::onDraw(sf::RenderWindow& _window)
@@ -113,6 +124,8 @@ void JoinMenu::onDraw(sf::RenderWindow& _window)
     _window.draw(m_enterHostAddressText);
     _window.draw(m_enterNameText);
     _window.draw(m_chooseColorText);
+    if (m_isJoining)
+        _window.draw(m_joiningText);
 }
 
 void JoinMenu::onColorButtonChosen(unsigned _buttonNum, bool _isChosen)

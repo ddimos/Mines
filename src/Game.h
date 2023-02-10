@@ -32,6 +32,12 @@ struct MenuInputs
     std::string playerName = "";
 };
 
+struct GameResult
+{
+    std::string loserName = "";
+    bool isVictory = false;
+};
+
 class GameListener;
 
 class Game
@@ -51,7 +57,7 @@ public:
 
     void OnCharacterUncoverCell(WorldPosition _pos, Character& _char);
     void OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char);
-    void OnGameEnded(bool _isVictory);
+    void OnGameEnded(bool _isVictory, PlayerID _loserId = PlayerIdInvalid);
 
     void OnStartMenuStartButtonPressed();   // not really happy abour the names
     void OnStartMenuJoinButtonPressed();
@@ -74,7 +80,8 @@ public:
     const std::vector<PlayerInfo>& GetPlayers() const { return m_players; }
 
     bool IsSessionMaster() const;
-    bool IsVictory() const { return m_isVictory; }
+
+    const GameResult& GetGameResult() const { return m_gameResult; }
 
     void RegisterGameListener(GameListener* _listener);
     void UnregisterGameListener(GameListener* _listener);
@@ -103,8 +110,9 @@ private:
     sf::Uint32 m_enteredChar = 0;
 
     bool m_isGameEnded = false;
-    bool m_isVictory = false;
+    GameResult m_gameResult = {};
     unsigned m_seed = 0;
+    WorldConfig m_worldConfig = {};
 
     NetworkMessage m_messageWithPlayers;
     
@@ -112,9 +120,12 @@ private:
     std::vector<PlayerInfo> m_players;
 
     bool m_isAssumedToBeAHost = false;
+    bool m_isJoiningOrJoined = false;
+
     // State machine
     GameState m_currentState = GameState::None;
     bool m_wantsToChangeState = false;
+    bool m_wantsToReturnToMenu = false;
 
     MenuManager m_menuManager;
     MenuInputs m_menuInputs;

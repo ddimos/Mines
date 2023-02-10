@@ -5,25 +5,14 @@
 #include "Utils/ResourceManager.h"
 #include <string>
 
-namespace
-{
-    const unsigned CHARACTER_SIZE_M = 25;
-    const unsigned CHARACTER_SIZE_S = 20;
-}
-
-
 InfoPanel::InfoPanel()
 {
-    m_bombsNumText.setPosition(sf::Vector2f{20.f, 220.f});
+    m_bombsNumText.setPosition(sf::Vector2f{20.f, 320.f});
     m_bombsNumText.setFillColor(sf::Color::White);
 
     m_helpersSprite.setTexture(ResourceManager::getTexture("helpers"));
     m_helpersSprite.setPosition(sf::Vector2f{20.f, 20.f});
     m_helpersSprite.setScale(sf::Vector2f{0.5f, 0.5f});
-}
-
-InfoPanel::~InfoPanel()
-{
 }
 
 void InfoPanel::updateBombsLeftText(int _newNumber)
@@ -36,7 +25,7 @@ void InfoPanel::OnInit()
 {
     const auto& font = ResourceManager::getFont("poppins_regular");
     m_bombsNumText.setFont(font);
-    m_bombsNumText.setString("0");
+    updateBombsLeftText(0);
 
     Game::Get().RegisterGameListener(this);
 }
@@ -51,12 +40,6 @@ void InfoPanel::OnFlagUnset()
     updateBombsLeftText(m_bombsLeft + 1);
 }
 
-// void InfoPanel::OnGameStart(int _bombsNum)
-// {
-//     updateBombsLeftText(_bombsNum);
-//     m_welcomeText.setString("PLAY!!");
-//     m_text.setString("Movement - Arrows\nUncover - Space\nFlag/Unflag - X");
-// }
 
 // void InfoPanel::OnGameFinish(bool _isVictory)
 // {
@@ -79,7 +62,7 @@ void InfoPanel::onPlayerJoined(const PlayerInfo& _info)
     player.shape.setOutlineColor(sf::Color::White);
     player.shape.setOutlineThickness(1.5f);
     
-    const float posY = 400.f + m_players.size() * 40.f;
+    const float posY = 450.f + m_players.size() * 40.f;
     player.shape.setPosition(sf::Vector2f{10.f, posY + 10.f});
     player.text.setPosition(sf::Vector2f{50.f, posY});
     m_players.emplace_back(std::move(player));
@@ -90,6 +73,11 @@ void InfoPanel::onPlayerLeft(const PlayerInfo& _info)
     m_players.erase(std::find_if(m_players.begin(), m_players.end(),
       [&_info](const PlayerText& _p){ return _p.info.networkPlayerCopy.GetPlayerId() == _info.networkPlayerCopy.GetPlayerId(); }),
       m_players.end());
+}
+
+void InfoPanel::onGameStart(const WorldConfig& _worldConfig)
+{
+    updateBombsLeftText(_worldConfig.bombsCount);
 }
 
 void InfoPanel::OnCharachterSpawned(const PlayerInfo& _info)

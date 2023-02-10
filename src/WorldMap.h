@@ -20,9 +20,11 @@ private:
     sf::Vector2i getTilePosition(int _tileNumber) const;
     void assignNewTexture(sf::Vertex* _quad, sf::Vector2i _tilePos);
     void setNewTextureToCell(const Cell& _cell);
+    int getCellIndex(const Cell& _cell);
 
     const sf::Vector2u TILE_SIZE{32, 32};
 
+    WorldPosition m_worldSize = {};
     sf::VertexArray m_vertices;
     const sf::Texture& m_tileset;
 };

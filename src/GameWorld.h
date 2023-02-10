@@ -16,15 +16,14 @@ public:
     void Update(float _dt);
     void Render(sf::RenderWindow& _window);
 
-    void CreateWorld(WorldPosition _worldSize, size_t _bombsNumber);
+    void CreateWorld(WorldConfig _worldConfig);
     void SpawnCharacter(bool _spawnMaster, bool _canControl, unsigned _id, const CharacterInfo& _info);
     void DestroyWorld();
 
     unsigned GenerateId();
-    sf::Color GenerateColor();
-    
+
     const Camera& GetCamera() const { return m_camera; }
-    WorldPosition GetWorldSize() const { return m_worldSize; }
+    WorldPosition GetWorldSize() const { return m_worldConfig.worldSize; }
 
     Cell& getCell(int _x, int _y);
     Cell& getCell(WorldPosition _pos);
@@ -46,10 +45,11 @@ private:
     std::set<WorldPosition> 
         getPositionsOfNotBombNeighboringCells(WorldPosition _position);
     void uncoverCellsInRadius(WorldPosition _pos, int _radius);
+    int getCellIndex(int _x, int _y);
 
     WorldMap m_worldMap;
 
-    WorldPosition m_worldSize = {};
+    WorldConfig m_worldConfig = {};
     std::vector<Cell> m_cells;
     std::vector<Character> m_characters;
     Character* m_mainCharachter = nullptr;

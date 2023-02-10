@@ -50,16 +50,16 @@ void FinishMenu::onDraw(sf::RenderWindow& _window)
 
 void FinishMenu::onActivate()
 {
-    bool isVictory = Game::Get().IsVictory(); // GetGameResult() , should have isVictory, player who has steped
+    const auto& result = Game::Get().GetGameResult();
     m_mainText.setString(
-        isVictory
+        result.isVictory
             ? "Congratulations!"
             : "Oops!");
 
     m_descriptionText.setString(
-        isVictory
+        result.isVictory
             ? "You found all the mines"
-            : "// stepped on a mine");
+            : result.loserName + " stepped on a mine");
 
     m_mainText.setPosition(sf::Vector2f(calculateCenterX(m_mainText.getGlobalBounds().width), 100));
     m_descriptionText.setPosition(sf::Vector2f(calculateCenterX(m_descriptionText.getGlobalBounds().width), 150));
