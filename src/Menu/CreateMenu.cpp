@@ -174,7 +174,7 @@ CreateMenu::CreateMenu()
             inputs.worldConfig.bombsCount = m_enteredBombsCount;
             inputs.worldConfig.worldSize.x = m_enteredWidth;
             inputs.worldConfig.worldSize.y = m_enteredHeight;
-            inputs.playerColorOption = m_chosenColor;
+            inputs.playerColorId = static_cast<ColorID>(m_chosenColor);
             Game::Get().OnCreateMenuButtonPressed(inputs);
         }
     ));

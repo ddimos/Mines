@@ -17,10 +17,8 @@ public:
     void Render(sf::RenderWindow& _window);
 
     void CreateWorld(WorldConfig _worldConfig);
-    void SpawnCharacter(bool _spawnMaster, bool _canControl, unsigned _id, const CharacterInfo& _info);
+    void SpawnCharacter(bool _spawnMaster, bool _canControl, const CharacterInfo& _info);
     void DestroyWorld();
-
-    unsigned GenerateId();
 
     const Camera& GetCamera() const { return m_camera; }
     WorldPosition GetWorldSize() const { return m_worldConfig.worldSize; }

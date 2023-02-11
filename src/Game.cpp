@@ -112,48 +112,49 @@ void Game::initGame()
 
 void Game::spawnCharacters()
 {
-    if (IsSessionMaster())
+    for (PlayerInfo& playerInfo : m_players)
     {
-        for (PlayerInfo& playerInfo : m_players)
-        {
-            CharacterInfo charInfo;
-        //   charInfo.color = m_gameWorld.GenerateColor();
-            unsigned id = m_gameWorld.GenerateId();      // Maybe I can use a player id
-            charInfo.playerId = playerInfo.networkPlayerCopy.GetPlayerId();
-            playerInfo.charInfoCopy = charInfo;
-            m_gameWorld.SpawnCharacter(true, playerInfo.networkPlayerCopy.IsLocal(), id, charInfo);   
-    //        m_infoPanel.OnCharachterSpawned(playerInfo);
-        }
-    }
-    else
-    {
-        while (!m_messageWithPlayers.IsEnd())
-        {
-            PlayerID playerId;
-            m_messageWithPlayers.Read(playerId);
-            unsigned characterId;
-            m_messageWithPlayers.Read(characterId);
-            sf::Uint32 color;
-            m_messageWithPlayers.Read(color);
-            
-            CharacterInfo charInfo;
-            charInfo.color = sf::Color(color);
-            charInfo.playerId = playerId;
-            m_gameWorld.SpawnCharacter(false, m_localPlayerInfo.networkPlayerCopy.GetPlayerId() == playerId, characterId, charInfo);
-            auto* playerInfo = GetPlayerInfo(playerId);
-            playerInfo->charInfoCopy = charInfo;
-//                m_infoPanel.OnCharachterSpawned(*playerInfo);
-        }
-        m_messageWithPlayers = {};
+        CharacterInfo charInfo;
+        charInfo.colorId = playerInfo.colorId;
+        charInfo.characterId = playerInfo.networkPlayerCopy.GetPlayerId();
+        charInfo.playerId = playerInfo.networkPlayerCopy.GetPlayerId();
+        playerInfo.charInfoCopy = charInfo;
+        m_gameWorld.SpawnCharacter(IsSessionMaster(), playerInfo.networkPlayerCopy.IsLocal(), charInfo);
     }
 }
+
 
 void Game::resetGame()
 {
     m_gameWorld.DestroyWorld();
     m_isGameEnded = false;
 }
- 
+
+bool Game::updatePlayerColor(PlayerID _playerId, ColorID _colorId)
+{
+    auto* playerInfo = GetPlayerInfo(_playerId);
+    if (!playerInfo)
+    {
+        LOG_ERROR("Couldn't find a player with id: " + tstr(_playerId));
+        return false;
+    }
+
+    playerInfo->colorId = _colorId;
+    notifyGameListeners([&playerInfo](GameListener* _list) {
+        _list->onPlayerInfoUpdated(*playerInfo);
+    });
+    return true;
+}
+
+void Game::requestLocalPlayerColorUpdate(ColorID _colorId)
+{
+    NetworkMessage message(Network::Get().GetHostPeerId(), true);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::REQUST_PLAYER_INFO_UPDATE));
+    message.Write(static_cast<PlayerID>(m_localPlayerId));
+    message.Write(static_cast<ColorID>(_colorId));
+    Network::Get().Send(message);
+}
+
 void Game::onStateEnter(GameState _newState)
 {
     switch (_newState)
@@ -169,8 +170,17 @@ void Game::onStateEnter(GameState _newState)
         break;
     case GameState::LOBBY:
         m_menuManager.Push(MenuType::LOBBY_MENU);
-        if (!m_messageWithPlayers.IsEnd())  // It means that we were in the Finish state when the host started a new game
+        if (m_wantToStartGame)  // It means that we were in the Finish state when the host started a new game
             m_wantsToChangeState = true;
+
+        if (m_needsToUpdateColor)
+        {
+            if (IsSessionMaster())
+                updatePlayerColor(m_localPlayerId, m_menuInputs.playerColorId);
+            else
+                requestLocalPlayerColorUpdate( m_menuInputs.playerColorId);
+            m_needsToUpdateColor = false;
+        }
         break;
     case GameState::GAME:
         initGame();
@@ -181,6 +191,7 @@ void Game::onStateEnter(GameState _newState)
         notifyGameListeners([this](GameListener* _list) {
                 _list->onGameStart(m_worldConfig);
             });
+        m_wantToStartGame = false;
         break;
     case GameState::FINISH:
         m_menuManager.Push(MenuType::FINISH_MENU);
@@ -200,10 +211,6 @@ void Game::onStateExit(GameState _oldState)
     case GameState::INIT:
         break;
     case GameState::CREATE:
-    {
-        Network::Get().CreateAndJoinSession(m_menuInputs.playerName);   // TODO to pass a struct with a color
-        break;
-    }
     case GameState::JOIN:
     case GameState::LOBBY:
     case GameState::GAME:
@@ -279,10 +286,27 @@ void Game::receiveNetworkMessages()
 
             if (event.player.IsLocal())
             {
-                m_localPlayerInfo = playerInfo;
-                if (!IsSessionMaster() && m_isJoiningOrJoined && m_currentState == GameState::JOIN)
+                m_localPlayerId = playerInfo.networkPlayerCopy.GetPlayerId();
+
+                if (m_isJoiningOrJoined && (m_currentState == GameState::JOIN || m_currentState == GameState::CREATE))
                     m_wantsToChangeState = true;
             }
+
+            if (IsSessionMaster() && !event.player.IsLocal())
+            {
+                NetworkMessage message(event.player.GetPeerId(), true);
+                message.Write(static_cast<sf::Uint16>(NetworkMessageType::UPDATE_PLAYER_INFO));
+                for (const auto& info : m_players)
+                {
+                    if (info.networkPlayerCopy.GetPlayerId() == playerInfo.networkPlayerCopy.GetPlayerId())
+                        continue;
+
+                    message.Write(static_cast<PlayerID>(info.networkPlayerCopy.GetPlayerId()));
+                    message.Write(static_cast<ColorID>(info.colorId));
+                }
+                Network::Get().Send(message);
+            }
+            
             break;
         }
         case NetworkEvent::Type::ON_PLAYER_LEAVE:
@@ -318,17 +342,60 @@ void Game::receiveNetworkMessages()
                 event.message.Read(m_worldConfig.worldSize.x);
                 event.message.Read(m_worldConfig.worldSize.y);
                 event.message.Read(m_worldConfig.bombsCount);
+
+                m_wantsToChangeState = true;
+                m_wantToStartGame = true;
             }
-            else if (type == NetworkMessageType::CREATE_CHARACTER)
+            else if (type == NetworkMessageType::REQUST_PLAYER_INFO_UPDATE)
             {
-                LOG("CREATE_CHARACTER");
-                if (m_currentState != GameState::LOBBY && m_currentState != GameState::FINISH)
+                LOG("REQUST_PLAYER_INFO_UPDATE");
+                if (m_currentState != GameState::LOBBY)
                 {
-                    LOG_ERROR("Cannot handle the CreateCharachter message in this state");
+                    LOG_ERROR("Cannot handle the RequestPlayerInfoUpdate message in this state");
                     break;
                 }
-                m_messageWithPlayers = event.message;
-                m_wantsToChangeState = true;
+                if (!IsSessionMaster())
+                {
+                    LOG_ERROR("Cannot handle the RequestPlayerInfoUpdate message because it's not host");
+                    break;
+                }
+
+                PlayerID playerId = PlayerIdInvalid;
+                ColorID colorId = ColorIdInvalid;
+                event.message.Read(playerId);
+                event.message.Read(colorId);
+
+                // TODO validate if the color is not taken, if it's, send a denied message 
+                bool result = updatePlayerColor(playerId, colorId);
+                if (!result)
+                {
+                    LOG_ERROR("Cannot update color " + tstr(colorId) + " for player " + tstr(playerId));
+                    break;
+                }
+                NetworkMessage message(true);
+                message.Write(static_cast<sf::Uint16>(NetworkMessageType::UPDATE_PLAYER_INFO));
+                message.Write(static_cast<PlayerID>(playerId));
+                message.Write(static_cast<ColorID>(colorId));
+                Network::Get().Send(message);
+            }
+            else if (type == NetworkMessageType::UPDATE_PLAYER_INFO)
+            {
+                LOG("UPDATE_PLAYER_INFO");
+                if (m_currentState != GameState::LOBBY && m_currentState != GameState::JOIN)
+                {
+                    LOG_ERROR("Cannot handle the UpdatePlayerInfo message in this state");
+                    break;
+                }
+
+                while(!event.message.IsEnd())
+                {
+                    PlayerID playerId = PlayerIdInvalid;
+                    ColorID colorId = ColorIdInvalid;
+                    event.message.Read(playerId);
+                    event.message.Read(colorId);
+
+                    updatePlayerColor(playerId, colorId);
+                }
             }
             else if (type == NetworkMessageType::REPLICATE_CHARACTER_CONTROLS)
             {
@@ -355,23 +422,12 @@ void Game::receiveNetworkMessages()
 
 void Game::sendCreateGameMessage() // TODO  join in progress
 {
-    {
-        NetworkMessage message(true);
-        message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
-        message.Write(static_cast<sf::Uint32>(m_seed));
-        message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.x));
-        message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.y));
-        message.Write(static_cast<sf::Uint32>(m_worldConfig.bombsCount));
-        Network::Get().Send(message);
-    }
     NetworkMessage message(true);
-    message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_CHARACTER));
-    for(const Character& ch : m_gameWorld.GetCharacters())
-    {
-        message.Write(ch.GetInfo().playerId);
-        message.Write(ch.GetId());
-        message.Write(ch.GetInfo().color.toInteger());
-    }
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
+    message.Write(static_cast<sf::Uint32>(m_seed));
+    message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.x));
+    message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.y));
+    message.Write(static_cast<sf::Uint32>(m_worldConfig.bombsCount));
     Network::Get().Send(message);
 }
 
@@ -394,8 +450,9 @@ void Game::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 void Game::OnGameEnded(bool _isVictory, PlayerID _loserId)
 {
     m_gameResult.isVictory = _isVictory;
-    if (_loserId != PlayerIdInvalid; auto* playerInfo = GetPlayerInfo(_loserId))
-        m_gameResult.loserName = playerInfo->networkPlayerCopy.GetName();
+    if (_loserId != PlayerIdInvalid)
+        if (auto* playerInfo = GetPlayerInfo(_loserId))
+            m_gameResult.loserName = playerInfo->networkPlayerCopy.GetName();
 
     m_isGameEnded = true;
 }
@@ -420,12 +477,14 @@ void Game::OnStartMenuJoinButtonPressed()
 
 void Game::OnCreateMenuButtonPressed(const MenuInputs& _input)
 {
-    if (m_currentState != GameState::CREATE)
+    if (m_currentState != GameState::CREATE || m_isJoiningOrJoined)
         return;
 
     m_menuInputs = _input;
     m_worldConfig = _input.worldConfig.IsValid() ? _input.worldConfig : WorldConfig::GetSmallWorld();
-    m_wantsToChangeState = true;
+    Network::Get().CreateAndJoinSession(m_menuInputs.playerName);   // TODO to pass a player descriptor 
+    m_isJoiningOrJoined = true;
+    m_needsToUpdateColor = true;
 }
 
 void Game::OnJoinMenuButtonPressed(const MenuInputs& _input)
@@ -447,6 +506,7 @@ void Game::OnJoinMenuButtonPressed(const MenuInputs& _input)
 
     Network::Get().JoinSession(address, m_menuInputs.playerName);
     m_isJoiningOrJoined = true;
+    m_needsToUpdateColor = true;
 }
 
 void Game::OnLobbyMenuButtonPressed()
@@ -504,7 +564,6 @@ void Game::notifyGameListeners(std::function<void(GameListener*)> _callback)
 void Game::OnTextEntered(sf::Uint32 _char)
 {
     m_enteredChar = _char;
-//    m_infoPanel.OnTextEntered(_char);
 }
 
 PlayerInfo* Game::GetPlayerInfo(PlayerID _playerId)
@@ -536,7 +595,7 @@ void Game::Update(float _dt)
     }
     else if (m_currentState == GameState::LOBBY)
     {
-// #if DEBUG
+// #if DEBUG    TODO
         if (isKeyPressed(sf::Keyboard::S))
         {
             NetworkMessage message(true);

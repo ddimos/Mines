@@ -22,12 +22,12 @@ void GameWorld::DestroyWorld()
     m_mainCharachter = nullptr;
 }
 
-void GameWorld::SpawnCharacter(bool _spawnMaster, bool _canControl, unsigned _id, const CharacterInfo& _info)
+void GameWorld::SpawnCharacter(bool _spawnMaster, bool _canControl, const CharacterInfo& _info)
 {
-    m_characters.emplace_back(Character(_spawnMaster, _canControl, _id, _info));
+    m_characters.emplace_back(Character(_spawnMaster, _canControl, _info));
     std::string roleStr = (_spawnMaster) ? "M":"R";
     roleStr += (_canControl) ? "+":"";
-    LOG("Spawn " + roleStr + " Id: " + tstr(_id));
+    LOG("Spawn " + roleStr + " Id: " + tstr(_info.characterId));
     if (_canControl)
     {
         if (m_mainCharachter != nullptr)
@@ -227,14 +227,9 @@ int GameWorld::getCellIndex(int _x, int _y)
     return _x + _y * (m_worldConfig.worldSize.x);
 }
 
-unsigned GameWorld::GenerateId()
-{
-    return m_characters.size() + 1; // TODO: a real bad way to generate ids
-}
-
 void GameWorld::OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message)
 {
-    unsigned id;
+    CharacterID id;
     _message.Read(id);
     for (Character& charac : m_characters)
     {
@@ -248,7 +243,7 @@ void GameWorld::OnReplicateCharacterControlsMessageReceived(NetworkMessage& _mes
 
 void GameWorld::OnReplicateCharacterMessageReceived(NetworkMessage& _message)
 {
-    unsigned id;
+    CharacterID id;
     _message.Read(id);
     for (Character& charac : m_characters)
     {
@@ -262,7 +257,7 @@ void GameWorld::OnReplicateCharacterMessageReceived(NetworkMessage& _message)
 
 void GameWorld::OnReplicateUncoverCellMessageReceived(NetworkMessage& _message)
 {
-    unsigned id;
+    CharacterID id;
     _message.Read(id);
     for (Character& charac : m_characters)
     {
@@ -276,7 +271,7 @@ void GameWorld::OnReplicateUncoverCellMessageReceived(NetworkMessage& _message)
 
 void GameWorld::OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _message)
 {
-    unsigned id;
+    CharacterID id;
     _message.Read(id);
     for (Character& charac : m_characters)
     {

@@ -61,7 +61,7 @@ void InfoPanel::onPlayerJoined(const PlayerInfo& _info)
     player.shape.setSize(sf::Vector2f{CELL_SIZE/1.3f, CELL_SIZE/1.3f});
     player.shape.setOutlineColor(sf::Color::White);
     player.shape.setOutlineThickness(1.5f);
-    
+
     const float posY = 450.f + m_players.size() * 40.f;
     player.shape.setPosition(sf::Vector2f{10.f, posY + 10.f});
     player.text.setPosition(sf::Vector2f{50.f, posY});
@@ -80,7 +80,7 @@ void InfoPanel::onGameStart(const WorldConfig& _worldConfig)
     updateBombsLeftText(_worldConfig.bombsCount);
 }
 
-void InfoPanel::OnCharachterSpawned(const PlayerInfo& _info)
+void InfoPanel::onPlayerInfoUpdated(const PlayerInfo& _info)
 {
     auto it = std::find_if(m_players.begin(), m_players.end(),
       [&_info](const PlayerText& _p){ return _p.info.networkPlayerCopy.GetPlayerId() == _info.networkPlayerCopy.GetPlayerId(); });
@@ -90,8 +90,8 @@ void InfoPanel::OnCharachterSpawned(const PlayerInfo& _info)
         return;
     }
     it->isCharacterSpawned = true;
-    it->shape.setFillColor(_info.charInfoCopy.color);
-    it->info.charInfoCopy = _info.charInfoCopy;
+    
+    it->shape.setFillColor(getColorById(_info.colorId));
 }
 
 void InfoPanel::Update(float _dt)

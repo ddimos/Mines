@@ -28,7 +28,7 @@ struct MenuInputs
 {
     std::string addressToConnect = "";
     WorldConfig worldConfig = {};// WorldConfigs::GetSmallWorld();
-    unsigned playerColorOption = 0;
+    ColorID playerColorId = ColorIdInvalid;
     std::string playerName = "";
 };
 
@@ -91,6 +91,8 @@ private:
     void initGame();
     void spawnCharacters();
     void resetGame();
+    bool updatePlayerColor(PlayerID _playerId, ColorID _colorId);
+    void requestLocalPlayerColorUpdate(ColorID _colorId);
 
     void onStateEnter(GameState _newState);
     void onStateExit(GameState _oldState);
@@ -114,9 +116,10 @@ private:
     unsigned m_seed = 0;
     WorldConfig m_worldConfig = {};
 
-    NetworkMessage m_messageWithPlayers;
+    bool m_wantToStartGame = false;
+    bool m_needsToUpdateColor = false;
     
-    PlayerInfo m_localPlayerInfo;
+    PlayerID m_localPlayerId = PlayerIdInvalid;
     std::vector<PlayerInfo> m_players;
 
     bool m_isAssumedToBeAHost = false;

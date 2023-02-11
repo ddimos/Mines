@@ -107,7 +107,7 @@ JoinMenu::JoinMenu()
                 MenuInputs inputs;
                 inputs.addressToConnect = m_enteredAddress;
                 inputs.playerName = m_enteredName;
-                inputs.playerColorOption = m_chosenColor;
+                inputs.playerColorId = static_cast<ColorID>(m_chosenColor);
                 Game::Get().OnJoinMenuButtonPressed(inputs);
                 m_isJoining = true;
             }

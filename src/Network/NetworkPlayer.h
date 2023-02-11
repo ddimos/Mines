@@ -18,6 +18,7 @@ public:
 
     const std::string& GetName() const { return m_name; }
     PlayerID GetPlayerId() const { return m_id; }
+    PeerID GetPeerId() const { return m_peerId; } // TODO it's available only on a host side
     bool IsLocal() const { return m_isLocalPlayer; }
 
 private:

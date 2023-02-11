@@ -3,18 +3,20 @@
 #include "Network/NetworkMessage.h"
 #include "Network/NetworkPlayer.h"
 
+using CharacterID = sf::Uint16;
+const CharacterID CharacterIdInvalid = 65535; 
+
 struct CharacterInfo
 {
-    sf::Color color = sf::Color::Yellow;
+    ColorID colorId = ColorIdInvalid;
     PlayerID playerId = PlayerIdInvalid;
+    CharacterID characterId = CharacterIdInvalid;
 };
 
 class Character
 {
 public:
-                        // TODO move to the character info?
-    Character(bool _isMaster, bool _canControl, unsigned _id, const CharacterInfo& _info);
-    ~Character();
+    Character(bool _isMaster, bool _canControl, const CharacterInfo& _info);
 
     void Update(float _dt);
 	void Render(sf::RenderWindow& _window);
@@ -25,7 +27,7 @@ public:
     unsigned GetUncoverRadius() const { return m_uncoverRadius; }
 
     bool IsMaster() const { return m_isMaster; }
-    unsigned GetId() const { return m_id; }
+    CharacterID GetId() const { return m_info.characterId; }
     const CharacterInfo& GetInfo() const { return m_info; }
 
     void OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message);
@@ -73,7 +75,6 @@ private:
 
     bool m_isMaster = true; 
     bool m_canControl = false;
-    unsigned m_id = 0;
 
     CharacterInfo m_info;
 };

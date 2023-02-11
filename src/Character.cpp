@@ -6,23 +6,17 @@
 
 #include <algorithm>
 
-Character::Character(bool _isMaster, bool _canControl, unsigned _id, const CharacterInfo& _info)
+Character::Character(bool _isMaster, bool _canControl, const CharacterInfo& _info)
     :
     m_isMaster(_isMaster),
     m_canControl(_canControl),
-    m_id(_id),
     m_info(_info)
 {
     m_shape.setSize(sf::Vector2f{CELL_SIZE / DECREASE_KOEF, CELL_SIZE / DECREASE_KOEF});
     m_padding = {(CELL_SIZE - CELL_SIZE / DECREASE_KOEF) / 2, (CELL_SIZE - CELL_SIZE / DECREASE_KOEF) / 2};
-    sf::Color color(m_info.color.r, m_info.color.g, m_info.color.b, 190);
-    m_shape.setFillColor(color);
+    m_shape.setFillColor(getColorById(_info.colorId));
     m_shape.setOutlineColor(sf::Color::Black);
     m_shape.setOutlineThickness(1.5f);
-}
-
-Character::~Character()
-{
 }
 
 void Character::Update(float _dt)
@@ -111,7 +105,7 @@ void Character::replicateControls()
     
     NetworkMessage message(Network::Get().GetHostPeerId(), false);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_CONTROLS));
-    message.Write(m_id);
+    message.Write((CharacterID)m_info.characterId);
     message.Write(m_controls.isLeftPressed);
     message.Write(m_controls.isRightPressed);
     message.Write(m_controls.isUpPressed);
@@ -129,7 +123,7 @@ void Character::replicatePos()
 
     NetworkMessage message(false);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_POS));
-    message.Write(m_id);
+    message.Write((CharacterID)m_info.characterId);
     message.Write((sf::Int32)m_position.x);
     message.Write((sf::Int32)m_position.y);
     
@@ -140,7 +134,7 @@ void Character::replicateUncoverCell()
 {
     NetworkMessage message(true);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_UNCOVER));
-    message.Write(m_id);
+    message.Write((CharacterID)m_info.characterId);
     message.Write((sf::Int32)m_position.x);
     message.Write((sf::Int32)m_position.y);
 
@@ -151,7 +145,7 @@ void Character::replicateToggleFlagCell()
 {
     NetworkMessage message(true);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_TOGGLE));
-    message.Write(m_id);
+    message.Write((CharacterID)m_info.characterId);
     message.Write((sf::Int32)m_position.x);
     message.Write((sf::Int32)m_position.y);
 

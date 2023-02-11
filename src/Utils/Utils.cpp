@@ -59,3 +59,34 @@ Profiler::~Profiler()
 
     LOG(m_context + tstr(duration_ms.count()));
 }
+
+// ---------------------------------------------------------
+
+
+sf::Color getColorById(ColorID _colorId)
+{
+    // TODO to load it from config?
+    switch (_colorId)
+    {
+    case 1:
+        return sf::Color(174, 248, 148); 
+    case 2:
+        return sf::Color(96, 249, 166); 
+    case 3:
+        return sf::Color(130, 244, 244);
+    case 4:
+        return sf::Color(106, 210, 255); 
+    case 5:
+        return sf::Color(114, 162, 255); 
+    case 6:
+        return sf::Color(129, 127, 255); 
+    case 7:
+        return sf::Color(215, 131, 255); 
+    case 8:
+        return sf::Color(255, 129, 220); 
+    default:
+        LOG_ERROR("This color id is not supported " + tstr(_colorId));
+        return sf::Color::Yellow; 
+        break;
+    }
+}

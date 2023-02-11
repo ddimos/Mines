@@ -9,8 +9,9 @@ class GameListener
 public:
     virtual void onPlayerJoined(const PlayerInfo&) {}
     virtual void onPlayerLeft(const PlayerInfo&) {}
-    virtual void onGameStart(const WorldConfig&) {}
+    virtual void onPlayerInfoUpdated(const PlayerInfo&) {}
     
+    virtual void onGameStart(const WorldConfig&) {}
     // TODO
     // OnTextEntered
     // onFlagSet

@@ -84,3 +84,11 @@ struct WorldConfig
     WorldPosition worldSize = {};
     unsigned bombsCount = 0;
 };
+
+
+// ---------------------------------------------------------
+
+using ColorID = sf::Uint8;
+const ColorID ColorIdInvalid = 0; 
+
+sf::Color getColorById(ColorID _colorId);
