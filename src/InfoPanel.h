@@ -20,9 +20,10 @@ public:
 private:
     void onPlayerJoined(const PlayerInfo& _info) override;
     void onPlayerLeft(const PlayerInfo& _info) override;
-    void onGameStart(const WorldConfig& _worldConfig) override;
     void onPlayerInfoUpdated(const PlayerInfo&) override;
-    
+    void onGameStart(const WorldConfig& _worldConfig) override;
+    void onCharacterToggleFlagCell(const Cell& _cell, const Character& _char) override;
+
     void updateBombsLeftText(int _newNumber);
     
     sf::Sprite m_helpersSprite;

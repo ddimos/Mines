@@ -1,5 +1,6 @@
 #include "InfoPanel.h"
 #include "Game.h"
+#include "Cell.h"
 #include "Utils/Log.h"
 #include "Utils/Utils.h"
 #include "Utils/ResourceManager.h"
@@ -32,17 +33,6 @@ void InfoPanel::OnInit()
 {
     Game::Get().RegisterGameListener(this);
 }
-
-void InfoPanel::OnFlagSet()
-{
-    updateBombsLeftText(m_bombsLeft - 1);
-}
-
-void InfoPanel::OnFlagUnset()
-{
-    updateBombsLeftText(m_bombsLeft + 1);
-}
-
 
 // void InfoPanel::OnGameFinish(bool _isVictory)
 // {
@@ -80,11 +70,6 @@ void InfoPanel::onPlayerLeft(const PlayerInfo& _info)
       m_players.end());
 }
 
-void InfoPanel::onGameStart(const WorldConfig& _worldConfig)
-{
-    updateBombsLeftText(_worldConfig.bombsCount);
-}
-
 void InfoPanel::onPlayerInfoUpdated(const PlayerInfo& _info)
 {
     auto it = std::find_if(m_players.begin(), m_players.end(),
@@ -97,6 +82,18 @@ void InfoPanel::onPlayerInfoUpdated(const PlayerInfo& _info)
     it->isCharacterSpawned = true;
     
     it->shape.setFillColor(getColorById(_info.colorId));
+}
+
+void InfoPanel::onGameStart(const WorldConfig& _worldConfig)
+{
+    updateBombsLeftText(_worldConfig.bombsCount);
+}
+
+void InfoPanel::onCharacterToggleFlagCell(const Cell& _cell, const Character& _char)
+{
+    (void)_char;
+    int newBobmsLeft = _cell.IsFlagged() ? m_bombsLeft - 1 : m_bombsLeft + 1;
+    updateBombsLeftText(newBobmsLeft);
 }
 
 void InfoPanel::Update(float _dt)

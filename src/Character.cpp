@@ -7,8 +7,9 @@
 
 #include <algorithm>
 
-Character::Character(bool _isMaster, bool _canControl, const CharacterInfo& _info)
+Character::Character(GameWorld& _gameWorldRef, bool _isMaster, bool _canControl, const CharacterInfo& _info)
     :
+    m_gameWorldRef(_gameWorldRef),
     m_isMaster(_isMaster),
     m_canControl(_canControl),
     m_info(_info)
@@ -60,12 +61,12 @@ void Character::Render(sf::RenderWindow& _window)
 
 void Character::onCharacterUncoverCell(WorldPosition _pos)
 {
-    Game::Get().OnCharacterUncoverCell(_pos, *this);
+    m_gameWorldRef.OnCharacterUncoverCell(_pos, *this);
 }
 
 void Character::onCharacterToggleFlagCell(WorldPosition _pos)
 {
-    Game::Get().OnCharacterToggleFlagCell(_pos, *this);
+    m_gameWorldRef.OnCharacterToggleFlagCell(_pos, *this);
 }
 
 void Character::readControls()

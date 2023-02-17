@@ -436,20 +436,11 @@ void Game::sendCreateGameMessage() // TODO  join in progress
     Network::Get().Send(message);
 }
 
-void Game::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
+void Game::OnCharacterToggleFlagCell(const Cell& _cell, const Character& _char)
 {
-    m_gameWorld.OnCharacterUncoverCell(_pos, _char);
-}
-
-void Game::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
-{
-    m_gameWorld.OnCharacterToggleFlagCell(_pos, _char);
-
-    // if (m_gameWorld.getCell(_pos).GetState() == Cell::State::FLAGGED)
-    //     m_infoPanel.OnFlagSet();
-    // else if (m_gameWorld.getCell(_pos).GetState() == Cell::State::COVERED)
-    //     m_infoPanel.OnFlagUnset();
-    
+    notifyGameListeners([&](GameListener* _list) {
+        _list->onCharacterToggleFlagCell(_cell, _char);
+    });
 }
 
 void Game::OnGameEnded(bool _isVictory, PlayerID _loserId)

@@ -3,6 +3,8 @@
 class PlayerInfo;
 class WorldConfig;
 class GameResult;
+class Cell;
+class Character;
 
 class GameListener
 {
@@ -12,10 +14,11 @@ public:
     virtual void onPlayerInfoUpdated(const PlayerInfo&) {}
     
     virtual void onGameStart(const WorldConfig&) {}
+    
+    virtual void onCharacterToggleFlagCell(const Cell&, const Character&) {}
+
     // TODO
     // OnTextEntered
-    // onFlagSet
-    // OnGameStart(int _bombsNum);
     // void onGameFinish(const GameResult&) {}
     // void OnCharachterSpawned(const PlayerInfo& _info);
 };

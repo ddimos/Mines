@@ -55,8 +55,7 @@ public:
     void Update(float _dt);
     void Draw(sf::RenderWindow& _window);
 
-    void OnCharacterUncoverCell(WorldPosition _pos, Character& _char);
-    void OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char);
+    void OnCharacterToggleFlagCell(const Cell& _cell, const Character& _char);
     void OnGameEnded(bool _isVictory, PlayerID _loserId = PlayerIdInvalid);
 
     void OnStartMenuStartButtonPressed();   // not really happy abour the names

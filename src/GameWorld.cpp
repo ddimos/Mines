@@ -29,7 +29,7 @@ void GameWorld::DestroyWorld()
 
 void GameWorld::SpawnCharacter(bool _spawnMaster, bool _canControl, const CharacterInfo& _info)
 {
-    m_characters.emplace_back(Character(_spawnMaster, _canControl, _info));
+    m_characters.emplace_back(Character(*this, _spawnMaster, _canControl, _info));
     std::string roleStr = (_spawnMaster) ? "M":"R";
     roleStr += (_canControl) ? "+":"";
     LOG("Spawn " + roleStr + " Id: " + tstr(_info.characterId));
@@ -105,8 +105,10 @@ void GameWorld::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 {
     (void)_char;
 
-    getCell(_pos).ToggleFlag(_char);
-    m_worldMap.OnToggleFlag(getCell(_pos));
+    auto& cell = getCell(_pos);
+    cell.ToggleFlag(_char);
+    m_worldMap.OnToggleFlag(cell);
+    Game::Get().OnCharacterToggleFlagCell(cell, _char);
 }
 
 void GameWorld::onUncoverCell(WorldPosition _pos)

@@ -3,6 +3,8 @@
 #include "Network/NetworkMessage.h"
 #include "Network/NetworkPlayer.h"
 
+class GameWorld;
+
 struct CharacterInfo
 {
     ColorID colorId = ColorIdInvalid;
@@ -13,7 +15,7 @@ struct CharacterInfo
 class Character
 {
 public:
-    Character(bool _isMaster, bool _canControl, const CharacterInfo& _info);
+    Character(GameWorld& _gameWorldRef, bool _isMaster, bool _canControl, const CharacterInfo& _info);
 
     void Update(float _dt);
 	void Render(sf::RenderWindow& _window);
@@ -57,6 +59,8 @@ private:
     void replicatePos();
     void replicateUncoverCell();
     void replicateToggleFlagCell();
+
+    GameWorld& m_gameWorldRef;
 
     WorldPosition m_position;
     WorldPosition m_prevPosition;
