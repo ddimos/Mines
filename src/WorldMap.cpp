@@ -1,10 +1,12 @@
 #include "WorldMap.h"
+#include "GameWorld.h"
 #include "Utils/Log.h"
 #include "Utils/Utils.h"
 #include "Utils/ResourceManager.h"
 
-WorldMap::WorldMap()
-    : m_tileset(ResourceManager::getTexture("tileset"))
+WorldMap::WorldMap(const GameWorld& _gameWorld)
+    : m_gameWorld(_gameWorld)
+    , m_tileset(ResourceManager::getTexture("tileset"))
 {
 }
 
@@ -49,10 +51,16 @@ int WorldMap::getTileNumber(const Cell& _cell) const
     if (_cell.IsCovered())
         return 0;
     if (_cell.IsFlagged())
-        return 2;
+    {
+        const auto& ch = m_gameWorld.GetCharacter(_cell.GetCharacterIdWhoFlagged());
+        return ch.GetInfo().colorId + 10; // 10 is an offset 
+    }
     if (_cell.IsEmpty())
         return 1;
-    return _cell.GetNumber() + 2;   // 2 is an offset 
+    if (_cell.IsNumber())
+        return _cell.GetNumber() + 1;   // 1 is an offset 
+    
+    return 10;  // it's an exploded mine
 }
 
 sf::Vector2i WorldMap::getTilePosition(int _tileNumber) const

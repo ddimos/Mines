@@ -26,15 +26,15 @@ public:
 	bool IsFlagged() const { return m_state == Cell::State::FLAGGED; }
 	bool IsNumber() const { return m_type == Cell::ValueType::NUMBER; }
 	bool IsEmpty() const { return m_type == Cell::ValueType::EMPTY; }
+	bool IsBomb() const { return m_type == Cell::ValueType::BOMB; }
 
 	WorldPosition GetPosition() const { return m_position; }
 	int GetNumber() const { return m_number; }
 	State GetState() const { return m_state; }
+	CharacterID GetCharacterIdWhoFlagged() const { return m_flaggedCharId; }
 
-    void ToggleFlag();
-
-    void OnUncoverCell();
-    void OnToggleFlag();
+    void ToggleFlag(const Character& _char);
+    void Uncover();
 
 private:
 	friend class GameWorld;
@@ -46,4 +46,5 @@ private:
     State m_state = State::COVERED;
 	ValueType m_type = ValueType::EMPTY;
 	int m_number = 0;
+	CharacterID m_flaggedCharId = CharacterIdInvalid;
 };

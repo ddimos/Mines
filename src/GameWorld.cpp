@@ -5,6 +5,11 @@
 
 #include <functional>
 
+GameWorld::GameWorld()
+    : m_worldMap(*this)
+{
+}
+
 void GameWorld::CreateWorld(WorldConfig _worldConfig)
 {
     m_worldConfig = _worldConfig;
@@ -66,6 +71,13 @@ Cell& GameWorld::getCell(WorldPosition _pos)
     return getCell(_pos.x, _pos.y);
 }
 
+const Character& GameWorld::GetCharacter(CharacterID _id) const
+{
+    auto it = std::find_if(m_characters.begin(), m_characters.end(),
+        [_id](const Character& _c){ return _c.GetId() == _id; });
+    return *it;
+}
+
 void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
 {
     (void)_char;
@@ -75,6 +87,7 @@ void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
 
     if (getCell(_pos).m_type == Cell::ValueType::BOMB)
     {
+        onUncoverCell(_pos);
         Game::Get().OnGameEnded(false, _char.GetInfo().playerId);
         return;
     }
@@ -83,13 +96,16 @@ void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
     
     if (getCell(_pos).m_type == Cell::ValueType::EMPTY)
         uncoverCellsInRadius(_pos, m_mainCharachter->GetUncoverRadius()); // TODO should be a character who uncovers
+
+    if (m_cellsLeftToUncover <= 0)
+        Game::Get().OnGameEnded(true);
 }
 
 void GameWorld::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 {
     (void)_char;
 
-    getCell(_pos).OnToggleFlag();
+    getCell(_pos).ToggleFlag(_char);
     m_worldMap.OnToggleFlag(getCell(_pos));
 }
 
@@ -97,12 +113,9 @@ void GameWorld::onUncoverCell(WorldPosition _pos)
 {
     if (getCell(_pos).IsCovered())
     {
-        getCell(_pos).OnUncoverCell();
+        getCell(_pos).Uncover();
         m_worldMap.OnUncoverCell(getCell(_pos));
         m_cellsLeftToUncover--;
-
-        if (m_cellsLeftToUncover <= 0)
-            Game::Get().OnGameEnded(true);
     }
 }
 

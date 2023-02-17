@@ -103,6 +103,7 @@ private:
 
     static Game* ms_game;
     sf::RenderWindow& m_window;
+    sf::Sprite m_background;
 
     InfoPanel m_infoPanel;
     GameWorld m_gameWorld;

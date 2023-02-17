@@ -3,6 +3,12 @@
 #include "Utils/Log.h"
 #include "Game.h"
 
+namespace
+{
+    constexpr int BUTTON_WIDTH = 200;
+    constexpr int BUTTON_HEIGHT = 50;
+}
+
 FinishMenu::FinishMenu()
     : BaseMenu(MenuType::FINISH_MENU)
 {
@@ -21,9 +27,9 @@ FinishMenu::FinishMenu()
 
     m_menuItems.emplace_back(std::make_unique<Button>(
         sf::Vector2f(300, 300),
-        ResourceManager::getTexture("create_menu_start_button"),    // TODO use a different texture
-        sf::IntRect{0,   0, 200, 62},
-        sf::IntRect{200, 0, 200, 62},
+        ResourceManager::getTexture("finish_menu_buttons"),
+        sf::IntRect{0,            0, BUTTON_WIDTH, BUTTON_HEIGHT},
+        sf::IntRect{BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT},
         [this](){
             LOG("Start Again click ");
             Game::Get().OnFinishMenuStartAgainButtonPressed();
@@ -32,9 +38,9 @@ FinishMenu::FinishMenu()
 
     m_menuItems.emplace_back(std::make_unique<Button>(
         sf::Vector2f(500, 300),
-        ResourceManager::getTexture("create_menu_start_button"),    // TODO use a different texture
-        sf::IntRect{0,   0, 200, 62},
-        sf::IntRect{200, 0, 200, 62},
+        ResourceManager::getTexture("finish_menu_buttons"),
+        sf::IntRect{0,            BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT},
+        sf::IntRect{BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT},
         [this](){
             LOG("Back To Menu click ");
             Game::Get().OnFinishMenuBackToMenuButtonPressed();

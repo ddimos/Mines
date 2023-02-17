@@ -10,7 +10,7 @@
 class GameWorld
 {
 public:
-    GameWorld() = default;
+    GameWorld();
     ~GameWorld() = default;
 
     void Update(float _dt);
@@ -26,6 +26,7 @@ public:
     Cell& getCell(int _x, int _y);
     Cell& getCell(WorldPosition _pos);
     const std::vector<Character>& GetCharacters() const { return m_characters; }
+    const Character& GetCharacter(CharacterID _id) const;
 
     void OnCharacterUncoverCell(WorldPosition _pos, Character& _char);
     void OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char);

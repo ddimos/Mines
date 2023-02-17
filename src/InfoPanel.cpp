@@ -7,26 +7,29 @@
 
 InfoPanel::InfoPanel()
 {
-    m_bombsNumText.setPosition(sf::Vector2f{20.f, 320.f});
+    const auto& fontB = ResourceManager::getFont("poppins_bold");   // TODO should be extra bold
+    m_bombsNumText.setPosition(sf::Vector2f{115.f, 320.f});
     m_bombsNumText.setFillColor(sf::Color::White);
+    m_bombsNumText.setCharacterSize(24);
+    m_bombsNumText.setFont(fontB);
+    
+    updateBombsLeftText(0);
 
     m_helpersSprite.setTexture(ResourceManager::getTexture("helpers"));
     m_helpersSprite.setPosition(sf::Vector2f{20.f, 20.f});
-    m_helpersSprite.setScale(sf::Vector2f{0.5f, 0.5f});
-}
+
+    m_linesSprite.setTexture(ResourceManager::getTexture("lines"));
+    m_linesSprite.setPosition(sf::Vector2f{20.f, 300.f});
+}   
 
 void InfoPanel::updateBombsLeftText(int _newNumber)
 {
     m_bombsLeft = _newNumber;
-    m_bombsNumText.setString("Bombs Left\n" + std::to_string(_newNumber));
+    m_bombsNumText.setString(std::to_string(_newNumber));
 }
 
 void InfoPanel::OnInit()
 {
-    const auto& font = ResourceManager::getFont("poppins_regular");
-    m_bombsNumText.setFont(font);
-    updateBombsLeftText(0);
-
     Game::Get().RegisterGameListener(this);
 }
 
@@ -58,12 +61,14 @@ void InfoPanel::onPlayerJoined(const PlayerInfo& _info)
     player.info = _info;
     player.text.setFont(ResourceManager::getFont("poppins_regular"));
     player.text.setString(_info.networkPlayerCopy.GetName());
-    player.shape.setSize(sf::Vector2f{CELL_SIZE/1.3f, CELL_SIZE/1.3f});
+    player.text.setFillColor(sf::Color(173, 173, 226));
+    player.text.setCharacterSize(16);
+    player.shape.setSize(sf::Vector2f{19, 19});
     player.shape.setOutlineColor(sf::Color::White);
     player.shape.setOutlineThickness(1.5f);
 
     const float posY = 450.f + m_players.size() * 40.f;
-    player.shape.setPosition(sf::Vector2f{10.f, posY + 10.f});
+    player.shape.setPosition(sf::Vector2f{20.f, posY});
     player.text.setPosition(sf::Vector2f{50.f, posY});
     m_players.emplace_back(std::move(player));
 }
@@ -103,6 +108,7 @@ void InfoPanel::Draw(sf::RenderWindow& _window)
 {
     _window.draw(m_bombsNumText);
     _window.draw(m_helpersSprite);
+    _window.draw(m_linesSprite);
     for (auto& player : m_players)
     {
         if (player.isCharacterSpawned)

@@ -6,10 +6,9 @@
 #include <algorithm>
 
 Camera::Camera()
-{}
-
-Camera::~Camera()
-{}
+    : m_sizeInWindowsCoord{(float)GAME_FIELD_SIZE.x, (float)GAME_FIELD_SIZE.y}
+{
+}
 
 void Camera::OnInit(WorldPosition _worldSize)
 {

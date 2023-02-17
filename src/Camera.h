@@ -7,7 +7,7 @@ class Camera
 {
 public:
     Camera();
-    ~Camera();
+    ~Camera() = default;
 
     void Update(float _dt);
 
@@ -25,6 +25,6 @@ private:
     WorldPosition   m_initialTargetedPos = {0, 0};
     
     bool            m_blockCamera = false;
-    sf::Vector2f    m_sizeInWindowsCoord = {1000.f, 1000.f};
+    sf::Vector2f    m_sizeInWindowsCoord = {};
     const float     m_speed = 10.f;
 };

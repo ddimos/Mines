@@ -86,7 +86,17 @@ sf::Color getColorById(ColorID _colorId)
         return sf::Color(255, 129, 220); 
     default:
         LOG_ERROR("This color id is not supported " + tstr(_colorId));
-        return sf::Color::Yellow; 
+        return sf::Color(174, 248, 148); 
         break;
     }
+}
+
+unsigned getTextureNumByColorId(ColorID _colorId)
+{
+    if (_colorId == ColorIdInvalid)
+    {
+        LOG_ERROR("This color id is not supported " + tstr(_colorId));
+        return 0;
+    }
+    return _colorId - 1;
 }

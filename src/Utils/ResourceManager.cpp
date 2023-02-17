@@ -8,7 +8,9 @@ sf::Font ResourceManager::ms_nullFont;
 
 void ResourceManager::StartUp()
 {
-    loadTexture("res/textures/all.png", "tileset");
+    loadTexture("res/textures/background.png", "background");
+    loadTexture("res/textures/tileset.png", "tileset");
+    loadTexture("res/textures/players.png", "players");
     loadTexture("res/textures/start_menu_buttons.png", "start_menu_buttons");
     loadTexture("res/textures/choose_color_buttons.png", "choose_color_buttons");
     loadTexture("res/textures/choose_size_button.png", "choose_size_button");
@@ -17,7 +19,9 @@ void ResourceManager::StartUp()
     loadTexture("res/textures/field1.png", "field1");
     loadTexture("res/textures/field2.png", "field2");
     loadTexture("res/textures/create_menu_elements.png", "create_menu_elements");
+    loadTexture("res/textures/finish_menu_buttons.png", "finish_menu_buttons");
     loadTexture("res/textures/helpers.png", "helpers");
+    loadTexture("res/textures/lines.png", "lines");
  
     loadFont("res/fonts/IBMPlexSansThaiLooped-Regular.ttf", "poppins_regular");
     loadFont("res/fonts/IBMPlexSansThaiLooped-Bold.ttf", "poppins_bold");

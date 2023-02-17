@@ -2,10 +2,12 @@
 #include "Utils/Utils.h"
 #include "Cell.h"
 
+class GameWorld;
+
 class WorldMap : public sf::Drawable, public sf::Transformable
 {
 public:
-    WorldMap();
+    WorldMap(const GameWorld& _gameWorld);
     ~WorldMap() = default;
 
     void CreateMap(WorldPosition _worldSize);
@@ -24,6 +26,7 @@ private:
 
     const sf::Vector2u TILE_SIZE{32, 32};
 
+    const GameWorld& m_gameWorld;
     WorldPosition m_worldSize = {};
     sf::VertexArray m_vertices;
     const sf::Texture& m_tileset;

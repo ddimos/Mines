@@ -3,6 +3,7 @@
 #include "Utils/Config.h"
 #include "Utils/Log.h"
 #include "GameListener.h"
+#include "ResourceManager.h"
 #include "Network/Network.h"
 #include "Network/NetworkPlayer.h"
 #include "NetworkMessageType.h"
@@ -39,13 +40,17 @@ Game::Game(sf::RenderWindow& _window)
     : m_window(_window)
     , m_menuManager(_window)
 {
-
     std::fill(ms_keysState.begin(), ms_keysState.end(), false);
 
-    m_gameView.setViewport(sf::FloatRect(0.f, 0.f, 0.8f, 1.f));
-    m_infoView.setViewport(sf::FloatRect(0.8f, 0.f, 0.8f, 1.f));
-
+    m_gameView.setViewport(sf::FloatRect(0.f,           0.f, WINDOWS_RATIO, 1.f));
+    m_infoView.setViewport(sf::FloatRect(WINDOWS_RATIO, 0.f, 1.f-WINDOWS_RATIO, 1.f));
+    m_gameView.setSize(GAME_FIELD_SIZE.x, GAME_FIELD_SIZE.y);
+    m_infoView.setSize(INFO_FIELD_SIZE.x, INFO_FIELD_SIZE.y);
+    m_infoView.setCenter({INFO_FIELD_SIZE.x / 2.f, INFO_FIELD_SIZE.y / 2.f});
     m_wantsToChangeState = true;
+
+    m_background.setTexture(ResourceManager::getTexture("background"));
+    m_background.setPosition({0.f, 0.f});
 }
 
 Game::~Game()
@@ -617,8 +622,7 @@ void Game::Update(float _dt)
     {
         m_gameWorld.Update(_dt);
         m_gameView.setCenter(m_gameWorld.GetCamera().GetPos());		
-        m_gameView.setSize(m_gameWorld.GetCamera().GetSize());		
-        
+
         if (m_isGameEnded)
             m_wantsToChangeState = true;
     }
@@ -641,5 +645,11 @@ void Game::Draw(sf::RenderWindow& _window)
     m_infoPanel.Draw(_window);
 
     _window.setView(_window.getDefaultView());
+
+    if (m_currentState == GameState::INIT 
+     || m_currentState == GameState::JOIN
+     || m_currentState == GameState::CREATE)
+        _window.draw(m_background);
+
     m_menuManager.Draw(_window);
 }

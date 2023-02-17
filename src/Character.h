@@ -3,9 +3,6 @@
 #include "Network/NetworkMessage.h"
 #include "Network/NetworkPlayer.h"
 
-using CharacterID = sf::Uint16;
-const CharacterID CharacterIdInvalid = 65535; 
-
 struct CharacterInfo
 {
     ColorID colorId = ColorIdInvalid;
@@ -61,17 +58,14 @@ private:
     void replicateUncoverCell();
     void replicateToggleFlagCell();
 
-    const float DECREASE_KOEF = 1.25;
-
     WorldPosition m_position;
     WorldPosition m_prevPosition;
-    sf::Vector2f m_padding = {};
 
     Controls m_controls = {};
 
     unsigned m_uncoverRadius = 10;
 
-    sf::RectangleShape m_shape;
+    sf::Sprite m_sprite;
 
     bool m_isMaster = true; 
     bool m_canControl = false;

@@ -1,6 +1,7 @@
 #include "Character.h"
 #include "Game.h"
 #include "Utils/Log.h"
+#include "Utils/ResourceManager.h"
 #include "NetworkMessageType.h"
 #include "Network/Network.h"
 
@@ -12,11 +13,13 @@ Character::Character(bool _isMaster, bool _canControl, const CharacterInfo& _inf
     m_canControl(_canControl),
     m_info(_info)
 {
-    m_shape.setSize(sf::Vector2f{CELL_SIZE / DECREASE_KOEF, CELL_SIZE / DECREASE_KOEF});
-    m_padding = {(CELL_SIZE - CELL_SIZE / DECREASE_KOEF) / 2, (CELL_SIZE - CELL_SIZE / DECREASE_KOEF) / 2};
-    m_shape.setFillColor(getColorById(_info.colorId));
-    m_shape.setOutlineColor(sf::Color::Black);
-    m_shape.setOutlineThickness(1.5f);
+    m_sprite.setTexture(ResourceManager::getTexture("players"));
+    m_sprite.setTextureRect(
+        sf::IntRect(
+            CELL_SIZE * getTextureNumByColorId(_info.colorId),
+            0,
+            CELL_SIZE,
+            CELL_SIZE));
 }
 
 void Character::Update(float _dt)
@@ -51,8 +54,8 @@ void Character::Update(float _dt)
 
 void Character::Render(sf::RenderWindow& _window)
 {
-    m_shape.setPosition(m_position.getWindowPosition() + m_padding);
-    _window.draw(m_shape);
+    m_sprite.setPosition(m_position.getWindowPosition());
+    _window.draw(m_sprite);
 }
 
 void Character::onCharacterUncoverCell(WorldPosition _pos)
