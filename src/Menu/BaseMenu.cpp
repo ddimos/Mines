@@ -29,8 +29,7 @@ void BaseMenu::Update()
 
 void BaseMenu::Draw(sf::RenderWindow& _window)
 {
+    onDraw(_window);
     for (auto& item : m_menuItems)
         item->Draw(_window);
-
-    onDraw(_window);
 }

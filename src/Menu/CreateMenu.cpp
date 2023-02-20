@@ -51,22 +51,22 @@ CreateMenu::CreateMenu()
     const auto& font = ResourceManager::getFont("poppins_regular");
     m_chooseFieldSizeText.setFont(font); 
     m_chooseFieldSizeText.setString("Choose field size");
-    m_chooseFieldSizeText.setCharacterSize(DEFAULT_TEXT_SIZE); 
+    m_chooseFieldSizeText.setCharacterSize(FONT_SIZE_2); 
     m_chooseFieldSizeText.setFillColor(sf::Color::White);
     m_chooseFieldSizeText.setPosition(sf::Vector2f(COLUMN_1, LINE_1)); 
     m_enterFieldSizeText.setFont(font);
     m_enterFieldSizeText.setString("or make your own");
-    m_enterFieldSizeText.setCharacterSize(DEFAULT_TEXT_SIZE); 
+    m_enterFieldSizeText.setCharacterSize(FONT_SIZE_2); 
     m_enterFieldSizeText.setFillColor(sf::Color::White);
     m_enterFieldSizeText.setPosition(sf::Vector2f(COLUMN_2, LINE_1));
     m_enterNameText.setFont(font);
     m_enterNameText.setString("Enter your name");
-    m_enterNameText.setCharacterSize(DEFAULT_TEXT_SIZE); 
+    m_enterNameText.setCharacterSize(FONT_SIZE_2); 
     m_enterNameText.setFillColor(sf::Color::White);
     m_enterNameText.setPosition(sf::Vector2f(COLUMN_1, LINE_3));
     m_chooseColorText.setFont(font);
     m_chooseColorText.setString("Choose your color");
-    m_chooseColorText.setCharacterSize(DEFAULT_TEXT_SIZE); 
+    m_chooseColorText.setCharacterSize(FONT_SIZE_2); 
     m_chooseColorText.setFillColor(sf::Color::White);
     m_chooseColorText.setPosition(sf::Vector2f(COLUMN_2, LINE_3));
 
@@ -85,7 +85,7 @@ CreateMenu::CreateMenu()
     ));
 
     m_menuItems.emplace_back(std::make_unique<SetOfChoosableButtons>(
-        8,
+        NUMBER_OF_AVAILABLE_COLORS,
         sf::Vector2f(COLUMN_2, LINE_4),
         DISTANCE_BETWEEN_COLOR_BUTTONS,
         ResourceManager::getTexture("choose_color_buttons"),
@@ -102,7 +102,7 @@ CreateMenu::CreateMenu()
         sf::Vector2f(COLUMN_1, LINE_4),
         ResourceManager::getTexture("field1"),
         ResourceManager::getFont("poppins_regular"),
-        "help text",
+        "name",
         [](sf::Uint32 _char, const std::string& _enteredText){
             (void)_char;
             (void)_enteredText;
@@ -152,8 +152,9 @@ CreateMenu::CreateMenu()
         ResourceManager::getTexture("field2"),
         ResourceManager::getFont("poppins_regular"),
         "333",
-        [maxWorldBombsCount](sf::Uint32 _char, const std::string& _enteredText){
-            return validateNumber(_char, _enteredText, maxWorldBombsCount);
+        [maxWorldBombsCount, this](sf::Uint32 _char, const std::string& _enteredText){
+            unsigned maxPosibleBombs = m_enteredWidth * m_enteredHeight;
+            return validateNumber(_char, _enteredText, maxWorldBombsCount > maxPosibleBombs ? maxPosibleBombs : maxWorldBombsCount);
         },
         [this](const std::string& _enteredText){
             LOG("Input finish " + _enteredText);
@@ -175,6 +176,8 @@ CreateMenu::CreateMenu()
             inputs.worldConfig.worldSize.x = m_enteredWidth;
             inputs.worldConfig.worldSize.y = m_enteredHeight;
             inputs.playerColorId = static_cast<ColorID>(m_chosenColor);
+            if (inputs.playerColorId == ColorIdInvalid)
+                    inputs.playerColorId = 1;   // TODO move this code elsewhere?
             Game::Get().OnCreateMenuButtonPressed(inputs);
         }
     ));

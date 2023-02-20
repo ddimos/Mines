@@ -13,6 +13,7 @@ private:
 
     bool m_isFirstActivation = true;
 
+    sf::Sprite m_background;
     sf::Text m_waitingText;
     sf::Text m_descriptionText;
 };

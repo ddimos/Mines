@@ -38,8 +38,7 @@ private:
     {
         sf::Text text;
         PlayerInfo info;
-        bool isCharacterSpawned = false;
-        sf::RectangleShape shape;
+        sf::Sprite sprite;
     };
     std::vector<PlayerText> m_players;
 };

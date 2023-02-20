@@ -15,6 +15,7 @@ constexpr unsigned DEFAULT_MAX_WORLD_WIDTH = 99;
 constexpr unsigned DEFAULT_MAX_WORLD_HEIGHT = 99;
 constexpr unsigned DEFAULT_MAX_WORLD_BOMBS_COUNT = 99;
 constexpr unsigned DEFAULT_MAX_INPUT_FIELD_SIZE = 32;
+constexpr unsigned NUMBER_OF_AVAILABLE_COLORS = MAX_PLAYER_COUNT;
 
 constexpr float EPSILON = 0.0001f; 
 
@@ -26,4 +27,8 @@ const sf::Color BACKGROUND_COLOR(26, 25, 46);
 const unsigned short DEFAULT_PORT = 20087;
 
 // Menu
-constexpr int DEFAULT_TEXT_SIZE = 24; 
+constexpr unsigned FONT_SIZE_1 = 36; 
+constexpr unsigned FONT_SIZE_2 = 24; 
+constexpr unsigned FONT_SIZE_3 = 20; 
+constexpr unsigned FONT_SIZE_4 = 16; 
+constexpr unsigned FONT_SIZE_5 = 14; 

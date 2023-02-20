@@ -8,11 +8,9 @@ namespace
     constexpr int BUTTON_WIDTH = 320;
     constexpr int BUTTON_HEIGHT = 65;
     
-    constexpr float WELCOME_TEXT_Y = 180.f;
-    constexpr float START_BUTTON_Y = 250.f;
-    constexpr float JOIN_BUTTON_Y = 350.f;
-
-    constexpr unsigned WELCOME_TEXT_SIZE = 35;
+    constexpr float WELCOME_TEXT_Y = 230.f;
+    constexpr float START_BUTTON_Y = WELCOME_TEXT_Y + 72.f;
+    constexpr float JOIN_BUTTON_Y = START_BUTTON_Y + 90.f;
 
     // texture coordinats
     const sf::IntRect START_BUTTON  {0,            0,             BUTTON_WIDTH, BUTTON_HEIGHT};
@@ -27,7 +25,7 @@ StartMenu::StartMenu()
     // TODO ? create a menu item for text ?
     m_text.setFont(ResourceManager::getFont("poppins_bold")); 
     m_text.setString("WELCOME!");
-    m_text.setCharacterSize(WELCOME_TEXT_SIZE); 
+    m_text.setCharacterSize(FONT_SIZE_1); 
     m_text.setFillColor(sf::Color::White);
     m_text.setPosition(sf::Vector2f(calculateCenterX(m_text.getGlobalBounds().width), WELCOME_TEXT_Y)); 
  

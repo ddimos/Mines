@@ -91,7 +91,6 @@ struct WorldConfig
 using ColorID = sf::Uint8;
 const ColorID ColorIdInvalid = 0; 
 
-sf::Color getColorById(ColorID _colorId);
 unsigned getTextureNumByColorId(ColorID _colorId);
 
 // ---------------------------------------------------------

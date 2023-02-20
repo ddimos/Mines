@@ -5,8 +5,9 @@
 namespace
 {
     constexpr int INPUT_FIELD_MARGIN = 5;
+    const sf::Color INPUT_FIELD_TEXT_COLOR = sf::Color::Black;
+    const sf::Color INPUT_FIELD_HELP_TEXT_COLOR = sf::Color{167, 167, 167};
 }
-
 
 void MenuItem::Update()
 {
@@ -158,7 +159,8 @@ InputField::InputField(
         ValidateEnteredTextCallback _onValidateEnteredTextCallback,
         FinishEnterTextCallback _onFinishEnterTextCallback,
         unsigned _maxSize)
-    : m_onValidateEnteredTextCallback(_onValidateEnteredTextCallback)
+    : m_helpText(_helpText)
+    , m_onValidateEnteredTextCallback(_onValidateEnteredTextCallback)
     , m_onFinishEnterTextCallback(_onFinishEnterTextCallback)
     , m_maxSize(_maxSize)
 {
@@ -171,8 +173,9 @@ InputField::InputField(
     m_sprite.setPosition(_position);
 
     m_inputText.setFont(_font);
-    m_inputText.setString(_helpText);
-    m_inputText.setFillColor(sf::Color::Black);
+    m_inputText.setString(m_helpText);
+    m_inputText.setFillColor(INPUT_FIELD_HELP_TEXT_COLOR);
+    m_inputText.setCharacterSize(FONT_SIZE_2); 
     m_inputText.setPosition(
         _position.x + INPUT_FIELD_MARGIN,
         (m_sprite.getGlobalBounds().height / 2.f - m_inputText.getGlobalBounds().height / 2.f) + _position.y);
@@ -194,17 +197,8 @@ void InputField::onUpdate()
 
     const sf::Vector2f mousePosition = sf::Vector2f(sf::Mouse::getPosition(window));
     if (!getBounds().contains(mousePosition))
-    {
         if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
-        {
-            if (m_isInInputMode)
-            {
-                m_isInInputMode = false;
-                if (!m_enteredStr.empty())
-                    m_onFinishEnterTextCallback(m_enteredStr);
-            }
-        }
-    }
+            onFinishEntering();
 
     if (!m_isInInputMode)
         return;
@@ -227,11 +221,7 @@ void InputField::onUpdate()
     }
     
     if (Game::Get().isKeyPressed(sf::Keyboard::Enter))
-    {
-        m_isInInputMode = false;
-        if (!m_enteredStr.empty())
-            m_onFinishEnterTextCallback(m_enteredStr);
-    }
+        onFinishEntering();
 }
 
 void InputField::onDraw(sf::RenderWindow& _window)
@@ -243,7 +233,32 @@ void InputField::onDraw(sf::RenderWindow& _window)
 void InputField::onClick(bool _isClicked)
 {
     if (!_isClicked)
-        m_isInInputMode = true;
+        onStartEntering();
+}
+
+void InputField::onStartEntering()
+{
+    if (m_isInInputMode)
+        return;
+
+    m_inputText.setString(m_enteredStr.empty() ? "" : m_enteredStr);
+    m_inputText.setFillColor(INPUT_FIELD_TEXT_COLOR);
+    m_isInInputMode = true;
+}
+
+void InputField::onFinishEntering()
+{
+    if (!m_isInInputMode)
+        return;
+    
+    m_isInInputMode = false;
+    if (!m_enteredStr.empty())
+        m_onFinishEnterTextCallback(m_enteredStr);
+    else
+    {
+        m_inputText.setString(m_helpText);
+        m_inputText.setFillColor(INPUT_FIELD_HELP_TEXT_COLOR);
+    }
 }
 
 void InputField::Fill(const std::string& _text)
@@ -251,11 +266,10 @@ void InputField::Fill(const std::string& _text)
     m_enteredStr = (_text.size() < m_maxSize) 
                  ? _text : _text.substr(0, m_maxSize);
  
-    m_inputText.setString(m_enteredStr);
-
     m_isInInputMode = false;
-    if (!m_enteredStr.empty())
-        m_onFinishEnterTextCallback(m_enteredStr);
+    
+    onStartEntering();
+    onFinishEntering();
 }
 
 // ---------------------------------------------------------

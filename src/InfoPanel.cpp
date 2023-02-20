@@ -6,18 +6,25 @@
 #include "Utils/ResourceManager.h"
 #include <string>
 
+namespace
+{
+    constexpr unsigned NUMBER_TEXT_FONT_SIZE = 24;
+    constexpr unsigned PLAYER_TEXT_FONT_SIZE = 14;
+    constexpr int CHOOSE_COLOR_BUTTON_SIZE = 35;
+}
+
 InfoPanel::InfoPanel()
 {
     const auto& fontB = ResourceManager::getFont("poppins_bold");   // TODO should be extra bold
     m_bombsNumText.setPosition(sf::Vector2f{115.f, 320.f});
     m_bombsNumText.setFillColor(sf::Color::White);
-    m_bombsNumText.setCharacterSize(24);
+    m_bombsNumText.setCharacterSize(NUMBER_TEXT_FONT_SIZE);
     m_bombsNumText.setFont(fontB);
     
     updateBombsLeftText(0);
 
     m_helpersSprite.setTexture(ResourceManager::getTexture("helpers"));
-    m_helpersSprite.setPosition(sf::Vector2f{20.f, 20.f});
+    m_helpersSprite.setPosition(sf::Vector2f{35.f, 40.f});
 
     m_linesSprite.setTexture(ResourceManager::getTexture("lines"));
     m_linesSprite.setPosition(sf::Vector2f{20.f, 300.f});
@@ -52,13 +59,10 @@ void InfoPanel::onPlayerJoined(const PlayerInfo& _info)
     player.text.setFont(ResourceManager::getFont("poppins_regular"));
     player.text.setString(_info.networkPlayerCopy.GetName());
     player.text.setFillColor(sf::Color(173, 173, 226));
-    player.text.setCharacterSize(16);
-    player.shape.setSize(sf::Vector2f{19, 19});
-    player.shape.setOutlineColor(sf::Color::White);
-    player.shape.setOutlineThickness(1.5f);
+    player.text.setCharacterSize(PLAYER_TEXT_FONT_SIZE);
 
     const float posY = 450.f + m_players.size() * 40.f;
-    player.shape.setPosition(sf::Vector2f{20.f, posY});
+    player.sprite.setPosition(sf::Vector2f{20.f, posY});
     player.text.setPosition(sf::Vector2f{50.f, posY});
     m_players.emplace_back(std::move(player));
 }
@@ -79,9 +83,14 @@ void InfoPanel::onPlayerInfoUpdated(const PlayerInfo& _info)
         LOG_ERROR("No player info for this id: " + tstr(_info.networkPlayerCopy.GetPlayerId()));
         return;
     }
-    it->isCharacterSpawned = true;
-    
-    it->shape.setFillColor(getColorById(_info.colorId));
+
+    it->sprite.setTexture(ResourceManager::getTexture("choose_color_buttons"));
+    it->sprite.setTextureRect(sf::IntRect{
+                (int)getTextureNumByColorId(_info.colorId) * CHOOSE_COLOR_BUTTON_SIZE,
+                0,
+                CHOOSE_COLOR_BUTTON_SIZE,
+                CHOOSE_COLOR_BUTTON_SIZE});
+    it->sprite.setScale(0.55f, 0.55f);
 }
 
 void InfoPanel::onGameStart(const WorldConfig& _worldConfig)
@@ -108,9 +117,7 @@ void InfoPanel::Draw(sf::RenderWindow& _window)
     _window.draw(m_linesSprite);
     for (auto& player : m_players)
     {
-        if (player.isCharacterSpawned)
-            _window.draw(player.shape);
-                
+        _window.draw(player.sprite);        
         _window.draw(player.text);
     }
 }

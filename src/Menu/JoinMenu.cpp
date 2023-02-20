@@ -34,27 +34,27 @@ JoinMenu::JoinMenu()
     const auto& font = ResourceManager::getFont("poppins_regular");
     m_enterHostAddressText.setFont(font); 
     m_enterHostAddressText.setString("Enter the host address");
-    m_enterHostAddressText.setCharacterSize(DEFAULT_TEXT_SIZE); 
+    m_enterHostAddressText.setCharacterSize(FONT_SIZE_2); 
     m_enterHostAddressText.setFillColor(sf::Color::White);
     m_enterHostAddressText.setPosition(sf::Vector2f(COLUMN_1, LINE_1)); 
     m_enterNameText.setFont(font);
     m_enterNameText.setString("Enter your name");
-    m_enterNameText.setCharacterSize(DEFAULT_TEXT_SIZE); 
+    m_enterNameText.setCharacterSize(FONT_SIZE_2); 
     m_enterNameText.setFillColor(sf::Color::White);
     m_enterNameText.setPosition(sf::Vector2f(COLUMN_1, LINE_3));
     m_chooseColorText.setFont(font);
     m_chooseColorText.setString("Choose your color");
-    m_chooseColorText.setCharacterSize(DEFAULT_TEXT_SIZE); 
+    m_chooseColorText.setCharacterSize(FONT_SIZE_2); 
     m_chooseColorText.setFillColor(sf::Color::White);
     m_chooseColorText.setPosition(sf::Vector2f(COLUMN_2, LINE_3));
     m_joiningText.setFont(font);
     m_joiningText.setString("Joining....");
-    m_joiningText.setCharacterSize(DEFAULT_TEXT_SIZE); 
+    m_joiningText.setCharacterSize(FONT_SIZE_2); 
     m_joiningText.setFillColor(sf::Color::White);
     m_joiningText.setPosition(sf::Vector2f(350, LINE_5));
 
     m_menuItems.emplace_back(std::make_unique<SetOfChoosableButtons>(
-        8,
+        NUMBER_OF_AVAILABLE_COLORS,
         sf::Vector2f(COLUMN_2, LINE_4),
         DISTANCE_BETWEEN_COLOR_BUTTONS,
         ResourceManager::getTexture("choose_color_buttons"),
@@ -85,7 +85,7 @@ JoinMenu::JoinMenu()
         sf::Vector2f(COLUMN_1, LINE_4),
         ResourceManager::getTexture("field1"),
         ResourceManager::getFont("poppins_regular"),
-        "help text ",
+        "name",
         [](sf::Uint32 _char, const std::string& _enteredText){
             (void)_char;
             (void)_enteredText;
@@ -108,6 +108,8 @@ JoinMenu::JoinMenu()
                 inputs.addressToConnect = m_enteredAddress;
                 inputs.playerName = m_enteredName;
                 inputs.playerColorId = static_cast<ColorID>(m_chosenColor);
+                if (inputs.playerColorId == ColorIdInvalid)
+                    inputs.playerColorId = 1;   // TODO move this code elsewhere?
                 Game::Get().OnJoinMenuButtonPressed(inputs);
                 m_isJoining = true;
             }

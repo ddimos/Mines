@@ -123,9 +123,13 @@ private:
     void onDraw(sf::RenderWindow& _window) override;
     void onClick(bool _isButtonPressed) override;
 
+    void onStartEntering();
+    void onFinishEntering();
+
     sf::Sprite m_sprite;
     sf::Text m_inputText;
     std::string m_enteredStr;
+    std::string m_helpText;
 
     bool m_isInInputMode = false;
     ValidateEnteredTextCallback m_onValidateEnteredTextCallback = {};
