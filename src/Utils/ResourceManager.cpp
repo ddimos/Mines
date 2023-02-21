@@ -10,6 +10,7 @@ void ResourceManager::StartUp()
 {
     loadTexture("res/textures/background.png", "background");
     loadTexture("res/textures/transparent_background.png", "transparent_background");
+    loadTexture("res/textures/transparent_background2.png", "transparent_background2");
     loadTexture("res/textures/tileset.png", "tileset");
     loadTexture("res/textures/players.png", "players");
     loadTexture("res/textures/start_menu_buttons.png", "start_menu_buttons");

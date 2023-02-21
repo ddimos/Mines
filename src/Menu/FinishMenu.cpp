@@ -9,14 +9,15 @@ namespace
     constexpr float DESCRIPTION_TEXT_Y = MAIN_TEXT_Y + 44.f;
     constexpr float BUTTON_Y = DESCRIPTION_TEXT_Y + 60.f;
 
-    constexpr int BUTTON_WIDTH = 200;
+    constexpr int BUTTON_WIDTH = 175;
     constexpr int BUTTON_HEIGHT = 50;
+    constexpr int DISTANCE_BETWEEN_BUTTONS = 25;
 }
 
 FinishMenu::FinishMenu()
     : BaseMenu(MenuType::FINISH_MENU)
 {
-    m_background.setTexture(ResourceManager::getTexture("transparent_background"));
+    m_background.setTexture(ResourceManager::getTexture("transparent_background2"));
     m_background.setPosition({0.f, 0.f});
 
     const auto& fontReg = ResourceManager::getFont("poppins_regular");
@@ -32,8 +33,9 @@ FinishMenu::FinishMenu()
     m_descriptionText.setFillColor(sf::Color::White);
     m_descriptionText.setPosition(sf::Vector2f(calculateCenterX(m_descriptionText.getGlobalBounds().width), DESCRIPTION_TEXT_Y));
 
+    int buttonX = (int)calculateCenterX(2 * BUTTON_WIDTH + DISTANCE_BETWEEN_BUTTONS);
     m_menuItems.emplace_back(std::make_unique<Button>(
-        sf::Vector2f(300, BUTTON_Y),
+        sf::Vector2f(buttonX, BUTTON_Y),
         ResourceManager::getTexture("finish_menu_buttons"),
         sf::IntRect{0,            0, BUTTON_WIDTH, BUTTON_HEIGHT},
         sf::IntRect{BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT},
@@ -44,7 +46,7 @@ FinishMenu::FinishMenu()
     ));
 
     m_menuItems.emplace_back(std::make_unique<Button>(
-        sf::Vector2f(500, BUTTON_Y),
+        sf::Vector2f(buttonX + BUTTON_WIDTH + DISTANCE_BETWEEN_BUTTONS, BUTTON_Y),
         ResourceManager::getTexture("finish_menu_buttons"),
         sf::IntRect{0,            BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT},
         sf::IntRect{BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT},

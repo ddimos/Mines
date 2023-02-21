@@ -4,7 +4,7 @@
 
 namespace
 {
-    constexpr int INPUT_FIELD_MARGIN = 5;
+    constexpr int INPUT_FIELD_MARGIN = 10;
     const sf::Color INPUT_FIELD_TEXT_COLOR = sf::Color::Black;
     const sf::Color INPUT_FIELD_HELP_TEXT_COLOR = sf::Color{167, 167, 167};
 }
@@ -177,8 +177,7 @@ InputField::InputField(
     m_inputText.setFillColor(INPUT_FIELD_HELP_TEXT_COLOR);
     m_inputText.setCharacterSize(FONT_SIZE_2); 
     m_inputText.setPosition(
-        _position.x + INPUT_FIELD_MARGIN,
-        (m_sprite.getGlobalBounds().height / 2.f - m_inputText.getGlobalBounds().height / 2.f) + _position.y);
+        _position.x + INPUT_FIELD_MARGIN, _position.y + INPUT_FIELD_MARGIN);
 
 }
 

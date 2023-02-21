@@ -8,11 +8,11 @@ namespace
 {
     constexpr int COLUMN_1 = 100;   // TODO Unite with Join Menu. Can be global
     constexpr int COLUMN_2 = 550;
-    constexpr int LINE_1 = 150;
-    constexpr int LINE_2 = 200;
-    constexpr int LINE_3 = 450;
-    constexpr int LINE_4 = 500;
-    constexpr int LINE_5 = 600;
+    constexpr int LINE_1 = 160;
+    constexpr int LINE_2 = 210;
+    constexpr int LINE_3 = 340;
+    constexpr int LINE_4 = 390;
+    constexpr int LINE_5 = 580;
     
     constexpr int INPUT_FIELD_2_WIDTH = 100;
     constexpr int INPUT_FIELD_2_HEIGHT = 45;

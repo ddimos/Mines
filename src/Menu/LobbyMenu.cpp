@@ -5,10 +5,11 @@
 
 namespace
 {
-    constexpr float WAITING_TEXT_Y = 300.f;
-    constexpr float DESCRIPTION_TEXT_Y = WAITING_TEXT_Y + 44.f;
-    constexpr float BUTTON_Y = DESCRIPTION_TEXT_Y + 60.f;
+    constexpr float WAITING_TEXT_Y = 280.f;
+    constexpr float DESCRIPTION_TEXT_Y = WAITING_TEXT_Y + 54.f;
+    constexpr float BUTTON_Y = DESCRIPTION_TEXT_Y + 85.f;
 
+    constexpr float OFFSET_FOR_NOT_HOSTS_Y = 40.f;
 }
 LobbyMenu::LobbyMenu()
     : BaseMenu(MenuType::LOBBY_MENU)
@@ -49,13 +50,15 @@ void LobbyMenu::onActivate()
         ));
 
         m_descriptionText.setString("You can start the game");
+        m_descriptionText.setPosition(sf::Vector2f(calculateCenterX(m_descriptionText.getGlobalBounds().width), DESCRIPTION_TEXT_Y));
     }
     else
     {
         m_descriptionText.setString(
-            "The game will start once everyone is here");
+            "  The game will start\nonce everyone is here");
+        m_waitingText.move(0.f, OFFSET_FOR_NOT_HOSTS_Y);
+        m_descriptionText.setPosition(sf::Vector2f(calculateCenterX(m_descriptionText.getGlobalBounds().width), DESCRIPTION_TEXT_Y + OFFSET_FOR_NOT_HOSTS_Y));
     }
-    m_descriptionText.setPosition(sf::Vector2f(calculateCenterX(m_descriptionText.getGlobalBounds().width), DESCRIPTION_TEXT_Y));
 }
 
 void LobbyMenu::onDraw(sf::RenderWindow& _window)
