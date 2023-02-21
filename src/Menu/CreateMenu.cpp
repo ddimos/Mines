@@ -79,7 +79,7 @@ CreateMenu::CreateMenu()
             CHOOSE_FILED_BUTTON_WIDTH,
             CHOOSE_FIELD_BUTTON_HEIGHT},
         [this](unsigned _buttonNum, bool _isChosen){
-            LOG("CHOOSE SIZE " + tstr(_buttonNum) + " - " + tstr(_isChosen));
+            LOG_DEBUG("CHOOSE SIZE " + tstr(_buttonNum) + " - " + tstr(_isChosen));
             onFieldSizeButtonChosen(_buttonNum, _isChosen);
         }
     ));
@@ -93,7 +93,7 @@ CreateMenu::CreateMenu()
             CHOOSE_COLOR_BUTTON_SIZE,
             CHOOSE_COLOR_BUTTON_SIZE},
         [this](unsigned _buttonNum, bool _isChosen){
-            LOG("CHOOSE Color " + tstr(_buttonNum) + " - " + tstr(_isChosen));
+            LOG_DEBUG("CHOOSE Color " + tstr(_buttonNum) + " - " + tstr(_isChosen));
             onColorButtonChosen(_buttonNum, _isChosen);
         }
     ));
@@ -109,7 +109,7 @@ CreateMenu::CreateMenu()
             return true;
         },
         [this](const std::string& _enteredText){
-            LOG("Input finish " + _enteredText);
+            LOG_DEBUG("Input finish " + _enteredText);
             m_enteredName = _enteredText;
         }
     ));
@@ -124,7 +124,7 @@ CreateMenu::CreateMenu()
             return validateNumber(_char, _enteredText, maxWorldWidth);
         },
         [this](const std::string& _enteredText){
-            LOG("Input finish " + _enteredText);
+            LOG_DEBUG("Input finish " + _enteredText);
             m_enteredWidth = std::stoi(_enteredText);
         }
     ));
@@ -140,7 +140,7 @@ CreateMenu::CreateMenu()
             return validateNumber(_char, _enteredText, maxWorldHeight);
         },
         [this](const std::string& _enteredText){
-            LOG("Input finish " + _enteredText);
+            LOG_DEBUG("Input finish " + _enteredText);
             m_enteredHeight = std::stoi(_enteredText);
         }
     ));
@@ -157,7 +157,7 @@ CreateMenu::CreateMenu()
             return validateNumber(_char, _enteredText, maxWorldBombsCount > maxPosibleBombs ? maxPosibleBombs : maxWorldBombsCount);
         },
         [this](const std::string& _enteredText){
-            LOG("Input finish " + _enteredText);
+            LOG_DEBUG("Input finish " + _enteredText);
             m_enteredBombsCount = std::stoi(_enteredText);
         }
     ));
@@ -169,7 +169,7 @@ CreateMenu::CreateMenu()
         sf::IntRect{0,                  0, START_BUTTON_WIDTH, START_BUTTON_HEIGHT},
         sf::IntRect{START_BUTTON_WIDTH, 0, START_BUTTON_WIDTH, START_BUTTON_HEIGHT},
         [this](){
-            LOG("Start Game click ");
+            LOG_DEBUG("Start Game click ");
             MenuInputs inputs;
             inputs.playerName = m_enteredName;
             inputs.worldConfig.bombsCount = m_enteredBombsCount;

@@ -77,7 +77,7 @@ void Character::readControls()
     m_controls.isUpPressed = Game::isKeyPressed(sf::Keyboard::Up);
     m_controls.isDownPressed = Game::isKeyPressed(sf::Keyboard::Down);
     m_controls.isSpacePressed = Game::isKeyPressed(sf::Keyboard::Space);
-    m_controls.isXPressed = Game::isKeyPressed(sf::Keyboard::X);
+    m_controls.isXPressed = Game::isKeyPressed(sf::Keyboard::F);
 }
 
 void Character::updateStateFromControls()

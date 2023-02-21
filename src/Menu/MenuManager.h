@@ -12,7 +12,7 @@ class MenuManager
 {
 public:
     MenuManager(sf::RenderWindow& _window);
-    ~MenuManager();
+    ~MenuManager() = default;
 
     void OnInit();
 

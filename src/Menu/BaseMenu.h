@@ -15,7 +15,6 @@ enum class MenuType
     CREATE_MENU,
     JOIN_MENU,
     LOBBY_MENU,
-    //GAME_MENU,
     FINISH_MENU
 };
 

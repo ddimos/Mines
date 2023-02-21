@@ -11,10 +11,6 @@ MenuManager::MenuManager(sf::RenderWindow& _window)
 {
 }
 
-MenuManager::~MenuManager()
-{
-}
-
 void MenuManager::OnInit()
 {
     m_menus.insert_or_assign(MenuType::START_MENU, std::make_unique<StartMenu>());

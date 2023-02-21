@@ -40,7 +40,7 @@ void LobbyMenu::onActivate()
     {
         m_menuItems.emplace_back(std::make_unique<Button>(
             sf::Vector2f(MenuItem::CENTER_ALLIGNED, BUTTON_Y),
-            ResourceManager::getTexture("create_menu_start_button"),    // TODO use a different texture
+            ResourceManager::getTexture("create_menu_start_button"),
             sf::IntRect{0,   0, 200, 62},
             sf::IntRect{200, 0, 200, 62},
             [this](){
