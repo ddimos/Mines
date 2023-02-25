@@ -28,35 +28,35 @@ LobbyMenu::LobbyMenu()
     m_descriptionText.setCharacterSize(FONT_SIZE_3); 
     m_descriptionText.setFillColor(sf::Color::White);
     m_descriptionText.setPosition(sf::Vector2f(calculateCenterX(m_descriptionText.getGlobalBounds().width), DESCRIPTION_TEXT_Y));
+
+    m_menuItems.emplace_back(std::make_unique<Button>(
+        sf::Vector2f(MenuItem::CENTER_ALLIGNED, BUTTON_Y),
+        ResourceManager::getTexture("create_menu_start_button"),
+        sf::IntRect{0,   0, 200, 62},
+        sf::IntRect{200, 0, 200, 62},
+        [this](){
+            LOG("Start Game click ");
+            Game::Get().OnLobbyMenuButtonPressed();
+        }
+    ));
+    m_button = m_menuItems.back().get();
 }
 
 void LobbyMenu::onActivate()
 {
-    if (!m_isFirstActivation)
-        return;
-    m_isFirstActivation = false;
-
     if (Game::Get().IsSessionMaster())
     {
-        m_menuItems.emplace_back(std::make_unique<Button>(
-            sf::Vector2f(MenuItem::CENTER_ALLIGNED, BUTTON_Y),
-            ResourceManager::getTexture("create_menu_start_button"),
-            sf::IntRect{0,   0, 200, 62},
-            sf::IntRect{200, 0, 200, 62},
-            [this](){
-                LOG("Start Game click ");
-                Game::Get().OnLobbyMenuButtonPressed();
-            }
-        ));
-
+        m_waitingText.setPosition(m_waitingText.getPosition().x, WAITING_TEXT_Y);
         m_descriptionText.setString("You can start the game");
         m_descriptionText.setPosition(sf::Vector2f(calculateCenterX(m_descriptionText.getGlobalBounds().width), DESCRIPTION_TEXT_Y));
     }
     else
     {
+        m_button->Deactivate();
+
+        m_waitingText.setPosition(m_waitingText.getPosition().x, WAITING_TEXT_Y + OFFSET_FOR_NOT_HOSTS_Y);
         m_descriptionText.setString(
             "  The game will start\nonce everyone is here");
-        m_waitingText.move(0.f, OFFSET_FOR_NOT_HOSTS_Y);
         m_descriptionText.setPosition(sf::Vector2f(calculateCenterX(m_descriptionText.getGlobalBounds().width), DESCRIPTION_TEXT_Y + OFFSET_FOR_NOT_HOSTS_Y));
     }
 }

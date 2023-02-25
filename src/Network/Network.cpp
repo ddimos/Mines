@@ -123,6 +123,15 @@ void Network::JoinSession(NetworkAddress _address, const std::string& _playerNam
     connect(_address);
 }
 
+void Network::LeaveSession()
+{
+    disconnect();
+    m_isSessionCreated = false;
+    m_connectingToHost = false;
+    m_isSessionMaster = false;
+    m_localPlayer = nullptr;
+}
+
 void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
 {
     Peer* senderPeer = getPeer(_sender);
@@ -293,21 +302,17 @@ void Network::connect(NetworkAddress _addressToConnect)
     createPeerInternal(_addressToConnect, false);
 }
 
-void Network::disconnect(NetworkAddress _addressToDisconnect)
+void Network::disconnect()
 {
-    if (_addressToDisconnect.address == sf::IpAddress::Broadcast)
+    for (Peer& peer : m_peers)
+        peer.Close();
+    
+    LOG("Disconnect");
+
+    if (m_isSessionMaster && m_peers.empty())
     {
-        for (Peer& peer : m_peers)
-            peer.Close();
-    }
-    else
-    {
-        if (Peer* peer = getPeer(_addressToDisconnect))
-        {
-            peer->Close();
-            return;
-        }   
-        LOG_ERROR("Don't disconnect from " + _addressToDisconnect.toString() + " because this peer is not connected now.");
+        m_localPlayer->m_isLeft = true;
+        m_events.emplace(NetworkEvent(NetworkEvent::Type::ON_PLAYER_LEAVE, *m_localPlayer));
     }
 }
 

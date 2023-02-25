@@ -10,12 +10,16 @@ BaseMenu::BaseMenu(MenuType _type)
 void BaseMenu::Activate()
 {
     m_isActive = true;
+    for (auto& item : m_menuItems)
+        item->Activate();
     onActivate();
 }
 
 void BaseMenu::Deactivate() 
 {
     m_isActive = false;
+    for (auto& item : m_menuItems)
+        item->Deactivate();
     onDeactivate();
 }
 
@@ -23,7 +27,6 @@ void BaseMenu::Update()
 {
     for (auto& item : m_menuItems)
         item->Update();
-
     onUpdate();
 }
 

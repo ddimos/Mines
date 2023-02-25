@@ -8,8 +8,6 @@ public:
     ~CreateMenu() = default;
 
 private:
-    void onActivate() override {}
-    void onDeactivate() override {}
     void onDraw(sf::RenderWindow& _window) override;
     void onFieldSizeButtonChosen(unsigned _buttonNum, bool _isChosen);
     void onColorButtonChosen(unsigned _buttonNum, bool _isChosen);

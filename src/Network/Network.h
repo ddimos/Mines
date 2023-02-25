@@ -26,6 +26,8 @@ public:
     void CreateAndJoinSession(const std::string& _playerName);  // Should be just CreateSession when I have a server
     void JoinSession(NetworkAddress _address, const std::string& _name);
 
+    void LeaveSession();
+
     bool IsSessionMaster() const { return m_isSessionMaster; }
     PeerID GetHostPeerId() const { return m_hostPeerId; }
 
@@ -43,7 +45,7 @@ private:
     Peer* getPeer(PeerID _peerId);
 
     void connect(NetworkAddress _addressToConnect);
-    void disconnect(NetworkAddress _addressToDisconnect); 
+    void disconnect(); 
 
     void onConnect(Peer& _peer);
     void onDisconnect(const Peer& _peer);

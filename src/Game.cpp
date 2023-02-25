@@ -165,6 +165,7 @@ void Game::onStateEnter(GameState _newState)
     switch (_newState)
     {
     case GameState::INIT:
+        m_wantsToReturnToMenu = false;
         m_menuManager.Push(MenuType::START_MENU);
         break;
     case GameState::CREATE:
@@ -210,7 +211,7 @@ void Game::onStateEnter(GameState _newState)
 
 void Game::onStateExit(GameState _oldState)
 {
-        m_menuManager.Pop();    // Do I need Pop
+    m_menuManager.Pop();
     switch (_oldState)
     {
     case GameState::INIT:
@@ -256,7 +257,6 @@ void Game::updateState()
         break;
     case GameState::FINISH:
         newState = m_wantsToReturnToMenu ? GameState::INIT : GameState::LOBBY;
-        // TODO to make a proper clean
         break;
     default:
         break;
@@ -318,6 +318,13 @@ void Game::receiveNetworkMessages()
         {
             LOG("ON_PLAYER_LEAVE " + event.player.GetName());
 
+            if (event.player.IsLocal())
+            {
+                m_isJoiningOrJoined = false;
+                m_localPlayerId = PlayerIdInvalid;
+                m_wantsToReturnToMenu = true;
+            }
+            
             auto it = std::find_if(m_players.begin(), m_players.end(),
             [&event](const PlayerInfo& _p){ return _p.networkPlayerCopy.GetPlayerId() == event.player.GetPlayerId(); });
             notifyGameListeners([it](GameListener* _list) {
@@ -485,6 +492,7 @@ void Game::OnCreateMenuButtonPressed(const MenuInputs& _input)
 
 void Game::OnJoinMenuButtonPressed(const MenuInputs& _input)
 {
+    // TODO handle a failure
     if (m_currentState != GameState::JOIN || m_isJoiningOrJoined)
         return;
 
@@ -526,6 +534,7 @@ void Game::OnFinishMenuBackToMenuButtonPressed()
     if (m_currentState != GameState::FINISH)
         return;
 
+    Network::Get().LeaveSession();
     m_wantsToChangeState = true;
     m_wantsToReturnToMenu = true;
 }
@@ -591,7 +600,7 @@ void Game::Update(float _dt)
     }
     else if (m_currentState == GameState::LOBBY)
     {
-// #if DEBUG    TODO
+#if 0    // TODO add a DEBUG define
         if (isKeyPressed(sf::Keyboard::S))
         {
             NetworkMessage message(true);
@@ -601,13 +610,8 @@ void Game::Update(float _dt)
             Network::Get().Send(message);
         }
         if (isKeyPressed(sf::Keyboard::J))
-        {
-            NetworkAddress address;
-            address.address = sf::IpAddress::Broadcast;
-            // TODO Network::Get().LeaveSession;
-        }
-// #endif
-        
+            Network::Get().LeaveSession();
+#endif   
     }
     else if (m_currentState == GameState::GAME)
     {

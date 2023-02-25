@@ -14,9 +14,16 @@ public:
     void Update();
     void Draw(sf::RenderWindow& _window);
 
+    void Activate();
+    void Deactivate();
+
 protected:
     virtual void onUpdate() {}
     virtual void onDraw(sf::RenderWindow& _window) {(void)_window;}
+    virtual void onActivate() {}
+    virtual void onDeactivate() {}
+
+    bool m_isActivated = false;
 };
 
 // ---------------------------------------------------------
@@ -156,6 +163,9 @@ public:
 private:
     void onUpdate() override;
     void onDraw(sf::RenderWindow& _window) override;
+    void onActivate() override;
+    void onDeactivate() override;
+
     void onButtonChosen(ChoosableButton& _button, bool _isChosen, unsigned _num);
 
     std::vector<ChoosableButton> m_buttons;

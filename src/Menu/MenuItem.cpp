@@ -11,13 +11,30 @@ namespace
 
 void MenuItem::Update()
 {
+    if (!m_isActivated)
+        return;
     onUpdate();
 }
 
 void MenuItem::Draw(sf::RenderWindow& _window)
 {
+    if (!m_isActivated)
+        return;
     onDraw(_window);
 }
+
+void MenuItem::Activate()
+{
+    m_isActivated = true;
+    onActivate();
+}
+
+void MenuItem::Deactivate()
+{
+    m_isActivated = false;
+    onDeactivate();
+}
+
 
 // ---------------------------------------------------------
 
@@ -316,6 +333,18 @@ void SetOfChoosableButtons::onDraw(sf::RenderWindow& _window)
 {
     for(auto& button : m_buttons)
         button.Draw(_window);
+}
+
+void SetOfChoosableButtons::onActivate()
+{
+    for(auto& button : m_buttons)
+        button.Activate();
+}
+
+void SetOfChoosableButtons::onDeactivate()
+{
+    for(auto& button : m_buttons)
+        button.Deactivate();
 }
 
 void SetOfChoosableButtons::onButtonChosen(ChoosableButton& _button, bool _isChosen, unsigned _num)
