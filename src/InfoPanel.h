@@ -26,8 +26,7 @@ private:
 
     void updateBombsLeftText(int _newNumber);
     
-    sf::Sprite m_helpersSprite;
-    sf::Sprite m_linesSprite;
+    sf::Sprite m_infoPanelSprite;
     sf::Text m_bombsNumText;
 
     bool m_isMaster = true;

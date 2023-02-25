@@ -10,24 +10,33 @@ namespace
 {
     constexpr unsigned NUMBER_TEXT_FONT_SIZE = 24;
     constexpr unsigned PLAYER_TEXT_FONT_SIZE = 14;
+
     constexpr int CHOOSE_COLOR_BUTTON_SIZE = 35;
+
+    const sf::Vector2f NUMBER_TEXT_POS{155.f, 297.f};
+    
+    constexpr float PLAYER_X = 30.f;
+    constexpr float FIRST_PLAYER_Y = 420.f;
+    constexpr float PLAYER_TEXT_OFFSET_X = 30.f;
+    constexpr float DISTANCE_BETWEEN_PLAYERS_Y = 43.f;
+
+    constexpr float PLAYER_SPRITE_SCALE = 0.55f;
+
+    const sf::Color PLAYER_TEXT_COLOR(173, 173, 226);
 }
 
 InfoPanel::InfoPanel()
 {
     const auto& fontB = ResourceManager::getFont("poppins_bold");   // TODO should be extra bold
-    m_bombsNumText.setPosition(sf::Vector2f{115.f, 320.f});
+    m_bombsNumText.setPosition(NUMBER_TEXT_POS);
     m_bombsNumText.setFillColor(sf::Color::White);
     m_bombsNumText.setCharacterSize(NUMBER_TEXT_FONT_SIZE);
     m_bombsNumText.setFont(fontB);
     
     updateBombsLeftText(0);
 
-    m_helpersSprite.setTexture(ResourceManager::getTexture("helpers"));
-    m_helpersSprite.setPosition(sf::Vector2f{35.f, 40.f});
-
-    m_linesSprite.setTexture(ResourceManager::getTexture("lines"));
-    m_linesSprite.setPosition(sf::Vector2f{20.f, 300.f});
+    m_infoPanelSprite.setTexture(ResourceManager::getTexture("info_panel"));
+    m_infoPanelSprite.setPosition(sf::Vector2f{0.f, 0.f});
 }   
 
 void InfoPanel::updateBombsLeftText(int _newNumber)
@@ -41,29 +50,18 @@ void InfoPanel::OnInit()
     Game::Get().RegisterGameListener(this);
 }
 
-// void InfoPanel::OnGameFinish(bool _isVictory)
-// {
-//     sf::String text1 = _isVictory ? ":)" : ":(" ;
-//     m_welcomeText.setString(text1);
-//     sf::String text2 = m_isMaster
-//                 ? "To restart press R!!"
-//                 : "Wait for the host\nto restart"; // TODO \n\nOr press R\nto go to Menu";
-//     m_text.setString(text2);
-//     m_bombsNumText.setString("");
-// }
-
 void InfoPanel::onPlayerJoined(const PlayerInfo& _info)
 {
     PlayerText player;
     player.info = _info;
     player.text.setFont(ResourceManager::getFont("poppins_regular"));
     player.text.setString(_info.networkPlayerCopy.GetName());
-    player.text.setFillColor(sf::Color(173, 173, 226));
+    player.text.setFillColor(PLAYER_TEXT_COLOR);
     player.text.setCharacterSize(PLAYER_TEXT_FONT_SIZE);
 
-    const float posY = 450.f + m_players.size() * 40.f;
-    player.sprite.setPosition(sf::Vector2f{20.f, posY});
-    player.text.setPosition(sf::Vector2f{50.f, posY});
+    const float posY = FIRST_PLAYER_Y + m_players.size() * DISTANCE_BETWEEN_PLAYERS_Y;
+    player.sprite.setPosition(sf::Vector2f{PLAYER_X, posY});
+    player.text.setPosition(sf::Vector2f{PLAYER_X + PLAYER_TEXT_OFFSET_X, posY});
     m_players.emplace_back(std::move(player));
 }
 
@@ -90,7 +88,7 @@ void InfoPanel::onPlayerInfoUpdated(const PlayerInfo& _info)
                 0,
                 CHOOSE_COLOR_BUTTON_SIZE,
                 CHOOSE_COLOR_BUTTON_SIZE});
-    it->sprite.setScale(0.55f, 0.55f);
+    it->sprite.setScale(PLAYER_SPRITE_SCALE, PLAYER_SPRITE_SCALE);
 }
 
 void InfoPanel::onGameStart(const WorldConfig& _worldConfig)
@@ -112,9 +110,8 @@ void InfoPanel::Update(float _dt)
 
 void InfoPanel::Draw(sf::RenderWindow& _window)
 {
+    _window.draw(m_infoPanelSprite);
     _window.draw(m_bombsNumText);
-    _window.draw(m_helpersSprite);
-    _window.draw(m_linesSprite);
     for (auto& player : m_players)
     {
         _window.draw(player.sprite);        

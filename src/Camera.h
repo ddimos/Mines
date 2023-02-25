@@ -24,7 +24,6 @@ private:
     WorldPosition   m_worldSize = {0, 0};
     WorldPosition   m_initialTargetedPos = {0, 0};
     
-    bool            m_blockCamera = false;
     sf::Vector2f    m_sizeInWindowsCoord = {};
     const float     m_speed = 10.f;
 };

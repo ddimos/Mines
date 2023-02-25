@@ -14,12 +14,11 @@ void Camera::OnInit(WorldPosition _worldSize)
 {
     m_worldSize = _worldSize;
     m_worldSizeInWindowsCoord = getWindowPosition(_worldSize.x, _worldSize.y);
+
     WorldPosition size;
     size.setFromWindowPosition(m_sizeInWindowsCoord);
-    m_initialTargetedPos.x = (m_worldSizeInWindowsCoord.x >= m_sizeInWindowsCoord.x) 
-    ? m_worldSize.x / 2 : size.x / 2;
-    m_initialTargetedPos.y = (m_worldSizeInWindowsCoord.y >= m_sizeInWindowsCoord.y) 
-    ? m_worldSize.y / 2 : size.y / 2;
+    m_initialTargetedPos.x = m_worldSize.x / 2;
+    m_initialTargetedPos.y = m_worldSize.y / 2;
     m_posInWindowsCoord = m_initialTargetedPos.getWindowPosition();
 }
 

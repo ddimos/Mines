@@ -27,7 +27,7 @@ enum class GameState
 struct MenuInputs
 {
     std::string addressToConnect = "";
-    WorldConfig worldConfig = {};// WorldConfigs::GetSmallWorld();
+    WorldConfig worldConfig = {};
     ColorID playerColorId = ColorIdInvalid;
     std::string playerName = "";
 };
@@ -58,15 +58,13 @@ public:
     void OnCharacterToggleFlagCell(const Cell& _cell, const Character& _char);
     void OnGameEnded(bool _isVictory, PlayerID _loserId = PlayerIdInvalid);
 
-    void OnStartMenuStartButtonPressed();   // not really happy abour the names
+    void OnStartMenuStartButtonPressed();   // TODO not really happy abour the names and how it's set up
     void OnStartMenuJoinButtonPressed();
     void OnCreateMenuButtonPressed(const MenuInputs& _input);
     void OnJoinMenuButtonPressed(const MenuInputs& _input);
     void OnLobbyMenuButtonPressed();
     void OnFinishMenuStartAgainButtonPressed();
     void OnFinishMenuBackToMenuButtonPressed();
-    // void OnStartButtonPressed();
-    // void OnJoinButtonPressed();
 
     void OnTextEntered(sf::Uint32 _char);
     sf::Uint32 GetEnteredChar() const { return m_enteredChar; }
