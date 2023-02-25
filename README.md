@@ -1,7 +1,7 @@
 # Mines
 A SFML multiplayer copy of minesweeper
 
-![game](https://user-images.githubusercontent.com/43299351/221376906-f8c372a4-b027-4d8b-937e-9a89b3c2b7de.png)
+![game3](https://user-images.githubusercontent.com/43299351/221378722-4018794f-da8f-476f-9f66-92c9e3e11cef.png)
 
 ## Installation
 ### Ubuntu 
