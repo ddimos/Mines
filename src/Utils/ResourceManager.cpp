@@ -33,7 +33,7 @@ void ResourceManager::loadTexture(std::string _path, std::string _name)
     sf::Texture texture;
     if (!texture.loadFromFile(_path))
     {
-        LOG_ERROR("Couldn't load a texture " + _path);
+        LOG_ERROR(Logger::Type::SYSTEM, "Couldn't load a texture " + _path);
         return;
     }
     ms_textures.insert_or_assign(_name, texture);
@@ -44,7 +44,7 @@ void ResourceManager::loadFont(std::string _path, std::string _name)
     sf::Font font;
     if (!font.loadFromFile(_path))
     {
-        LOG_ERROR("Couldn't load a font " + _path);
+        LOG_ERROR(Logger::Type::SYSTEM, "Couldn't load a font " + _path);
         return;
     }
     ms_fonts.insert_or_assign(_name, font);
@@ -56,7 +56,7 @@ const sf::Texture& ResourceManager::getTexture(std::string _name)
     if (it != ms_textures.end())
         return it->second;
 
-    LOG_ERROR("Couldn't find a texture " + _name);
+    LOG_ERROR(Logger::Type::SYSTEM, "Couldn't find a texture " + _name);
     return ms_nullTexture;
 }
 
@@ -66,6 +66,6 @@ const sf::Font& ResourceManager::getFont(std::string _name)
     if (it != ms_fonts.end())
         return it->second;
 
-    LOG_ERROR("Couldn't find a font " + _name);
+    LOG_ERROR(Logger::Type::SYSTEM, "Couldn't find a font " + _name);
     return ms_nullFont;
 }

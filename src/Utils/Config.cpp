@@ -1,5 +1,5 @@
 #include "Utils/Config.h"
-#include "Utils/Log.h"
+#include <iostream>
 #include <algorithm>
 #include <fstream>
 #include <sstream>
@@ -37,7 +37,7 @@ void Config::loadAndParseFile(const std::string& _filePath)
     std::ifstream readFile(_filePath);
     if (!readFile.is_open())
     {
-        LOG_ERROR("Cannot open the config file");
+        std::cout << "Cannot open the config file" << std::endl;
         return;
     }
 

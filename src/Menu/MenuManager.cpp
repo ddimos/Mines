@@ -24,14 +24,14 @@ void MenuManager::Push(MenuType _menuType)
 {
     if (m_currentMenu)
     {
-        LOG_ERROR("Multiple menus is not supported in the stack");
+        LOG_ERROR(Logger::Type::MENU, "Multiple menus is not supported in the stack");
 
         m_currentMenu->Deactivate();
     }
     auto it = m_menus.find(_menuType);
     if (it == m_menus.end())
     {
-        LOG_ERROR("Menu wasn't found"); // TODO add a name
+        LOG_ERROR(Logger::Type::MENU, "Menu wasn't found"); // TODO add a name
         return;
     }
     

@@ -62,7 +62,7 @@ JoinMenu::JoinMenu()
             CHOOSE_COLOR_BUTTON_SIZE,
             CHOOSE_COLOR_BUTTON_SIZE},
         [this](unsigned _buttonNum, bool _isChosen){
-            LOG_DEBUG("CHOOSE Color " + tstr(_buttonNum) + " - " + tstr(_isChosen));
+            LOG_DEBUG(Logger::Type::MENU, "CHOOSE Color " + tstr(_buttonNum) + " - " + tstr(_isChosen));
             onColorButtonChosen(_buttonNum, _isChosen);
         }
     ));
@@ -76,7 +76,7 @@ JoinMenu::JoinMenu()
             return validateAddress(_char, _enteredText);
         },
         [this](const std::string& _enteredText){
-            LOG_DEBUG("Input finish " + _enteredText);
+            LOG_DEBUG(Logger::Type::MENU, "Input finish " + _enteredText);
             m_enteredAddress = _enteredText;
         }
     ));
@@ -92,7 +92,7 @@ JoinMenu::JoinMenu()
             return true;
         },
         [this](const std::string& _enteredText){
-            LOG_DEBUG("Input finish " + _enteredText);
+            LOG_DEBUG(Logger::Type::MENU, "Input finish " + _enteredText);
             m_enteredName = _enteredText;
         }
     ));
@@ -103,7 +103,7 @@ JoinMenu::JoinMenu()
             sf::IntRect{0,                 0, JOIN_BUTTON_WIDTH, JOIN_BUTTON_HEIGHT},
             sf::IntRect{JOIN_BUTTON_WIDTH, 0, JOIN_BUTTON_WIDTH, JOIN_BUTTON_HEIGHT},
             [this](){
-                LOG_DEBUG("Join Game click ");
+                LOG_DEBUG(Logger::Type::MENU, "Join Game click ");
                 MenuInputs inputs;
                 inputs.addressToConnect = m_enteredAddress;
                 inputs.playerName = m_enteredName;

@@ -35,7 +35,7 @@ LobbyMenu::LobbyMenu()
         sf::IntRect{0,   0, 200, 62},
         sf::IntRect{200, 0, 200, 62},
         [this](){
-            LOG_DEBUG("Start Game click ");
+            LOG_DEBUG(Logger::Type::MENU, "Start Game click ");
             Game::Get().OnLobbyMenuButtonPressed();
         }
     ));

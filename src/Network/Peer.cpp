@@ -28,7 +28,7 @@ void Peer::Update(float _dt)
         if (_info.timeout <= 0.f)
         {
             Connection::Send(_info.packet, m_address);
-            LOG_DEBUG("onReliableSent again. Sequence number: " + tstr(_info.seqNum));
+            LOG_DEBUG(Logger::Type::NETWORK, "onReliableSent again. Sequence number: " + tstr(_info.seqNum));
             _info.timeout = TIME_TO_RESEND_s;
         }   
     }
@@ -50,7 +50,7 @@ void Peer::Send(const NetworkMessage& _message)
 
 void Peer::onReliableSent(sf::Packet _packet, sf::Uint32 _seqNum)
 {
-    LOG_DEBUG("onReliableSent. Sequence number: " + tstr(_seqNum));
+    LOG_DEBUG(Logger::Type::NETWORK, "onReliableSent. Sequence number: " + tstr(_seqNum));
     auto it = std::find_if(m_reliableSent.begin(), m_reliableSent.end(), 
                             [_seqNum](const ReliablePacketInfo& _info) { return _info.seqNum == _seqNum; });
     
@@ -60,7 +60,7 @@ void Peer::onReliableSent(sf::Packet _packet, sf::Uint32 _seqNum)
 
 void Peer::sendAR(sf::Uint32 _seqNum)
 {
-    LOG_DEBUG("Send AR. Sequence number: " + tstr(_seqNum));
+    LOG_DEBUG(Logger::Type::NETWORK, "Send AR. Sequence number: " + tstr(_seqNum));
     sf::Packet packet;
     PacketHeader header(InternalPacketType::INTERNAL_AR, false, _seqNum);
     header.Serialize(packet);
@@ -76,13 +76,13 @@ void Peer::OnReliableReceived(sf::Uint32 _seqNum, const NetworkMessage& _message
 
     if (_seqNum <= m_sequenceNumberOfLastDelivered) // Drop
     {
-        LOG("Drop the message. Received sequence number: " + tstr(_seqNum) + " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
+        LOG(Logger::Type::NETWORK, "Drop the message. Received sequence number: " + tstr(_seqNum) + " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
         return;
     }
     
     if (_seqNum - m_sequenceNumberOfLastDelivered > 1) // Store
     {
-        LOG("Store the message. Received sequence number: " + tstr(_seqNum) + " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
+        LOG(Logger::Type::NETWORK, "Store the message. Received sequence number: " + tstr(_seqNum) + " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
         m_messagesToStore.insert({_seqNum, _message});
         return;
     }    
@@ -90,15 +90,15 @@ void Peer::OnReliableReceived(sf::Uint32 _seqNum, const NetworkMessage& _message
     m_messagesToDeliver.push(_message);
     ++m_sequenceNumberOfLastDelivered;
 
-    LOG_DEBUG("Deliver message seqNum: " + tstr(_seqNum)+ " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
+    LOG_DEBUG(Logger::Type::NETWORK, "Deliver message seqNum: " + tstr(_seqNum)+ " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
     for (const auto& [storeSeqNum, storeMessage] : m_messagesToStore)
     {
-        LOG_DEBUG("Stored message seqNum: " + tstr(storeSeqNum));
+        LOG_DEBUG(Logger::Type::NETWORK, "Stored message seqNum: " + tstr(storeSeqNum));
         if (storeSeqNum - m_sequenceNumberOfLastDelivered == 1)
         {
             m_messagesToDeliver.push(storeMessage);
             ++m_sequenceNumberOfLastDelivered;
-            LOG_DEBUG("Deliver message from stored seqNum: " + tstr(storeSeqNum)+ " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
+            LOG_DEBUG(Logger::Type::NETWORK, "Deliver message from stored seqNum: " + tstr(storeSeqNum)+ " sequence number of last delivered: " + tstr(m_sequenceNumberOfLastDelivered));
         }
     }
 

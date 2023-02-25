@@ -40,7 +40,7 @@ FinishMenu::FinishMenu()
         sf::IntRect{0,            0, BUTTON_WIDTH, BUTTON_HEIGHT},
         sf::IntRect{BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT},
         [this](){
-            LOG_DEBUG("Start Again click ");
+            LOG_DEBUG(Logger::Type::MENU, "Start Again click ");
             Game::Get().OnFinishMenuStartAgainButtonPressed();
         }
     ));
@@ -51,7 +51,7 @@ FinishMenu::FinishMenu()
         sf::IntRect{0,            BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT},
         sf::IntRect{BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT},
         [this](){
-            LOG_DEBUG("Back To Menu click ");
+            LOG_DEBUG(Logger::Type::MENU, "Back To Menu click ");
             Game::Get().OnFinishMenuBackToMenuButtonPressed();
         }
     ));

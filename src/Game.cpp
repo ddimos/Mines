@@ -108,7 +108,7 @@ void Game::initGame()
     if (IsSessionMaster())
         m_seed = time(NULL);
 
-    LOG("Create a game world. Seed: " + tstr(m_seed) + " X: " + tstr(m_worldConfig.worldSize.x)
+    LOG(Logger::Type::GAME, "Create a game world. Seed: " + tstr(m_seed) + " X: " + tstr(m_worldConfig.worldSize.x)
                                                      + " Y: " + tstr(m_worldConfig.worldSize.y)
                                                      + " Bombs: " + tstr(m_worldConfig.bombsCount));
     provideSeed(m_seed);    
@@ -140,7 +140,7 @@ bool Game::updatePlayerColor(PlayerID _playerId, ColorID _colorId)
     auto* playerInfo = GetPlayerInfo(_playerId);
     if (!playerInfo)
     {
-        LOG_ERROR("Couldn't find a player with id: " + tstr(_playerId));
+        LOG_ERROR(Logger::Type::GAME, "Couldn't find a player with id: " + tstr(_playerId));
         return false;
     }
 
@@ -263,7 +263,7 @@ void Game::updateState()
     }
 
     onStateExit(m_currentState);
-    LOG("Change the game state from: " + toString(m_currentState) + " to: "+ toString(newState));
+    LOG(Logger::Type::GAME, "Change the game state from: " + toString(m_currentState) + " to: "+ toString(newState));
     m_currentState = newState;
     onStateEnter(m_currentState);
 }
@@ -280,7 +280,7 @@ void Game::receiveNetworkMessages()
         {
         case NetworkEvent::Type::ON_PLAYER_JOIN: 
         {
-            LOG("ON_PLAYER_JOIN " + event.player.GetName());
+            LOG(Logger::Type::GAME, "ON_PLAYER_JOIN " + event.player.GetName());
             
             PlayerInfo playerInfo;  // Do I even need this playerInfo??
             playerInfo.networkPlayerCopy = event.player;
@@ -316,7 +316,7 @@ void Game::receiveNetworkMessages()
         }
         case NetworkEvent::Type::ON_PLAYER_LEAVE:
         {
-            LOG("ON_PLAYER_LEAVE " + event.player.GetName());
+            LOG(Logger::Type::GAME, "ON_PLAYER_LEAVE " + event.player.GetName());
 
             if (event.player.IsLocal())
             {
@@ -343,10 +343,10 @@ void Game::receiveNetworkMessages()
 
             if (type == NetworkMessageType::CREATE_GAME)
             {
-                LOG("CREATE_GAME");
+                LOG(Logger::Type::GAME, "CREATE_GAME");
                 if (m_currentState != GameState::LOBBY && m_currentState != GameState::FINISH)
                 {
-                    LOG_ERROR("Cannot handle the CreateGame message in this state");
+                    LOG_ERROR(Logger::Type::GAME, "Cannot handle the CreateGame message in this state");
                     break;
                 }
                 
@@ -360,15 +360,15 @@ void Game::receiveNetworkMessages()
             }
             else if (type == NetworkMessageType::REQUST_PLAYER_INFO_UPDATE)
             {
-                LOG("REQUST_PLAYER_INFO_UPDATE");
+                LOG(Logger::Type::GAME, "REQUST_PLAYER_INFO_UPDATE");
                 if (m_currentState != GameState::LOBBY)
                 {
-                    LOG_ERROR("Cannot handle the RequestPlayerInfoUpdate message in this state");
+                    LOG_ERROR(Logger::Type::GAME, "Cannot handle the RequestPlayerInfoUpdate message in this state");
                     break;
                 }
                 if (!IsSessionMaster())
                 {
-                    LOG_ERROR("Cannot handle the RequestPlayerInfoUpdate message because it's not host");
+                    LOG_ERROR(Logger::Type::GAME, "Cannot handle the RequestPlayerInfoUpdate message because it's not host");
                     break;
                 }
 
@@ -381,7 +381,7 @@ void Game::receiveNetworkMessages()
                 bool result = updatePlayerColor(playerId, colorId);
                 if (!result)
                 {
-                    LOG_ERROR("Cannot update color " + tstr(colorId) + " for player " + tstr(playerId));
+                    LOG_ERROR(Logger::Type::GAME, "Cannot update color " + tstr(colorId) + " for player " + tstr(playerId));
                     break;
                 }
                 NetworkMessage message(true);
@@ -392,10 +392,10 @@ void Game::receiveNetworkMessages()
             }
             else if (type == NetworkMessageType::UPDATE_PLAYER_INFO)
             {
-                LOG("UPDATE_PLAYER_INFO");
+                LOG(Logger::Type::GAME, "UPDATE_PLAYER_INFO");
                 if (m_currentState != GameState::LOBBY && m_currentState != GameState::JOIN)
                 {
-                    LOG_ERROR("Cannot handle the UpdatePlayerInfo message in this state");
+                    LOG_ERROR(Logger::Type::GAME, "Cannot handle the UpdatePlayerInfo message in this state");
                     break;
                 }
 
@@ -501,7 +501,7 @@ void Game::OnJoinMenuButtonPressed(const MenuInputs& _input)
     size_t index = m_menuInputs.addressToConnect.find(":");
     if (index == std::string::npos)
     {
-        LOG_ERROR("No entered address.");
+        LOG_ERROR(Logger::Type::GAME, "No entered address.");
         return;
     }
     NetworkAddress address;
@@ -546,7 +546,7 @@ void Game::RegisterGameListener(GameListener* _listener)
             [_listener](GameListener* _list){ return _list == _listener; })
         != m_gameListeners.end())
     {
-        LOG_ERROR("Double registration of a game listener");
+        LOG_ERROR(Logger::Type::GAME, "Double registration of a game listener");
         return;
     }
     m_gameListeners.push_back(_listener);

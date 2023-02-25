@@ -32,11 +32,11 @@ void GameWorld::SpawnCharacter(bool _spawnMaster, bool _canControl, const Charac
     m_characters.emplace_back(Character(*this, _spawnMaster, _canControl, _info));
     std::string roleStr = (_spawnMaster) ? "M":"R";
     roleStr += (_canControl) ? "+":"";
-    LOG("Spawn " + roleStr + " Id: " + tstr(_info.characterId));
+    LOG(Logger::Type::GAME, "Spawn " + roleStr + " Id: " + tstr(_info.characterId));
     if (_canControl)
     {
         if (m_mainCharachter != nullptr)
-            LOG_ERROR("Main charachter is already created");
+            LOG_ERROR(Logger::Type::GAME, "Main charachter is already created");
         
         m_mainCharachter = &m_characters.back();
         m_camera.SetTargetedCharacter(m_mainCharachter);    

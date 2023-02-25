@@ -57,7 +57,7 @@ Profiler::~Profiler()
     auto t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration_ms = t2 - m_t;
 
-    LOG(m_context + tstr(duration_ms.count()));
+    LOG(Logger::Type::SYSTEM, m_context + tstr(duration_ms.count()));
 }
 
 // ---------------------------------------------------------
@@ -66,7 +66,7 @@ unsigned getTextureNumByColorId(ColorID _colorId)
 {
     if (_colorId == ColorIdInvalid || _colorId > NUMBER_OF_AVAILABLE_COLORS)
     {
-        LOG_ERROR("This color id is not supported " + tstr(_colorId));
+        LOG_ERROR(Logger::Type::SYSTEM, "This color id is not supported " + tstr(_colorId));
         return 0;
     }
     return _colorId - 1;

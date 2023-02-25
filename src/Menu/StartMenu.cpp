@@ -37,7 +37,7 @@ StartMenu::StartMenu()
             START_BUTTON,
             START_BUTTON_H,
             [this](){
-                LOG_DEBUG("Start Game click ");
+                LOG_DEBUG(Logger::Type::MENU, "Start Game click ");
                 Game::Get().OnStartMenuStartButtonPressed();
             }
         ));
@@ -48,7 +48,7 @@ StartMenu::StartMenu()
             JOIN_BUTTON,
             JOIN_BUTTON_H,
             [this](){
-                LOG_DEBUG("Join Game click ");
+                LOG_DEBUG(Logger::Type::MENU, "Join Game click ");
                 Game::Get().OnStartMenuJoinButtonPressed();
             }
         ));

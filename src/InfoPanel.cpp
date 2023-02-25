@@ -78,7 +78,7 @@ void InfoPanel::onPlayerInfoUpdated(const PlayerInfo& _info)
       [&_info](const PlayerText& _p){ return _p.info.networkPlayerCopy.GetPlayerId() == _info.networkPlayerCopy.GetPlayerId(); });
     if (it == m_players.end())
     {
-        LOG_ERROR("No player info for this id: " + tstr(_info.networkPlayerCopy.GetPlayerId()));
+        LOG_ERROR(Logger::Type::GAME, "No player info for this id: " + tstr(_info.networkPlayerCopy.GetPlayerId()));
         return;
     }
 

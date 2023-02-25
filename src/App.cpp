@@ -12,16 +12,18 @@ const double DT = 1.f / 60.f;
 
 bool Application::StartUp(sf::RenderWindow* window)
 {
-    LOG("StartUp");
+    Config::StartUp("gameConfig.conf");
+    Logger::StartUp();
+    
+    LOG(Logger::Type::SYSTEM, "StartUp");
     m_window = window;
 
     if (!m_window)
     {
-        LOG_ERROR("window is nullptr");
+        LOG_ERROR(Logger::Type::SYSTEM, "window is nullptr");
         return false;
     }
     ResourceManager::StartUp();
-    Config::StartUp("gameConfig.conf");
     Network::StartUp(Config::Get().GetConfig("port", DEFAULT_PORT));
     Game::StartUp(*window);
 
@@ -75,7 +77,7 @@ void Application::MainLoop()
 
 bool Application::ShutDown()
 {
-    LOG("ShutDown");
+    LOG(Logger::Type::SYSTEM, "ShutDown");
     m_window = nullptr;
 
     Game::ShutDown();
