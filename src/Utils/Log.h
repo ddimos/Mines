@@ -8,6 +8,9 @@ Logger::Log(Logger::Level::INFO, type, mes)
 #define LOG_DEBUG(type, mes) \
 Logger::Log(Logger::Level::DEBUG, type, mes)
 
+#define LOG_TRACE(type, mes) \
+Logger::Log(Logger::Level::TRACE, type, mes)
+
 #define LOG_ERROR(type, mes) \
 Logger::Log(Logger::Level::ERROR, type, mes)
 
@@ -29,7 +32,8 @@ public:
         NONE   = 0,
         ERROR  = 1,
         INFO   = 2,
-        DEBUG  = 3
+        DEBUG  = 3,
+        TRACE  = 4 
     };
     static void StartUp();
 

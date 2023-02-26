@@ -212,7 +212,7 @@ void Network::OnReceivePacket(sf::Packet _packet, NetworkAddress _sender)
             break;
         }
         senderPeer->OnHeartbeatReceived();
-        LOG_DEBUG(Logger::Type::NETWORK, "Received a heartbeat from " + _sender.toString());
+        LOG_TRACE(Logger::Type::NETWORK, "Received a heartbeat from " + _sender.toString());
         break;
     }
     case InternalPacketType::INTERNAL_AR:

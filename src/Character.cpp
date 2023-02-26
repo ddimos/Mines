@@ -61,11 +61,13 @@ void Character::Render(sf::RenderWindow& _window)
 
 void Character::onCharacterUncoverCell(WorldPosition _pos)
 {
+   // LOG_TRACE(Logger::Type::GAME, "Character " + tstr(m_info.characterId) + " uncover cell " + tstr(_pos.x) + " " + tstr(_pos.y));
     m_gameWorldRef.OnCharacterUncoverCell(_pos, *this);
 }
 
 void Character::onCharacterToggleFlagCell(WorldPosition _pos)
 {
+ //   LOG_TRACE(Logger::Type::GAME, "Character " + tstr(m_info.characterId) + " flag cell " + tstr(_pos.x) + " " + tstr(_pos.y));
     m_gameWorldRef.OnCharacterToggleFlagCell(_pos, *this);
 }
 
@@ -136,6 +138,7 @@ void Character::replicatePos()
 
 void Character::replicateUncoverCell()
 {
+//    LOG_TRACE(Logger::Type::GAME, "Replicate character " + tstr(m_info.characterId) + " uncover cell " + tstr(m_position.x) + " " + tstr(m_position.y));
     NetworkMessage message(true);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_UNCOVER));
     message.Write((CharacterID)m_info.characterId);
@@ -147,6 +150,7 @@ void Character::replicateUncoverCell()
 
 void Character::replicateToggleFlagCell()
 {
+ //   LOG_TRACE(Logger::Type::GAME, "Replicate character " + tstr(m_info.characterId) + " flag cell " + tstr(m_position.x) + " " + tstr(m_position.y));
     NetworkMessage message(true);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_TOGGLE));
     message.Write((CharacterID)m_info.characterId);

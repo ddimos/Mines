@@ -46,6 +46,7 @@ void Logger::Log(Level _level, Type _type, std::string_view _message)
 
     switch (_level)
     {
+    case Level::TRACE:
     case Level::DEBUG:
     case Level::INFO:
     {
