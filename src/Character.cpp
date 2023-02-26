@@ -109,7 +109,7 @@ void Character::replicateControls()
     if (!m_controls.hasValue())
         return;
     
-    NetworkMessage message(Network::Get().GetHostPeerId(), false);
+    NetworkMessage message(Network::Get().GetHostPeerId(), true);   // TODO to split movement and important inputs
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::REPLICATE_CHARACTER_CONTROLS));
     message.Write((CharacterID)m_info.characterId);
     message.Write(m_controls.isLeftPressed);
