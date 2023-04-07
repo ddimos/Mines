@@ -80,22 +80,33 @@ const Character& GameWorld::GetCharacter(CharacterID _id) const
 
 void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
 {
-    (void)_char;
-    
-    if (getCell(_pos).m_state == Cell::State::FLAGGED)
+    Cell& cell = getCell(_pos);
+    if (cell.m_state == Cell::State::FLAGGED)
         return;
 
-    if (getCell(_pos).m_type == Cell::ValueType::BOMB)
+    if (cell.m_type == Cell::ValueType::BOMB)
     {
+        if (!cell.IsCovered())     // Someone has already exploded here
+            return;
         onUncoverCell(_pos);
-        Game::Get().OnGameEnded(false, _char.GetInfo().playerId);
+
+        if (m_worldConfig.gameMode == GameMode::HARD)
+            Game::Get().OnGameEnded(false, _char.GetInfo().playerId);
+        else if (m_worldConfig.gameMode == GameMode::NORMAL)
+        {
+            _char.OnCharacterDie();
+            Game::Get().OnCharacterDie(_char);
+
+            if (!areThereAlivePlayers())
+                Game::Get().OnGameEnded(false);
+        }
         return;
     }
 
     onUncoverCell(_pos);
     
-    if (getCell(_pos).m_type == Cell::ValueType::EMPTY)
-        uncoverCellsInRadius(_pos, m_mainCharachter->GetUncoverRadius()); // TODO should be a character who uncovers
+    if (cell.m_type == Cell::ValueType::EMPTY)
+        uncoverCellsInRadius(_pos, _char.GetUncoverRadius());
 
     if (m_cellsLeftToUncover <= 0)
         Game::Get().OnGameEnded(true);
@@ -113,11 +124,14 @@ void GameWorld::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
 
 void GameWorld::onUncoverCell(WorldPosition _pos)
 {
-    if (getCell(_pos).IsCovered())
+    Cell& cell = getCell(_pos);
+    if (cell.IsCovered())
     {
-        getCell(_pos).Uncover();
-        m_worldMap.OnUncoverCell(getCell(_pos));
-        m_cellsLeftToUncover--;
+        cell.Uncover();
+        m_worldMap.OnUncoverCell(cell);
+
+        if (cell.m_type != Cell::ValueType::BOMB)
+            m_cellsLeftToUncover--;
     }
 }
 
@@ -240,6 +254,15 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
 int GameWorld::getCellIndex(int _x, int _y)
 {
     return _x + _y * (m_worldConfig.worldSize.x);
+}
+
+bool GameWorld::areThereAlivePlayers() const
+{
+    auto it = std::find_if(m_characters.begin(), m_characters.end(),
+        [](const Character& _char) {
+            return !_char.IsDead();
+        });
+    return it != m_characters.end();
 }
 
 void GameWorld::OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message)

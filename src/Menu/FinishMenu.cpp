@@ -75,7 +75,8 @@ void FinishMenu::onActivate()
     m_descriptionText.setString(
         result.isVictory
             ? "You found all the mines"
-            : result.loserName + " stepped on a mine");
+            : (result.loserName.empty() ? "Everyone" : result.loserName)
+                + " stepped on a mine");
 
     m_mainText.setPosition(sf::Vector2f(calculateCenterX(m_mainText.getGlobalBounds().width), MAIN_TEXT_Y));
     m_descriptionText.setPosition(sf::Vector2f(calculateCenterX(m_descriptionText.getGlobalBounds().width), DESCRIPTION_TEXT_Y));

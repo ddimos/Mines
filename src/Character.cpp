@@ -30,17 +30,20 @@ void Character::Update(float _dt)
         return;
 
     if (m_canControl)
-    {
         readControls();
-        if (!m_isMaster)
-        {
-            updateStateFromControls();   // TODO ?don't update the state but wait it from the host or do preupdate
-            replicateControls();
-            return;
-        }
-    }
+    updatePosFromControls();
+
+    if (m_isDead)
+        return;
 
     updateStateFromControls();
+
+    if (!m_isMaster)
+    {
+        replicateControls();
+        return;
+    }
+    
     replicatePos();
 
     if (m_controls.isSpacePressed)
@@ -82,6 +85,14 @@ void Character::readControls()
 
 void Character::updateStateFromControls()
 {
+    if (m_controls.isSpacePressed)
+        onCharacterUncoverCell(m_position);
+    if (m_controls.isXPressed)
+        onCharacterToggleFlagCell(m_position);   
+}
+
+void Character::updatePosFromControls()
+{
     sf::Vector2i deltaPos = {0, 0};
     if (m_controls.isLeftPressed)
         deltaPos.x -= 1;
@@ -95,11 +106,6 @@ void Character::updateStateFromControls()
     const auto worldSize = Game::Get().GetGameWorld().GetWorldSize();
     m_position.x = std::clamp(m_position.x + deltaPos.x, 0, (int)worldSize.x - 1);
     m_position.y = std::clamp(m_position.y + deltaPos.y, 0, (int)worldSize.y - 1);
-
-    if (m_controls.isSpacePressed)
-        onCharacterUncoverCell(m_position);
-    if (m_controls.isXPressed)
-        onCharacterToggleFlagCell(m_position);   
 }
 
 void Character::replicateControls()
@@ -193,6 +199,11 @@ void Character::OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _messag
     _message.Read(m_position.x);
     _message.Read(m_position.y);
     onCharacterToggleFlagCell(m_position);
+}
+
+void Character::OnCharacterDie()
+{
+    m_isDead = true;
 }
 
 void Character::Controls::reset()

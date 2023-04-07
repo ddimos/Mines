@@ -16,7 +16,8 @@ public:
     virtual void onGameStart(const WorldConfig&) {}
     
     virtual void onCharacterToggleFlagCell(const Cell&, const Character&) {}
-
+    virtual void onCharacterDie(const Character&) {}
+    
     // TODO
     // OnTextEntered
     // void onGameFinish(const GameResult&) {}

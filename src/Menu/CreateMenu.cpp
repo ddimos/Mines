@@ -175,6 +175,7 @@ CreateMenu::CreateMenu()
             inputs.worldConfig.bombsCount = m_enteredBombsCount;
             inputs.worldConfig.worldSize.x = m_enteredWidth;
             inputs.worldConfig.worldSize.y = m_enteredHeight;
+            inputs.worldConfig.gameMode = GameMode::NORMAL;
             inputs.playerColorId = static_cast<ColorID>(m_chosenColor);
             if (inputs.playerColorId == ColorIdInvalid)
                     inputs.playerColorId = 1;   // TODO move this code elsewhere?

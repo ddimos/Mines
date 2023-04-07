@@ -103,6 +103,12 @@ void InfoPanel::onCharacterToggleFlagCell(const Cell& _cell, const Character& _c
     updateBombsLeftText(newBobmsLeft);
 }
 
+void InfoPanel::onCharacterDie(const Character& _char)
+{
+    (void)_char;
+    // TODO update the player's text
+}
+
 void InfoPanel::Update(float _dt)
 {
     (void)_dt;

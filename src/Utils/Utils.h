@@ -70,8 +70,14 @@ private:
 
 #define PROFILE_POINT(context) Profiler p(context);
 
-
 // ---------------------------------------------------------
+
+enum class GameMode
+{
+    EASY,
+    NORMAL,
+    HARD
+};
 
 struct WorldConfig
 {
@@ -79,12 +85,12 @@ struct WorldConfig
     static WorldConfig GetMediumWorld() { return WorldConfig{{25, 25}, 30};}
     static WorldConfig GetLargeWorld() { return WorldConfig{{50, 50}, 100};}
 
-    bool IsValid() const { return worldSize.x != 0 && worldSize.y != 0; }
+    bool IsValid() const { return worldSize.x != 0 && worldSize.y != 0 && bombsCount != 0; }
     
     WorldPosition worldSize = {};
     unsigned bombsCount = 0;
+    GameMode gameMode = GameMode::EASY;
 };
-
 
 // ---------------------------------------------------------
 

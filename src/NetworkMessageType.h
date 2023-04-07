@@ -5,6 +5,7 @@ enum class NetworkMessageType : sf::Uint16
 {
     None = 0,
     CREATE_GAME,
+    FINISH_GAME,
     REQUST_PLAYER_INFO_UPDATE,
     UPDATE_PLAYER_INFO,
     REPLICATE_CHARACTER_CONTROLS,

@@ -30,6 +30,7 @@ struct MenuInputs
     WorldConfig worldConfig = {};
     ColorID playerColorId = ColorIdInvalid;
     std::string playerName = "";
+    GameMode gameMode = GameMode::EASY;
 };
 
 struct GameResult
@@ -57,7 +58,8 @@ public:
 
     void OnCharacterToggleFlagCell(const Cell& _cell, const Character& _char);
     void OnGameEnded(bool _isVictory, PlayerID _loserId = PlayerIdInvalid);
-
+    void OnCharacterDie(const Character& _char);
+    
     void OnStartMenuStartButtonPressed();   // TODO not really happy abour the names and how it's set up
     void OnStartMenuJoinButtonPressed();
     void OnCreateMenuButtonPressed(const MenuInputs& _input);
@@ -109,7 +111,6 @@ private:
 
     sf::Uint32 m_enteredChar = 0;
 
-    bool m_isGameEnded = false;
     GameResult m_gameResult = {};
     unsigned m_seed = 0;
     WorldConfig m_worldConfig = {};

@@ -29,6 +29,9 @@ public:
     CharacterID GetId() const { return m_info.characterId; }
     const CharacterInfo& GetInfo() const { return m_info; }
 
+    bool IsDead() const { return m_isDead; }
+    void OnCharacterDie();
+
     void OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message);
     void OnReplicateCharacterMessageReceived(NetworkMessage& _message);
     void OnReplicateUncoverCellMessageReceived(NetworkMessage& _message);
@@ -55,6 +58,7 @@ private:
 
     void readControls();
     void updateStateFromControls();
+    void updatePosFromControls();
     void replicateControls();
     void replicatePos();
     void replicateUncoverCell();
@@ -73,6 +77,8 @@ private:
 
     bool m_isMaster = true; 
     bool m_canControl = false;
+
+    bool m_isDead = false;
 
     CharacterInfo m_info;
 };

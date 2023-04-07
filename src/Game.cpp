@@ -110,8 +110,9 @@ void Game::initGame()
 
     LOG("Create a game world. Seed: " + tstr(m_seed) + " X: " + tstr(m_worldConfig.worldSize.x)
                                                      + " Y: " + tstr(m_worldConfig.worldSize.y)
-                                                     + " Bombs: " + tstr(m_worldConfig.bombsCount));
-    provideSeed(m_seed);    
+                                                     + " Bombs: " + tstr(m_worldConfig.bombsCount)
+                                                     + " Mode: " + tstr((int)m_worldConfig.gameMode));
+    provideSeed(m_seed);
     m_gameWorld.CreateWorld(m_worldConfig);
 }
 
@@ -132,7 +133,7 @@ void Game::spawnCharacters()
 void Game::resetGame()
 {
     m_gameWorld.DestroyWorld();
-    m_isGameEnded = false;
+    m_gameResult = {};
 }
 
 bool Game::updatePlayerColor(PlayerID _playerId, ColorID _colorId)
@@ -351,12 +352,35 @@ void Game::receiveNetworkMessages()
                 }
                 
                 event.message.Read(m_seed);
-                event.message.Read(m_worldConfig.worldSize.x);
-                event.message.Read(m_worldConfig.worldSize.y);
-                event.message.Read(m_worldConfig.bombsCount);
+                event.message.Read<sf::Int32>(m_worldConfig.worldSize.x);
+                event.message.Read<sf::Int32>(m_worldConfig.worldSize.y);
+                event.message.Read<sf::Uint32>(m_worldConfig.bombsCount);
+                sf::Uint8 mode;
+                event.message.Read<sf::Uint8>(mode);
+                m_worldConfig.gameMode = static_cast<GameMode>(mode);
 
                 m_wantsToChangeState = true;
                 m_wantToStartGame = true;
+            }
+            else if (type == NetworkMessageType::FINISH_GAME)
+            {
+                LOG("FINISH_GAME");
+
+                if (m_currentState != GameState::GAME)
+                {
+                    LOG_ERROR("Cannot handle the FinishGame message in this state");
+                    break;
+                }
+
+                event.message.Read<bool>(m_gameResult.isVictory);
+                PlayerID playerId = PlayerIdInvalid;
+                event.message.Read<PlayerID>(playerId);
+                if (playerId != PlayerIdInvalid)
+                    if (auto* playerInfo = GetPlayerInfo(playerId))
+                        m_gameResult.loserName = playerInfo->networkPlayerCopy.GetName();
+
+                m_wantsToChangeState = true;
+
             }
             else if (type == NetworkMessageType::REQUST_PLAYER_INFO_UPDATE)
             {
@@ -440,6 +464,7 @@ void Game::sendCreateGameMessage() // TODO  join in progress
     message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.x));
     message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.y));
     message.Write(static_cast<sf::Uint32>(m_worldConfig.bombsCount));
+    message.Write(static_cast<sf::Uint8>(m_worldConfig.gameMode));
     Network::Get().Send(message);
 }
 
@@ -452,12 +477,29 @@ void Game::OnCharacterToggleFlagCell(const Cell& _cell, const Character& _char)
 
 void Game::OnGameEnded(bool _isVictory, PlayerID _loserId)
 {
+    if (!IsSessionMaster())
+        return;
+
     m_gameResult.isVictory = _isVictory;
     if (_loserId != PlayerIdInvalid)
         if (auto* playerInfo = GetPlayerInfo(_loserId))
             m_gameResult.loserName = playerInfo->networkPlayerCopy.GetName();
 
-    m_isGameEnded = true;
+    m_wantsToChangeState = true;
+
+    NetworkMessage message(true);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::FINISH_GAME));
+    message.Write(static_cast<bool>(_isVictory));
+    message.Write(static_cast<PlayerID>(_loserId));
+
+    Network::Get().Send(message);
+}
+
+void Game::OnCharacterDie(const Character& _char)
+{
+    notifyGameListeners([&](GameListener* _list) {
+        _list->onCharacterDie(_char);
+    });
 }
 
 void Game::OnStartMenuStartButtonPressed()
@@ -616,13 +658,7 @@ void Game::Update(float _dt)
     else if (m_currentState == GameState::GAME)
     {
         m_gameWorld.Update(_dt);
-        m_gameView.setCenter(m_gameWorld.GetCamera().GetPos());		
-
-        if (m_isGameEnded)
-            m_wantsToChangeState = true;
-    }
-    else if (m_currentState == GameState::FINISH)
-    {
+        m_gameView.setCenter(m_gameWorld.GetCamera().GetPos());
     }
 
     m_menuManager.Update(_dt);

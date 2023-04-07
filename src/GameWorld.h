@@ -45,6 +45,7 @@ private:
         getPositionsOfNotBombNeighboringCells(WorldPosition _position);
     void uncoverCellsInRadius(WorldPosition _pos, int _radius);
     int getCellIndex(int _x, int _y);
+    bool areThereAlivePlayers() const;
 
     WorldMap m_worldMap;
 
