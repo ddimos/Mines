@@ -22,6 +22,7 @@ public:
 
     const Camera& GetCamera() const { return m_camera; }
     WorldPosition GetWorldSize() const { return m_worldConfig.worldSize; }
+    GameMode GetGameMode() const { return m_worldConfig.gameMode; }
 
     Cell& getCell(int _x, int _y);
     Cell& getCell(WorldPosition _pos);
@@ -38,12 +39,12 @@ public:
     
 private:
 
-    void onUncoverCell(WorldPosition _pos);
+    void onUncoverCell(WorldPosition _pos, const Character& _char);
     void createCells(WorldPosition _worldSize);
     void generateBombs(size_t _bombsNumber);
     std::set<WorldPosition> 
         getPositionsOfNotBombNeighboringCells(WorldPosition _position);
-    void uncoverCellsInRadius(WorldPosition _pos, int _radius);
+    void uncoverCellsInRadius(WorldPosition _pos, const Character& _char);
     int getCellIndex(int _x, int _y);
     bool areThereAlivePlayers() const;
 

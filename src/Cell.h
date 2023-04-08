@@ -31,10 +31,10 @@ public:
 	WorldPosition GetPosition() const { return m_position; }
 	int GetNumber() const { return m_number; }
 	State GetState() const { return m_state; }
-	CharacterID GetCharacterIdWhoFlagged() const { return m_flaggedCharId; }
+	CharacterID GetCharacterIdWhoFlaggedOrExploded() const { return m_charId; }
 
     void ToggleFlag(const Character& _char);
-    void Uncover();
+    void Uncover(const Character& _char);
 
 private:
 	friend class GameWorld;
@@ -46,5 +46,5 @@ private:
     State m_state = State::COVERED;
 	ValueType m_type = ValueType::EMPTY;
 	int m_number = 0;
-	CharacterID m_flaggedCharId = CharacterIdInvalid;
+	CharacterID m_charId = CharacterIdInvalid;
 };

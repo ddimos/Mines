@@ -82,18 +82,27 @@ void InfoPanel::onPlayerInfoUpdated(const PlayerInfo& _info)
         return;
     }
 
-    it->sprite.setTexture(ResourceManager::getTexture("choose_color_buttons"));
+    it->sprite.setTexture(ResourceManager::getTexture("colors"));
     it->sprite.setTextureRect(sf::IntRect{
                 (int)getTextureNumByColorId(_info.colorId) * CHOOSE_COLOR_BUTTON_SIZE,
                 0,
                 CHOOSE_COLOR_BUTTON_SIZE,
                 CHOOSE_COLOR_BUTTON_SIZE});
     it->sprite.setScale(PLAYER_SPRITE_SCALE, PLAYER_SPRITE_SCALE);
+    it->info = _info;
 }
 
 void InfoPanel::onGameStart(const WorldConfig& _worldConfig)
 {
     updateBombsLeftText(_worldConfig.bombsCount);
+    for (auto& player : m_players)
+    {
+        player.sprite.setTextureRect(sf::IntRect{
+            (int)getTextureNumByColorId(player.info.colorId) * CHOOSE_COLOR_BUTTON_SIZE,
+            0,
+            CHOOSE_COLOR_BUTTON_SIZE,
+            CHOOSE_COLOR_BUTTON_SIZE});
+    }
 }
 
 void InfoPanel::onCharacterToggleFlagCell(const Cell& _cell, const Character& _char)
@@ -105,8 +114,19 @@ void InfoPanel::onCharacterToggleFlagCell(const Cell& _cell, const Character& _c
 
 void InfoPanel::onCharacterDie(const Character& _char)
 {
-    (void)_char;
-    // TODO update the player's text
+    auto it = std::find_if(m_players.begin(), m_players.end(),
+      [&_char](const PlayerText& _p){ return _p.info.networkPlayerCopy.GetPlayerId() == _char.GetInfo().playerId; });
+    if (it == m_players.end())
+    {
+        LOG_ERROR("No player info for this id: " + tstr(_char.GetInfo().playerId));
+        return;
+    }
+
+    it->sprite.setTextureRect(sf::IntRect{
+                (int)getTextureNumByColorId(it->info.colorId) * CHOOSE_COLOR_BUTTON_SIZE,
+                3 * CHOOSE_COLOR_BUTTON_SIZE,
+                CHOOSE_COLOR_BUTTON_SIZE,
+                CHOOSE_COLOR_BUTTON_SIZE});
 }
 
 void InfoPanel::Update(float _dt)

@@ -14,7 +14,7 @@ void ResourceManager::StartUp()
     loadTexture("res/textures/tileset.png", "tileset");
     loadTexture("res/textures/players.png", "players");
     loadTexture("res/textures/start_menu_buttons.png", "start_menu_buttons");
-    loadTexture("res/textures/choose_color_buttons.png", "choose_color_buttons");
+    loadTexture("res/textures/colors.png", "colors");
     loadTexture("res/textures/choose_size_button.png", "choose_size_button");
     loadTexture("res/textures/create_menu_start_button.png", "create_menu_start_button");
     loadTexture("res/textures/join_menu_join_button.png", "join_menu_join_button");

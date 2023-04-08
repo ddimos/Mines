@@ -12,13 +12,14 @@ void Cell::ToggleFlag(const Character& _char)
         return;
 
     m_state = (m_state == State::COVERED) ? State::FLAGGED : State::COVERED;
-    m_flaggedCharId = _char.GetId();
+    m_charId = _char.GetId();
 }
 
-void Cell::Uncover()
+void Cell::Uncover(const Character& _char)
 {
     if (m_state == State::FLAGGED)
         return;
 
     m_state = Cell::State::UNCOVERED;
+    m_charId = _char.GetId();
 }

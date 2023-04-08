@@ -88,7 +88,7 @@ void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
     {
         if (!cell.IsCovered())     // Someone has already exploded here
             return;
-        onUncoverCell(_pos);
+        onUncoverCell(_pos, _char);
 
         if (m_worldConfig.gameMode == GameMode::HARD)
             Game::Get().OnGameEnded(false, _char.GetInfo().playerId);
@@ -103,10 +103,10 @@ void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
         return;
     }
 
-    onUncoverCell(_pos);
+    onUncoverCell(_pos, _char);
     
     if (cell.m_type == Cell::ValueType::EMPTY)
-        uncoverCellsInRadius(_pos, _char.GetUncoverRadius());
+        uncoverCellsInRadius(_pos, _char);
 
     if (m_cellsLeftToUncover <= 0)
         Game::Get().OnGameEnded(true);
@@ -122,12 +122,12 @@ void GameWorld::OnCharacterToggleFlagCell(WorldPosition _pos, Character& _char)
     Game::Get().OnCharacterToggleFlagCell(cell, _char);
 }
 
-void GameWorld::onUncoverCell(WorldPosition _pos)
+void GameWorld::onUncoverCell(WorldPosition _pos, const Character& _char)
 {
     Cell& cell = getCell(_pos);
     if (cell.IsCovered())
     {
-        cell.Uncover();
+        cell.Uncover(_char);
         m_worldMap.OnUncoverCell(cell);
 
         if (cell.m_type != Cell::ValueType::BOMB)
@@ -182,7 +182,7 @@ void GameWorld::generateBombs(size_t _bombsNumber)
 	}
 }
 
-void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
+void GameWorld::uncoverCellsInRadius(WorldPosition _pos, const Character& _char)
 {
     std::vector<WorldPosition> cellsToUncover;
     std::function<bool(WorldPosition)> isInArrayToUncover = [&cellsToUncover] (WorldPosition _pos)
@@ -194,7 +194,8 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
 
     std::function<void(WorldPosition)> checkNeib = [&](WorldPosition _posToCheck)
     {
-        if (_radius != InfiniteRadius && (_pos - _posToCheck).getLength() >= _radius)
+        int radius = (int)_char.GetUncoverRadius();
+        if (radius != InfiniteRadius && (_pos - _posToCheck).getLength() >= radius)
             return;
 
         std::function<void(WorldPosition)> checkAxis = [&](WorldPosition _posToCheckAxis)
@@ -248,7 +249,7 @@ void GameWorld::uncoverCellsInRadius(WorldPosition _pos, int _radius)
     checkNeib(_pos);
 
     for (WorldPosition pos : cellsToUncover)
-        onUncoverCell(pos);
+        onUncoverCell(pos, _char);
 }
 
 int GameWorld::getCellIndex(int _x, int _y)

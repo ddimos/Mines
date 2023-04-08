@@ -58,6 +58,9 @@ void Character::Update(float _dt)
 
 void Character::Render(sf::RenderWindow& _window)
 {
+    if (m_isDead && !m_canControl)
+        return;
+
     m_sprite.setPosition(m_position.getWindowPosition());
     _window.draw(m_sprite);
 }
@@ -204,6 +207,13 @@ void Character::OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _messag
 void Character::OnCharacterDie()
 {
     m_isDead = true;
+
+    m_sprite.setTextureRect(
+        sf::IntRect(
+            CELL_SIZE * getTextureNumByColorId(m_info.colorId),
+            CELL_SIZE,
+            CELL_SIZE,
+            CELL_SIZE));
 }
 
 void Character::Controls::reset()

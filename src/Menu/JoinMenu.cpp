@@ -57,7 +57,7 @@ JoinMenu::JoinMenu()
         NUMBER_OF_AVAILABLE_COLORS,
         sf::Vector2f(COLUMN_2, LINE_4),
         DISTANCE_BETWEEN_COLOR_BUTTONS,
-        ResourceManager::getTexture("choose_color_buttons"),
+        ResourceManager::getTexture("colors"),
         sf::Vector2i{
             CHOOSE_COLOR_BUTTON_SIZE,
             CHOOSE_COLOR_BUTTON_SIZE},

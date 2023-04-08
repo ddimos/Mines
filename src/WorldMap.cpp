@@ -52,7 +52,7 @@ int WorldMap::getTileNumber(const Cell& _cell) const
         return 0;
     if (_cell.IsFlagged())
     {
-        const auto& ch = m_gameWorld.GetCharacter(_cell.GetCharacterIdWhoFlagged());
+        const auto& ch = m_gameWorld.GetCharacter(_cell.GetCharacterIdWhoFlaggedOrExploded());
         return ch.GetInfo().colorId + 10; // 10 is an offset 
     }
     if (_cell.IsEmpty())
@@ -60,7 +60,15 @@ int WorldMap::getTileNumber(const Cell& _cell) const
     if (_cell.IsNumber())
         return _cell.GetNumber() + 1;   // 1 is an offset 
     
-    return 10;  // it's an exploded mine
+    // The cell has a mine
+
+    if (m_gameWorld.GetGameMode() == GameMode::NORMAL)
+    {
+        const auto& ch = m_gameWorld.GetCharacter(_cell.GetCharacterIdWhoFlaggedOrExploded());
+        return ch.GetInfo().colorId + 18; // 18 is an offset 
+    }
+    
+    return 10;  // just a mine
 }
 
 sf::Vector2i WorldMap::getTilePosition(int _tileNumber) const
