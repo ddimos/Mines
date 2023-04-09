@@ -7,7 +7,8 @@ namespace
 {
     constexpr float WAITING_TEXT_Y = 280.f;
     constexpr float DESCRIPTION_TEXT_Y = WAITING_TEXT_Y + 54.f;
-    constexpr float BUTTON_Y = DESCRIPTION_TEXT_Y + 85.f;
+    constexpr float BUTTON_Y = DESCRIPTION_TEXT_Y + 74.f;
+    constexpr float CONFIG_BUTTON_Y = BUTTON_Y + 80.f;
 
     constexpr float OFFSET_FOR_NOT_HOSTS_Y = 40.f;
 }
@@ -36,10 +37,22 @@ LobbyMenu::LobbyMenu()
         sf::IntRect{200, 0, 200, 62},
         [this](){
             LOG_DEBUG("Start Game click ");
-            Game::Get().OnLobbyMenuButtonPressed();
+            Game::Get().OnLobbyMenuStartButtonPressed();
         }
     ));
-    m_button = m_menuItems.back().get();
+    m_startButton = m_menuItems.back().get();
+
+    m_menuItems.emplace_back(std::make_unique<Button>(
+        sf::Vector2f(MenuItem::CENTER_ALLIGNED, CONFIG_BUTTON_Y),
+        ResourceManager::getTexture("field_settings_button"),
+        sf::IntRect{0,   0, 146, 24},
+        sf::IntRect{147, 0, 146, 24},
+        [this](){
+            LOG_DEBUG("Config click ");
+            Game::Get().OnLobbyMenuConfigButtonPressed();
+        }
+    ));
+    m_configButton = m_menuItems.back().get();
 }
 
 void LobbyMenu::onActivate()
@@ -52,7 +65,8 @@ void LobbyMenu::onActivate()
     }
     else
     {
-        m_button->Deactivate();
+        m_startButton->Deactivate();
+        m_configButton->Deactivate();
 
         m_waitingText.setPosition(m_waitingText.getPosition().x, WAITING_TEXT_Y + OFFSET_FOR_NOT_HOSTS_Y);
         m_descriptionText.setString(

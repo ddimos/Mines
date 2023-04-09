@@ -23,6 +23,8 @@ void ResourceManager::StartUp()
     loadTexture("res/textures/create_menu_elements.png", "create_menu_elements");
     loadTexture("res/textures/finish_menu_buttons.png", "finish_menu_buttons");
     loadTexture("res/textures/info_panel.png", "info_panel");
+    loadTexture("res/textures/choose_mode_button.png", "choose_mode_button");
+    loadTexture("res/textures/field_settings_button.png", "field_settings_button");
  
     loadFont("res/fonts/IBMPlexSansThaiLooped-Regular.ttf", "poppins_regular");
     loadFont("res/fonts/IBMPlexSansThaiLooped-Bold.ttf", "poppins_bold");

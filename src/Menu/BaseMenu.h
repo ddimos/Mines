@@ -13,6 +13,7 @@ enum class MenuType
     None,
     START_MENU,
     CREATE_MENU,
+    CONFIGURE_MENU,
     JOIN_MENU,
     LOBBY_MENU,
     FINISH_MENU

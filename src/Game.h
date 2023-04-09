@@ -18,6 +18,7 @@ enum class GameState
     None,
     INIT,
     CREATE,
+    CONFIG_WORLD,
     JOIN,
     LOBBY,
     GAME,
@@ -30,7 +31,6 @@ struct MenuInputs
     WorldConfig worldConfig = {};
     ColorID playerColorId = ColorIdInvalid;
     std::string playerName = "";
-    GameMode gameMode = GameMode::EASY;
 };
 
 struct GameResult
@@ -63,8 +63,10 @@ public:
     void OnStartMenuStartButtonPressed();   // TODO not really happy abour the names and how it's set up
     void OnStartMenuJoinButtonPressed();
     void OnCreateMenuButtonPressed(const MenuInputs& _input);
+    void OnConfigureMenuButtonPressed(const MenuInputs& _input);
     void OnJoinMenuButtonPressed(const MenuInputs& _input);
-    void OnLobbyMenuButtonPressed();
+    void OnLobbyMenuStartButtonPressed();
+    void OnLobbyMenuConfigButtonPressed();
     void OnFinishMenuStartAgainButtonPressed();
     void OnFinishMenuBackToMenuButtonPressed();
 
@@ -128,6 +130,7 @@ private:
     GameState m_currentState = GameState::None;
     bool m_wantsToChangeState = false;
     bool m_wantsToReturnToMenu = false;
+    bool m_wantsToGonfigWorld = false;
 
     MenuManager m_menuManager;
     MenuInputs m_menuInputs;

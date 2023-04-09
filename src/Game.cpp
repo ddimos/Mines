@@ -18,6 +18,8 @@ namespace
             return "INIT";
         case GameState::CREATE:
             return "CREATE";
+        case GameState::CONFIG_WORLD:
+            return "CONFIG_WORLD";
         case GameState::JOIN:
             return "JOIN";
         case GameState::LOBBY:
@@ -172,10 +174,14 @@ void Game::onStateEnter(GameState _newState)
     case GameState::CREATE:
         m_menuManager.Push(MenuType::CREATE_MENU);
         break;
+    case GameState::CONFIG_WORLD:
+        m_menuManager.Push(MenuType::CONFIGURE_MENU);
+        break;
     case GameState::JOIN:
         m_menuManager.Push(MenuType::JOIN_MENU);
         break;
     case GameState::LOBBY:
+        m_wantsToGonfigWorld = false;
         m_menuManager.Push(MenuType::LOBBY_MENU);
         if (m_wantToStartGame)  // It means that we were in the Finish state when the host started a new game
             m_wantsToChangeState = true;
@@ -218,6 +224,7 @@ void Game::onStateExit(GameState _oldState)
     case GameState::INIT:
         break;
     case GameState::CREATE:
+    case GameState::CONFIG_WORLD:
     case GameState::JOIN:
     case GameState::LOBBY:
     case GameState::GAME:
@@ -247,11 +254,14 @@ void Game::updateState()
         newState = m_isAssumedToBeAHost ? GameState::CREATE : GameState::JOIN;
         break;
     case GameState::CREATE:
+        newState = GameState::CONFIG_WORLD;
+        break;
+    case GameState::CONFIG_WORLD:   //NOTE: I think I could merge Create and Join states/menu
     case GameState::JOIN:
         newState = GameState::LOBBY;
         break;
     case GameState::LOBBY:
-        newState = GameState::GAME;
+        newState = m_wantsToGonfigWorld ? GameState::CONFIG_WORLD : GameState::GAME;
         break;
     case GameState::GAME:
         newState = GameState::FINISH;
@@ -526,10 +536,21 @@ void Game::OnCreateMenuButtonPressed(const MenuInputs& _input)
         return;
 
     m_menuInputs = _input;
-    m_worldConfig = _input.worldConfig.IsValid() ? _input.worldConfig : WorldConfig::GetSmallWorld();
     Network::Get().CreateAndJoinSession(m_menuInputs.playerName);   // TODO to pass a player descriptor 
     m_isJoiningOrJoined = true;
     m_needsToUpdateColor = true;
+}
+
+void Game::OnConfigureMenuButtonPressed(const MenuInputs& _input)
+{
+    if (m_currentState != GameState::CONFIG_WORLD)
+        return;
+
+    m_wantsToChangeState = true;
+    if (_input.worldConfig.IsValid())
+        m_worldConfig = _input.worldConfig;
+    else
+        m_worldConfig.ApplyDefaultSmallWorld();
 }
 
 void Game::OnJoinMenuButtonPressed(const MenuInputs& _input)
@@ -555,11 +576,20 @@ void Game::OnJoinMenuButtonPressed(const MenuInputs& _input)
     m_needsToUpdateColor = true;
 }
 
-void Game::OnLobbyMenuButtonPressed()
+void Game::OnLobbyMenuStartButtonPressed()
 {
     if (m_currentState != GameState::LOBBY)
         return;
 
+    m_wantsToChangeState = true;
+}
+
+void Game::OnLobbyMenuConfigButtonPressed()
+{
+    if (m_currentState != GameState::LOBBY)
+        return;
+
+    m_wantsToGonfigWorld = true;
     m_wantsToChangeState = true;
 }
 
@@ -679,7 +709,8 @@ void Game::Draw(sf::RenderWindow& _window)
 
     if (m_currentState == GameState::INIT 
      || m_currentState == GameState::JOIN
-     || m_currentState == GameState::CREATE)
+     || m_currentState == GameState::CREATE
+     || m_currentState == GameState::CONFIG_WORLD)
         _window.draw(m_background);
 
     m_menuManager.Draw(_window);

@@ -15,5 +15,6 @@ private:
     sf::Text m_waitingText;
     sf::Text m_descriptionText;
 
-    MenuItem* m_button = nullptr;
+    MenuItem* m_startButton = nullptr;
+    MenuItem* m_configButton = nullptr;
 };

@@ -81,9 +81,9 @@ enum class GameMode
 
 struct WorldConfig
 {
-    static WorldConfig GetSmallWorld() { return WorldConfig{{10, 10}, 10};}
-    static WorldConfig GetMediumWorld() { return WorldConfig{{25, 25}, 30};}
-    static WorldConfig GetLargeWorld() { return WorldConfig{{50, 50}, 100};}
+    void ApplyDefaultSmallWorld()  { worldSize={10, 10}; bombsCount = 10;}
+    void ApplyDefaultMediumWorld() { worldSize={25, 25}; bombsCount = 30;}
+    void ApplyDefaultLargeWorld()  { worldSize={50, 50}; bombsCount = 100;}
 
     bool IsValid() const { return worldSize.x != 0 && worldSize.y != 0 && bombsCount != 0; }
     
