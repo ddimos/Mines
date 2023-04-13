@@ -54,6 +54,7 @@ int getRand();
 // ---------------------------------------------------------
 
 float calculateCenterX(float _width);
+float calculateCenterX(float _x, float _width);
 
 // ---------------------------------------------------------
 

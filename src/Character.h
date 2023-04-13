@@ -30,7 +30,7 @@ public:
     const CharacterInfo& GetInfo() const { return m_info; }
 
     bool IsDead() const { return m_isDead; }
-    void OnCharacterDie();
+    void OnCharacterExplode(bool _doesCharacterDie);
 
     void OnReplicateCharacterControlsMessageReceived(NetworkMessage& _message);
     void OnReplicateCharacterMessageReceived(NetworkMessage& _message);

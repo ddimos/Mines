@@ -112,8 +112,12 @@ void InfoPanel::onCharacterToggleFlagCell(const Cell& _cell, const Character& _c
     updateBombsLeftText(newBobmsLeft);
 }
 
-void InfoPanel::onCharacterDie(const Character& _char)
+void InfoPanel::onCharacterExplode(const Character& _char)
 {
+    updateBombsLeftText(m_bombsLeft - 1); 
+    if (!_char.IsDead())
+        return;
+
     auto it = std::find_if(m_players.begin(), m_players.end(),
       [&_char](const PlayerText& _p){ return _p.info.networkPlayerCopy.GetPlayerId() == _char.GetInfo().playerId; });
     if (it == m_players.end())

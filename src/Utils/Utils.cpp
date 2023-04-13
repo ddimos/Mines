@@ -40,7 +40,12 @@ int getRand()
 
 float calculateCenterX(float _width)
 {
-    return Game::Get().GetWindow().getSize().x / 2.f - _width / 2.f;
+    return calculateCenterX(Game::Get().GetWindow().getSize().x / 2.f, _width);
+}
+
+float calculateCenterX(float _x, float _width)
+{
+    return _x - _width / 2.f;
 }
 
 // ---------------------------------------------------------

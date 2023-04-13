@@ -90,13 +90,14 @@ void GameWorld::OnCharacterUncoverCell(WorldPosition _pos, Character& _char)
             return;
         onUncoverCell(_pos, _char);
 
+        bool doesCharacterDie = m_worldConfig.gameMode != GameMode::EASY;
+        _char.OnCharacterExplode(doesCharacterDie);
+        Game::Get().OnCharacterExplode(_char);
+
         if (m_worldConfig.gameMode == GameMode::HARD)
             Game::Get().OnGameEnded(false, _char.GetInfo().playerId);
         else if (m_worldConfig.gameMode == GameMode::NORMAL)
         {
-            _char.OnCharacterDie();
-            Game::Get().OnCharacterDie(_char);
-
             if (!areThereAlivePlayers())
                 Game::Get().OnGameEnded(false);
         }

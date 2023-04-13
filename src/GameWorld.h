@@ -10,6 +10,9 @@
 class GameWorld
 {
 public:
+    using Cells = std::vector<Cell>;
+    using Characters = std::vector<Character>;
+
     GameWorld();
     ~GameWorld() = default;
 
@@ -26,7 +29,8 @@ public:
 
     Cell& getCell(int _x, int _y);
     Cell& getCell(WorldPosition _pos);
-    const std::vector<Character>& GetCharacters() const { return m_characters; }
+    const Cells& GetCells() const { return m_cells; }
+    const Characters& GetCharacters() const { return m_characters; }
     const Character& GetCharacter(CharacterID _id) const;
 
     void OnCharacterUncoverCell(WorldPosition _pos, Character& _char);
@@ -51,8 +55,8 @@ private:
     WorldMap m_worldMap;
 
     WorldConfig m_worldConfig = {};
-    std::vector<Cell> m_cells;
-    std::vector<Character> m_characters;
+    Cells m_cells;
+    Characters m_characters;
     Character* m_mainCharachter = nullptr;
 
     Camera m_camera;

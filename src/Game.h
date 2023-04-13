@@ -7,6 +7,7 @@
 #include "GameWorld.h"
 #include "PlayerInfo.h"
 #include "Menu/MenuManager.h"
+#include "GameStats.h"
 
 namespace sf
 {
@@ -35,7 +36,7 @@ struct MenuInputs
 
 struct GameResult
 {
-    std::string loserName = "";
+    PlayerInfo* loserPtr = nullptr;
     bool isVictory = false;
 };
 
@@ -58,7 +59,7 @@ public:
 
     void OnCharacterToggleFlagCell(const Cell& _cell, const Character& _char);
     void OnGameEnded(bool _isVictory, PlayerID _loserId = PlayerIdInvalid);
-    void OnCharacterDie(const Character& _char);
+    void OnCharacterExplode(const Character& _char);
     
     void OnStartMenuStartButtonPressed();   // TODO not really happy abour the names and how it's set up
     void OnStartMenuJoinButtonPressed();
@@ -75,6 +76,7 @@ public:
 
     const sf::RenderWindow& GetWindow() const { return m_window; } 
     const GameWorld& GetGameWorld() const { return m_gameWorld; }
+    const GameStatsController& GetStatsController() const { return m_statsController; }
     GameState GetState() const { return m_currentState; }
 
     PlayerInfo* GetPlayerInfo(PlayerID _playerId);
@@ -100,6 +102,7 @@ private:
     void updateState();
     void receiveNetworkMessages();
     void sendCreateGameMessage();
+    void sendFinishGameMessage();
     void notifyGameListeners(std::function<void(GameListener*)> _callback);
 
     static Game* ms_game;
@@ -110,6 +113,7 @@ private:
     GameWorld m_gameWorld;
     sf::View m_gameView;
     sf::View m_infoView;
+    GameStatsController m_statsController;
 
     sf::Uint32 m_enteredChar = 0;
 

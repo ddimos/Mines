@@ -14,12 +14,12 @@ public:
     virtual void onPlayerInfoUpdated(const PlayerInfo&) {}
     
     virtual void onGameStart(const WorldConfig&) {}
+    virtual void onGameFinish(const GameResult&) {}
     
     virtual void onCharacterToggleFlagCell(const Cell&, const Character&) {}
-    virtual void onCharacterDie(const Character&) {}
+    virtual void onCharacterExplode(const Character&) {}
     
     // TODO
     // OnTextEntered
-    // void onGameFinish(const GameResult&) {}
     // void OnCharachterSpawned(const PlayerInfo& _info);
 };

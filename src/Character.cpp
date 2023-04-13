@@ -204,8 +204,11 @@ void Character::OnReplicateToggleFlagCellMessageReceived(NetworkMessage& _messag
     onCharacterToggleFlagCell(m_position);
 }
 
-void Character::OnCharacterDie()
+void Character::OnCharacterExplode(bool _doesCharacterDie)
 {
+    if (!_doesCharacterDie)
+        return;
+
     m_isDead = true;
 
     m_sprite.setTextureRect(

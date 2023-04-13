@@ -84,6 +84,7 @@ void Game::Init()
 {
     m_menuManager.OnInit();
     m_infoPanel.OnInit();
+    m_statsController.OnInit();
     // Create a preview
      m_gameWorld.CreateWorld({{35, 35}, 1});
 }
@@ -222,12 +223,17 @@ void Game::onStateExit(GameState _oldState)
     switch (_oldState)
     {
     case GameState::INIT:
-        break;
     case GameState::CREATE:
     case GameState::CONFIG_WORLD:
     case GameState::JOIN:
     case GameState::LOBBY:
+        break;
     case GameState::GAME:
+        notifyGameListeners([&](GameListener* _list) {
+            _list->onGameFinish(m_gameResult);
+        });
+        if (IsSessionMaster())
+            sendFinishGameMessage();
         break;
     case GameState::FINISH:
         resetGame();
@@ -387,10 +393,24 @@ void Game::receiveNetworkMessages()
                 event.message.Read<PlayerID>(playerId);
                 if (playerId != PlayerIdInvalid)
                     if (auto* playerInfo = GetPlayerInfo(playerId))
-                        m_gameResult.loserName = playerInfo->networkPlayerCopy.GetName();
+                        m_gameResult.loserPtr = playerInfo;
+
+                PlayersStats stats;
+                while(!event.message.IsEnd())
+                {
+                    PlayerID playerId = PlayerIdInvalid;
+                    PlayerStats playerStats;
+                    
+                    event.message.Read(playerId);
+                    event.message.Read<sf::Uint32>(playerStats.numberOfDeathsTotal);
+                    event.message.Read<sf::Uint32>(playerStats.numberOfDeathsLastGame);
+                    event.message.Read<sf::Uint32>(playerStats.numberOfFoundBombsTotal);
+                    event.message.Read<sf::Uint32>(playerStats.numberOfFoundBombsLastGame);
+                    stats.insert_or_assign(playerId, playerStats);
+                }
+                m_statsController.ProvideStatsFromHost(std::move(stats));
 
                 m_wantsToChangeState = true;
-
             }
             else if (type == NetworkMessageType::REQUST_PLAYER_INFO_UPDATE)
             {
@@ -445,6 +465,11 @@ void Game::receiveNetworkMessages()
             }
             else if (type == NetworkMessageType::REPLICATE_CHARACTER_CONTROLS)
             {
+                if (m_currentState != GameState::GAME)
+                {
+                    LOG_ERROR("Cannot handle the ReplicateCharacterControls message in this state");
+                    break;
+                }
                 m_gameWorld.OnReplicateCharacterControlsMessageReceived(event.message);
             }
             else if (type == NetworkMessageType::REPLICATE_CHARACTER_POS)
@@ -478,6 +503,24 @@ void Game::sendCreateGameMessage() // TODO  join in progress
     Network::Get().Send(message);
 }
 
+void Game::sendFinishGameMessage()
+{
+    NetworkMessage message(true);
+    message.Write(static_cast<sf::Uint16>(NetworkMessageType::FINISH_GAME));
+    message.Write(static_cast<bool>(m_gameResult.isVictory));
+    PlayerID loserId = (m_gameResult.loserPtr) ? m_gameResult.loserPtr->networkPlayerCopy.GetPlayerId() : PlayerIdInvalid;
+    message.Write(static_cast<PlayerID>(loserId));
+    for(const auto&[id, stats] : m_statsController.GetPlayersStats())
+    {
+        message.Write(static_cast<PlayerID>(id));
+        message.Write(static_cast<sf::Uint32>(stats.numberOfDeathsTotal));
+        message.Write(static_cast<sf::Uint32>(stats.numberOfDeathsLastGame));
+        message.Write(static_cast<sf::Uint32>(stats.numberOfFoundBombsTotal));
+        message.Write(static_cast<sf::Uint32>(stats.numberOfFoundBombsLastGame));
+    }
+    Network::Get().Send(message);
+}
+
 void Game::OnCharacterToggleFlagCell(const Cell& _cell, const Character& _char)
 {
     notifyGameListeners([&](GameListener* _list) {
@@ -493,22 +536,15 @@ void Game::OnGameEnded(bool _isVictory, PlayerID _loserId)
     m_gameResult.isVictory = _isVictory;
     if (_loserId != PlayerIdInvalid)
         if (auto* playerInfo = GetPlayerInfo(_loserId))
-            m_gameResult.loserName = playerInfo->networkPlayerCopy.GetName();
+            m_gameResult.loserPtr = playerInfo;
 
     m_wantsToChangeState = true;
-
-    NetworkMessage message(true);
-    message.Write(static_cast<sf::Uint16>(NetworkMessageType::FINISH_GAME));
-    message.Write(static_cast<bool>(_isVictory));
-    message.Write(static_cast<PlayerID>(_loserId));
-
-    Network::Get().Send(message);
 }
 
-void Game::OnCharacterDie(const Character& _char)
+void Game::OnCharacterExplode(const Character& _char)
 {
     notifyGameListeners([&](GameListener* _list) {
-        _list->onCharacterDie(_char);
+        _list->onCharacterExplode(_char);
     });
 }
 

@@ -30,5 +30,6 @@ const unsigned short DEFAULT_PORT = 20087;
 constexpr unsigned FONT_SIZE_1 = 36; 
 constexpr unsigned FONT_SIZE_2 = 24; 
 constexpr unsigned FONT_SIZE_3 = 20; 
+constexpr unsigned FONT_SIZE_3_5 = 18; 
 constexpr unsigned FONT_SIZE_4 = 16; 
 constexpr unsigned FONT_SIZE_5 = 14; 
