@@ -133,6 +133,8 @@ private:
     void onStartEntering();
     void onFinishEntering();
 
+    void processChar(sf::Uint32 _char);
+    
     sf::Sprite m_sprite;
     sf::Text m_inputText;
     std::string m_enteredStr;
@@ -143,6 +145,8 @@ private:
     FinishEnterTextCallback m_onFinishEnterTextCallback = {};
 
     const unsigned m_maxSize = DEFAULT_MAX_INPUT_FIELD_SIZE;
+
+    bool m_isPasted = false;
 };
 
 // ---------------------------------------------------------

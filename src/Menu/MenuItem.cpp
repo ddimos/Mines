@@ -219,23 +219,30 @@ void InputField::onUpdate()
     if (!m_isInInputMode)
         return;
 
-    const sf::Uint32 enteredChar = Game::Get().GetEnteredChar();
-    if (enteredChar)
+    if(Game::isKeyDown(sf::Keyboard::V) && Game::isKeyDown(sf::Keyboard::LControl))
     {
-        if (enteredChar == 8) // Backspace
+        if (!m_isPasted)
         {
-            if (!m_enteredStr.empty())
-                m_enteredStr.pop_back();
+            m_isPasted = true;
+
+            size_t i = m_enteredStr.size();
+            for (char c : sf::Clipboard::getString())
+            {
+                if (i >= m_maxSize)
+                    break;
+                processChar(c);
+                ++i;
+            }
         }
-        else if(m_enteredStr.size() < m_maxSize)
-        {
-            m_enteredStr += enteredChar;    // To be able to validate a newly created string
-            if (!m_onValidateEnteredTextCallback(enteredChar, m_enteredStr))    // TODO to pass std::array here to be able to modify it
-                m_enteredStr.pop_back();
-        }
-        m_inputText.setString(m_enteredStr);
     }
-    
+    else
+    {
+        m_isPasted = false;
+    }
+
+    if (!m_isPasted)
+        processChar(Game::Get().GetEnteredChar());
+ 
     if (Game::Get().isKeyPressed(sf::Keyboard::Enter))
         onFinishEntering();
 }
@@ -275,6 +282,25 @@ void InputField::onFinishEntering()
         m_inputText.setString(m_helpText);
         m_inputText.setFillColor(INPUT_FIELD_HELP_TEXT_COLOR);
     }
+}
+
+void InputField::processChar(sf::Uint32 _char)
+{
+    if (!_char)
+        return;
+
+    if (_char == 8) // Backspace
+    {
+        if (!m_enteredStr.empty())
+            m_enteredStr.pop_back();
+    }
+    else if(m_enteredStr.size() < m_maxSize)
+    {
+        m_enteredStr += _char;    // To be able to validate a newly created string
+        if (!m_onValidateEnteredTextCallback(_char, m_enteredStr))    // TODO to pass std::array here to be able to modify it
+            m_enteredStr.pop_back();
+    }
+    m_inputText.setString(m_enteredStr);
 }
 
 void InputField::Fill(const std::string& _text)
