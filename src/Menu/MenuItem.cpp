@@ -264,7 +264,7 @@ void InputField::onStartEntering()
     if (m_isInInputMode)
         return;
 
-    m_inputText.setString(m_enteredStr.empty() ? "" : m_enteredStr);
+    m_inputText.setString(m_enteredStr.empty() ? "_" : m_enteredStr + "_");
     m_inputText.setFillColor(INPUT_FIELD_TEXT_COLOR);
     m_isInInputMode = true;
 }
@@ -276,7 +276,10 @@ void InputField::onFinishEntering()
     
     m_isInInputMode = false;
     if (!m_enteredStr.empty())
+    {
+        m_inputText.setString(m_enteredStr);
         m_onFinishEnterTextCallback(m_enteredStr);
+    }
     else
     {
         m_inputText.setString(m_helpText);
@@ -300,7 +303,7 @@ void InputField::processChar(sf::Uint32 _char)
         if (!m_onValidateEnteredTextCallback(_char, m_enteredStr))    // TODO to pass std::array here to be able to modify it
             m_enteredStr.pop_back();
     }
-    m_inputText.setString(m_enteredStr);
+    m_inputText.setString(m_enteredStr + "_");
 }
 
 void InputField::Fill(const std::string& _text)
