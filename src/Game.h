@@ -118,7 +118,6 @@ private:
     sf::Uint32 m_enteredChar = 0;
 
     GameResult m_gameResult = {};
-    unsigned m_seed = 0;
     WorldConfig m_worldConfig = {};
 
     bool m_wantToStartGame = false;

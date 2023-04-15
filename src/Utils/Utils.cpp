@@ -28,16 +28,6 @@ int WorldPosition::getLength() const
     return static_cast<int>(sqrt(x*x + y*y));
 }
 
-void provideSeed(unsigned _seed)
-{
-    srand(_seed);
-}
-
-int getRand()
-{
-    return rand();
-}
-
 float calculateCenterX(float _width)
 {
     return calculateCenterX(Game::Get().GetWindow().getSize().x / 2.f, _width);

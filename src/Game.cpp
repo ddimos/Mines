@@ -110,13 +110,13 @@ bool Game::isKeyDown(sf::Keyboard::Key _key)
 void Game::initGame()
 {
     if (IsSessionMaster())
-        m_seed = time(NULL);
+        m_worldConfig.seed = time(NULL);
 
-    LOG("Create a game world. Seed: " + tstr(m_seed) + " X: " + tstr(m_worldConfig.worldSize.x)
+    LOG("Create a game world. Seed: " + tstr(m_worldConfig.seed) 
+                                                     + " X: " + tstr(m_worldConfig.worldSize.x)
                                                      + " Y: " + tstr(m_worldConfig.worldSize.y)
                                                      + " Bombs: " + tstr(m_worldConfig.bombsCount)
                                                      + " Mode: " + tstr((int)m_worldConfig.gameMode));
-    provideSeed(m_seed);
     m_gameWorld.CreateWorld(m_worldConfig);
 }
 
@@ -368,7 +368,7 @@ void Game::receiveNetworkMessages()
                     break;
                 }
                 
-                event.message.Read(m_seed);
+                event.message.Read(m_worldConfig.seed);
                 event.message.Read<sf::Int32>(m_worldConfig.worldSize.x);
                 event.message.Read<sf::Int32>(m_worldConfig.worldSize.y);
                 event.message.Read<sf::Uint32>(m_worldConfig.bombsCount);
@@ -496,7 +496,7 @@ void Game::sendCreateGameMessage() // TODO  join in progress
 {
     NetworkMessage message(true);
     message.Write(static_cast<sf::Uint16>(NetworkMessageType::CREATE_GAME));
-    message.Write(static_cast<sf::Uint32>(m_seed));
+    message.Write(static_cast<sf::Uint32>(m_worldConfig.seed));
     message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.x));
     message.Write(static_cast<sf::Int32>(m_worldConfig.worldSize.y));
     message.Write(static_cast<sf::Uint32>(m_worldConfig.bombsCount));
@@ -584,9 +584,8 @@ void Game::OnConfigureMenuButtonPressed(const MenuInputs& _input)
         return;
 
     m_wantsToChangeState = true;
-    if (_input.worldConfig.IsValid())
-        m_worldConfig = _input.worldConfig;
-    else
+    m_worldConfig = _input.worldConfig;
+    if (!_input.worldConfig.IsValid())
         m_worldConfig.ApplyDefaultSmallWorld();
 }
 

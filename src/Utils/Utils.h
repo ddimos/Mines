@@ -45,11 +45,6 @@ inline bool approximatelyEqual(float _a, float _b)
 
 // ---------------------------------------------------------
 
-void provideSeed(unsigned _seed);
-int getRand();
-
-// ---------------------------------------------------------
-
 float calculateCenterX(float _width);
 float calculateCenterX(float _x, float _width);
 
@@ -73,6 +68,7 @@ struct WorldConfig
     WorldPosition worldSize = {};
     unsigned bombsCount = 0;
     GameMode gameMode = GameMode::EASY;
+    unsigned seed = 0;
 };
 
 // ---------------------------------------------------------

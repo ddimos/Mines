@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "Cell.h"
 #include "WorldMap.h"
+#include "Random.h"
 #include "Network/NetworkMessage.h"
 #include <set>
 
@@ -53,6 +54,7 @@ private:
     bool areThereAlivePlayers() const;
 
     WorldMap m_worldMap;
+    Random m_randomizer;
 
     WorldConfig m_worldConfig = {};
     Cells m_cells;

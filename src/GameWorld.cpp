@@ -12,6 +12,7 @@ GameWorld::GameWorld()
 
 void GameWorld::CreateWorld(WorldConfig _worldConfig)
 {
+    m_randomizer.Init(_worldConfig.seed);
     m_worldConfig = _worldConfig;
     m_cells.clear();
     createCells(m_worldConfig.worldSize);
@@ -150,13 +151,14 @@ void GameWorld::generateBombs(size_t _bombsNumber)
 {
     while (_bombsNumber)
 	{
-		const int X = getRand() % m_worldConfig.worldSize.x;
-		const int Y = getRand() % m_worldConfig.worldSize.y;
+		const int X = m_randomizer.GetRand(0, m_worldConfig.worldSize.x);
+		const int Y = m_randomizer.GetRand(0, m_worldConfig.worldSize.y);
 
-		if(getCell(X, Y).m_type == Cell::ValueType::BOMB)
+        Cell& cell = getCell(X, Y);
+		if(cell.m_type == Cell::ValueType::BOMB)
 			continue;
 
-		getCell(X, Y).setType(Cell::ValueType::BOMB);
+		cell.setType(Cell::ValueType::BOMB);
 
 		for (int i = -1; i <= 1; i++)
 		{
@@ -173,10 +175,11 @@ void GameWorld::generateBombs(size_t _bombsNumber)
 				if (x < 0 || x >= m_worldConfig.worldSize.x)
 					continue;
 
-				if (getCell(x, y).m_type == Cell::ValueType::BOMB)
+                Cell& neighborCell = getCell(x, y);
+				if (neighborCell.m_type == Cell::ValueType::BOMB)
 					continue;
-				getCell(x, y).setType(Cell::ValueType::NUMBER);
-				getCell(x, y).increaseNumber();
+				neighborCell.setType(Cell::ValueType::NUMBER);
+				neighborCell.increaseNumber();
 			}
 		}
 		_bombsNumber--;
