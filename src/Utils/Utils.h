@@ -2,9 +2,6 @@
 #include <SFML/Graphics.hpp>
 #include "Constants.h"
 #include <cmath>
-#include <chrono>
-#include <string>
-
 
 inline sf::Vector2f getWindowPosition(int _x, int _y)
 {
@@ -55,21 +52,6 @@ int getRand();
 
 float calculateCenterX(float _width);
 float calculateCenterX(float _x, float _width);
-
-// ---------------------------------------------------------
-
-class Profiler
-{
-public:
-    Profiler(const std::string& _context = "");
-    ~Profiler();
-
-private:
-    std::string m_context = "";
-    std::chrono::_V2::system_clock::time_point m_t = {};
-};
-
-#define PROFILE_POINT(context) Profiler p(context);
 
 // ---------------------------------------------------------
 

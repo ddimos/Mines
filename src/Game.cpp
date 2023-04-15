@@ -2,11 +2,12 @@
 #include "Utils/Utils.h"
 #include "Utils/Config.h"
 #include "Utils/Log.h"
+#include "Utils/ResourceManager.h"
 #include "GameListener.h"
-#include "ResourceManager.h"
 #include "Network/Network.h"
 #include "Network/NetworkPlayer.h"
 #include "NetworkMessageType.h"
+#include <array>
 
 namespace
 {
